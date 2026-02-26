@@ -7,14 +7,18 @@ const installSnippet = `npm install @botgrid/sdk`;
 const usageSnippet = `import { BotGridAds } from "@botgrid/sdk";
 
 const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY!,
+  apiKey: import.meta.env.VITE_BOTGRID_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
+  baseUrl: import.meta.env.VITE_API_BASE_URL || "/api", // local API
 });
 
 export async function handleMessage(userId: string, topic: string) {
   if (botGrid.shouldShowAd(userId, 5)) {
     const ad = await botGrid.displayAd({ topic, userId });
+    if (ad) {
+      await botGrid.trackImpression(ad.id, userId);
+    }
     return ad;
   }
   return null;
@@ -55,7 +59,7 @@ const SDK = () => {
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li>Use frequency guards (`shouldShowAd`) to avoid over-serving.</li>
               <li>Log and monitor `trackImpression` / `trackClick` for performance.</li>
-              <li>Start with the demo flow, then replace mock ads with real API data.</li>
+              <li>Use `/admin` to manage ad inventory and review event logs.</li>
             </ul>
 
             <div className="mt-7 rounded-xl border border-border bg-background p-4">

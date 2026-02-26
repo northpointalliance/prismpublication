@@ -8,8 +8,10 @@ TUNNEL_NAME="prism-aiads"
 RUN_DIR="$PROJECT_DIR/.run"
 LOG_DIR="$PROJECT_DIR/logs"
 VITE_PID_FILE="$RUN_DIR/vite.pid"
+API_PID_FILE="$RUN_DIR/api.pid"
 CLOUDFLARED_PID_FILE="$RUN_DIR/cloudflared.pid"
 VITE_LOG="$LOG_DIR/vite.log"
+API_LOG="$LOG_DIR/api.log"
 CLOUDFLARED_LOG="$LOG_DIR/cloudflared.log"
 
 mkdir -p "$RUN_DIR" "$LOG_DIR"
@@ -26,6 +28,12 @@ is_running() {
 find_existing_vite_pid() {
   ps -eo pid=,args= | awk -v p1="$PROJECT_DIR/node_modules/.bin/vite" -v p2="$PROJECT_DIR/node_modules/vite/bin/vite.js" '
     $2 == "node" && ($3 == p1 || $3 == p2) { print $1; exit }
+  '
+}
+
+find_existing_api_pid() {
+  ps -eo pid=,args= | awk -v target="$PROJECT_DIR/server/src/index.js" '
+    $2 == "node" && (($3 == "--watch" && $4 == target) || $3 == target) { print $1; exit }
   '
 }
 
@@ -63,6 +71,37 @@ start_vite() {
     echo "Vite failed to start. Last log lines:"
     tail -n 40 "$VITE_LOG" 2>/dev/null || true
     rm -f "$VITE_PID_FILE"
+  fi
+}
+
+start_api() {
+  local existing_pid
+  existing_pid="$(find_existing_api_pid)"
+  if [[ -n "$existing_pid" ]]; then
+    echo "$existing_pid" >"$API_PID_FILE"
+    echo "API already running (PID $existing_pid)."
+    return
+  fi
+
+  if is_running "$API_PID_FILE"; then
+    echo "API already running (PID $(cat "$API_PID_FILE"))."
+    return
+  fi
+
+  echo "Starting local API on :8787 ..."
+  cd "$PROJECT_DIR/server"
+  nohup node --watch "$PROJECT_DIR/server/src/index.js" >"$API_LOG" 2>&1 &
+  sleep 1
+  local api_pid
+  api_pid="$(find_existing_api_pid)"
+
+  if [[ -n "$api_pid" ]]; then
+    echo "$api_pid" >"$API_PID_FILE"
+    echo "API started (PID $api_pid). Log: $API_LOG"
+  else
+    echo "API failed to start. Last log lines:"
+    tail -n 40 "$API_LOG" 2>/dev/null || true
+    rm -f "$API_PID_FILE"
   fi
 }
 
@@ -120,6 +159,20 @@ stop_one() {
 }
 
 status() {
+  if is_running "$API_PID_FILE"; then
+    echo "API: RUNNING (PID $(cat "$API_PID_FILE"))"
+  else
+    local api_pid
+    api_pid="$(find_existing_api_pid)"
+    if [[ -n "$api_pid" ]]; then
+      echo "$api_pid" >"$API_PID_FILE"
+      echo "API: RUNNING (PID $api_pid)"
+    else
+      rm -f "$API_PID_FILE"
+      echo "API: STOPPED"
+    fi
+  fi
+
   if is_running "$VITE_PID_FILE"; then
     echo "Vite: RUNNING (PID $(cat "$VITE_PID_FILE"))"
   else
@@ -146,6 +199,9 @@ status() {
 }
 
 logs() {
+  echo "---- api.log ----"
+  tail -n 40 "$API_LOG" 2>/dev/null || true
+  echo
   echo "---- vite.log ----"
   tail -n 40 "$VITE_LOG" 2>/dev/null || true
   echo
@@ -156,9 +212,9 @@ logs() {
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/prism_stack.sh start     # Start Vite + Cloudflare tunnel in background
-  ./scripts/prism_stack.sh stop      # Stop both
-  ./scripts/prism_stack.sh restart   # Restart both
+  ./scripts/prism_stack.sh start     # Start API + Vite + Cloudflare tunnel in background
+  ./scripts/prism_stack.sh stop      # Stop tunnel + Vite + API
+  ./scripts/prism_stack.sh restart   # Restart all
   ./scripts/prism_stack.sh status    # Show process status
   ./scripts/prism_stack.sh logs      # Show recent logs
 EOF
@@ -167,6 +223,7 @@ EOF
 cmd="${1:-}"
 case "$cmd" in
   start)
+    start_api
     start_vite
     start_tunnel
     status
@@ -174,6 +231,7 @@ case "$cmd" in
   stop)
     stop_one "$CLOUDFLARED_PID_FILE" "Tunnel"
     stop_one "$VITE_PID_FILE" "Vite"
+    stop_one "$API_PID_FILE" "API"
     ;;
   restart)
     "$0" stop

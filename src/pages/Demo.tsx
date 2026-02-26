@@ -2,23 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Play, Pause, RotateCcw, Sparkles, MessageSquare, MousePointerClick, Radio } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
-
-type DemoAdFormat = "text" | "card" | "banner";
-
-interface MockBotGridConfig {
-  apiKey: string;
-  botId: string;
-  adFormat?: DemoAdFormat;
-}
-
-interface DemoAd {
-  id: string;
-  title: string;
-  description: string;
-  ctaText: string;
-  clickUrl: string;
-  advertiser: string;
-}
+import { BotGridAds, type Ad as DemoAd } from "@botgrid/sdk";
+import { runtimeConfig } from "@/lib/api";
 
 const createMessageId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -26,65 +11,6 @@ const createMessageId = () => {
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
-
-// Mock BotGrid SDK
-class MockBotGridAds {
-  private apiKey: string;
-  private botId: string;
-  private adFormat: DemoAdFormat;
-
-  constructor(config: MockBotGridConfig) {
-    this.apiKey = config.apiKey;
-    this.botId = config.botId;
-    this.adFormat = config.adFormat || "text";
-  }
-
-  async displayAd(_context: Record<string, unknown> = {}): Promise<DemoAd> {
-    const ads: DemoAd[] = [
-      {
-        id: "ad-1",
-        title: "🚀 Boost Your AI Productivity",
-        description: "Discover the latest AI tools to streamline your workflow. Millions of professionals already use AI to 2x their output.",
-        ctaText: "Try Free",
-        clickUrl: "https://example.com/ai-tools",
-        advertiser: "AI Tools Co",
-      },
-      {
-        id: "ad-2",
-        title: "📚 Master Machine Learning",
-        description: "Join 50,000+ students in our comprehensive ML course. Get certified in 12 weeks with hands-on projects.",
-        ctaText: "Start Learning",
-        clickUrl: "https://example.com/ml-course",
-        advertiser: "LearnAI Academy",
-      },
-      {
-        id: "ad-3",
-        title: "💼 AI Consulting for Business",
-        description: "Transform your business with AI. Free consultation available. See how top companies are leveraging AI today.",
-        ctaText: "Book Free Call",
-        clickUrl: "https://example.com/consulting",
-        advertiser: "AI Consult Pro",
-      },
-      {
-        id: "ad-4",
-        title: "🔥 Build Chatbots Without Code",
-        description: "Create powerful AI assistants in minutes. No programming needed. Join 10,000+ businesses already building.",
-        ctaText: "Start Building",
-        clickUrl: "https://example.com/chatbot-builder",
-        advertiser: "BotBuilder",
-      },
-      {
-        id: "ad-5",
-        title: "⚡ Supercharge Your Coding",
-        description: "AI-powered coding assistant that writes 40% of your code. Works with 20+ programming languages.",
-        ctaText: "Install Free",
-        clickUrl: "https://example.com/coding-assistant",
-        advertiser: "CodeAI",
-      },
-    ];
-    return ads[Math.floor(Math.random() * ads.length)];
-  }
-}
 
 // Pre-scripted conversation with naturally integrated ads
 const conversationScript = [
@@ -121,14 +47,16 @@ const Demo = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const messageListRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
-  const botGridRef = useRef<MockBotGridAds | null>(null);
+  const botGridRef = useRef<BotGridAds | null>(null);
   const playbackRef = useRef(false);
+  const demoUserId = "demo-local-user";
   
   useEffect(() => {
-    botGridRef.current = new MockBotGridAds({
-      apiKey: "demo-api-key",
+    botGridRef.current = new BotGridAds({
+      apiKey: runtimeConfig.botgridApiKey,
       botId: "demo-bot",
       adFormat: "card",
+      baseUrl: runtimeConfig.apiBaseUrl,
     });
   }, []);
 
@@ -167,9 +95,12 @@ const Demo = () => {
       const item = conversationScript[i];
       
       if (item.role === 'ad') {
-        // Show ad naturally integrated
-        const ad = await botGridRef.current?.displayAd({ topic: "tech" });
+        const ad = await botGridRef.current?.displayAd({
+          topic: "ai",
+          userId: demoUserId,
+        });
         if (ad && playbackRef.current) {
+          void botGridRef.current?.trackImpression(ad.id, demoUserId);
           const adMessage: Message = {
             id: createMessageId(),
             role: 'ad',
@@ -216,6 +147,7 @@ const Demo = () => {
   };
 
   const handleAdClick = (ad: DemoAd) => {
+    void botGridRef.current?.trackClick(ad.id, demoUserId);
     window.open(ad.clickUrl, "_blank", "noopener,noreferrer");
   };
 

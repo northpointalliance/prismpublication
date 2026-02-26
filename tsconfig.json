@@ -4,7 +4,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@botgrid/sdk/react": ["./packages/sdk/dist/react.d.ts"],
+      "@botgrid/sdk": ["./packages/sdk/dist/index.d.ts"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

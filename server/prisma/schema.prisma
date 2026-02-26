@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LeadRole {
+  publisher
+  advertiser
+  demo
+  general
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  archived
+}
+
+enum AdFormat {
+  text
+  card
+  banner
+}
+
+enum AdEventType {
+  impression
+  click
+  revenue
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  role      LeadRole   @default(general)
+  name      String
+  email     String
+  company   String?
+  message   String?
+  source    String?
+  status    LeadStatus @default(new)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([email])
+  @@index([role, createdAt])
+  @@map("leads")
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  ctaText     String
+  clickUrl    String
+  imageUrl    String?
+  advertiser  String
+  topics      String[] @default([])
+  format      AdFormat @default(card)
+  isActive    Boolean  @default(true)
+  weight      Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  events      AdEvent[]
+
+  @@index([isActive, createdAt])
+  @@index([advertiser])
+  @@map("ads")
+}
+
+model AdEvent {
+  id        String      @id @default(cuid())
+  adId      String?
+  ad        Ad?         @relation(fields: [adId], references: [id], onDelete: SetNull)
+  eventType AdEventType
+  botId     String
+  userId    String?
+  topic     String?
+  amount    Int?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  @@index([eventType, createdAt])
+  @@index([adId, createdAt])
+  @@index([botId, createdAt])
+  @@map("ad_events")
+}

@@ -13,11 +13,19 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8787",
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@botgrid/sdk/react": path.resolve(__dirname, "./packages/sdk/dist/react.mjs"),
+      "@botgrid/sdk": path.resolve(__dirname, "./packages/sdk/dist/index.mjs"),
     },
   },
 }));

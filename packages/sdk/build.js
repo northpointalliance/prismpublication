@@ -1,79 +1,79 @@
 /**
  * BotGrid SDK Build Script
- * Simple build using esbuild
+ * Uses local esbuild CLI binary to avoid host/binary version mismatch errors.
  */
 
-import * as esbuild from 'esbuild';
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { spawn, spawnSync } from "child_process";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, constants, accessSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const watchMode = process.argv.includes("--watch");
+const distDir = join(__dirname, "dist");
 
-// Ensure dist directory exists
-if (!existsSync(join(__dirname, 'dist'))) {
-  mkdirSync(join(__dirname, 'dist'), { recursive: true });
+const binaryName = process.platform === "win32" ? "esbuild.exe" : "esbuild";
+const platformPackage = `${process.platform}-${process.arch}`;
+
+const candidateBinaries = [
+  process.env.ESBUILD_BINARY_PATH,
+  join(__dirname, "node_modules", "@esbuild", platformPackage, "bin", binaryName),
+  join(__dirname, "..", "..", "node_modules", "@esbuild", platformPackage, "bin", binaryName),
+  join(__dirname, "node_modules", "esbuild", "bin", binaryName),
+  join(__dirname, "..", "..", "node_modules", "esbuild", "bin", binaryName),
+].filter(Boolean);
+
+const isRunnableBinary = (candidate) => {
+  if (!candidate || !existsSync(candidate)) return false;
+  try {
+    accessSync(candidate, constants.X_OK);
+    const result = spawnSync(candidate, ["--version"], { stdio: "pipe" });
+    return result.status === 0;
+  } catch (_err) {
+    return false;
+  }
+};
+
+const esbuildBinary = candidateBinaries.find(isRunnableBinary);
+
+if (!existsSync(distDir)) {
+  mkdirSync(distDir, { recursive: true });
 }
 
-// Copy package.json to dist
-const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
+const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
 delete pkg.scripts;
 delete pkg.devDependencies;
 delete pkg.type;
-writeFileSync(join(__dirname, 'dist', 'package.json'), JSON.stringify(pkg, null, 2));
+writeFileSync(join(distDir, "package.json"), JSON.stringify(pkg, null, 2));
 
-// Build configurations
 const builds = [
-  // ESM build
   {
-    entryPoints: ['src/index.ts'],
-    bundle: true,
-    platform: 'browser',
-    format: 'esm',
-    outfile: 'dist/index.mjs',
+    entry: "src/index.ts",
+    outfile: "dist/index.mjs",
+    format: "esm",
     external: [],
-    minify: true,
-    sourcemap: true,
   },
-  // CJS build
   {
-    entryPoints: ['src/index.ts'],
-    bundle: true,
-    platform: 'browser',
-    format: 'cjs',
-    outfile: 'dist/index.js',
+    entry: "src/index.ts",
+    outfile: "dist/index.js",
+    format: "cjs",
     external: [],
-    minify: true,
-    sourcemap: true,
   },
-  // React ESM
   {
-    entryPoints: ['src/react.tsx'],
-    bundle: true,
-    platform: 'browser',
-    format: 'esm',
-    outfile: 'dist/react.mjs',
-    external: ['react', 'react-dom'],
-    minify: true,
-    sourcemap: true,
-    loader: { '.tsx': 'tsx', '.ts': 'ts' },
+    entry: "src/react.tsx",
+    outfile: "dist/react.mjs",
+    format: "esm",
+    external: ["react", "react-dom"],
   },
-  // React CJS
   {
-    entryPoints: ['src/react.tsx'],
-    bundle: true,
-    platform: 'browser',
-    format: 'cjs',
-    outfile: 'dist/react.js',
-    external: ['react', 'react-dom'],
-    minify: true,
-    sourcemap: true,
-    loader: { '.tsx': 'tsx', '.ts': 'ts' },
+    entry: "src/react.tsx",
+    outfile: "dist/react.js",
+    format: "cjs",
+    external: ["react", "react-dom"],
   },
 ];
 
-// Type declarations (simplified - just copy source as d.ts for now)
 const typeContent = `// BotGrid SDK Type Declarations
 export class BotGridAds {
   constructor(config: BotGridConfig);
@@ -180,21 +180,90 @@ export interface BotGridAdProps {
 export default BotGridAds;
 `;
 
-writeFileSync(join(__dirname, 'dist', 'index.d.ts'), typeContent);
-writeFileSync(join(__dirname, 'dist', 'react.d.ts'), typeContent);
+writeFileSync(join(distDir, "index.d.ts"), typeContent);
+writeFileSync(join(distDir, "react.d.ts"), typeContent);
 
-// Run builds
-async function build() {
-  try {
-    for (const config of builds) {
-      await esbuild.build(config);
-      console.log(`✓ Built ${config.outfile}`);
+const buildArgs = ({ entry, outfile, format, external }) => {
+  const args = [
+    entry,
+    "--bundle",
+    "--platform=browser",
+    `--format=${format}`,
+    `--outfile=${outfile}`,
+    "--minify",
+    "--sourcemap",
+  ];
+  for (const item of external) {
+    args.push(`--external:${item}`);
+  }
+  if (watchMode) {
+    args.push("--watch");
+  }
+  return args;
+};
+
+const ensureBinary = () => {
+  if (!esbuildBinary) {
+    console.error("Build failed: no runnable esbuild binary was found.");
+    console.error("Checked:");
+    for (const candidate of candidateBinaries) {
+      console.error(`- ${candidate}`);
     }
-    console.log('\n✅ Build complete!');
-  } catch (error) {
-    console.error('Build failed:', error);
     process.exit(1);
   }
-}
+};
+
+const runOneSync = (config) => {
+  const result = spawnSync(esbuildBinary, buildArgs(config), {
+    cwd: __dirname,
+    stdio: "inherit",
+  });
+  if (result.status !== 0) {
+    throw new Error(`Build failed for ${config.outfile}`);
+  }
+  console.log(`✓ Built ${config.outfile}`);
+};
+
+const runWatch = () => {
+  const children = builds.map((config) => {
+    const child = spawn(esbuildBinary, buildArgs(config), {
+      cwd: __dirname,
+      stdio: "inherit",
+    });
+    child.on("exit", (code) => {
+      if (code && code !== 0) {
+        console.error(`Watcher exited with code ${code} for ${config.outfile}`);
+      }
+    });
+    return child;
+  });
+
+  console.log("Watching SDK builds...");
+  const stopAll = () => {
+    for (const child of children) {
+      child.kill("SIGTERM");
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", stopAll);
+  process.on("SIGTERM", stopAll);
+};
+
+const build = async () => {
+  try {
+    ensureBinary();
+    if (watchMode) {
+      runWatch();
+      return;
+    }
+    for (const config of builds) {
+      runOneSync(config);
+    }
+    console.log("\n✅ Build complete!");
+  } catch (error) {
+    console.error("Build failed:", error);
+    process.exit(1);
+  }
+};
 
 build();
