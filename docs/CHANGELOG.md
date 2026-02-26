@@ -2,6 +2,50 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Changelog refresh: verification + runbook)
+
+- Confirmed latest implementation state:
+  - SDK demo now uses real runtime/API calls (no in-page mock provider).
+  - Admin panel exists at `/admin` with key-gated access.
+  - Backend supports ad serving, tracking events, lead capture, and admin reads/writes.
+  - Stack script now manages API + Vite + Cloudflare tunnel together.
+- Verification pass completed:
+  - `npm run build` passed.
+  - `npm run test` passed.
+  - `npm run lint` passed with warning-only existing UI/sdk fast-refresh warnings.
+- Operational note:
+  - If backend dependencies are missing, run in `server/`:
+    - `npm install`
+    - `npm run prisma:migrate`
+    - `npm run prisma:seed`
+  - Then run from project root:
+    - `./scripts/prism_stack.sh restart`
+    - `./scripts/prism_stack.sh status`
+
+## 2026-02-26 (SDK + Admin runtime completion)
+
+- Replaced demo page mock ad provider with real SDK runtime calls (`@botgrid/sdk`) against local API routes.
+- Added local ad-serving endpoints to backend:
+  - `POST /api/ads`
+  - `POST /api/track/:eventType`
+- Added ad inventory + event logging models in Prisma:
+  - `Ad`
+  - `AdEvent`
+- Added admin API surface (key-protected) for operations:
+  - overview, ads CRUD-lite, event list, lead list
+- Added `/admin` page:
+  - key-based unlock flow
+  - ad creation + active toggle
+  - recent SDK events + recent leads
+- Updated Vite config:
+  - `/api` proxy to local API (`localhost:8787`)
+  - local alias mapping for `@botgrid/sdk` and `@botgrid/sdk/react`
+- Updated stack script `scripts/prism_stack.sh`:
+  - starts/stops API + Vite + tunnel together
+  - includes API status and logs
+- Fixed SDK build script robustness:
+  - rewrote `packages/sdk/build.js` to call local esbuild CLI binary directly, avoiding host/binary mismatch failure.
+
 ## Review: First Change vs Current
 
 ### Baseline (first pass)
@@ -74,6 +118,20 @@ These are the exact points you asked to confirm:
 
 ## Timeline of Major Changes
 
+### 2026-02-26 (Docs + sitemap maintenance)
+- Updated docs index (`docs/README.md`) to match current multi-page architecture and commands.
+- Documented clearly that Supabase remains active and local DB is additive (not a replacement).
+- Refined sitemap structure with route coverage + `lastmod` entries.
+- Confirmed robots sitemap reference remains aligned.
+
+### 2026-02-26 (Local database foundation for scalability)
+- Added local Postgres via `docker-compose.yml` (service: `postgres`).
+- Added backend scaffold in `server/` using Express + Prisma.
+- Added Prisma schema for leads pipeline (`server/prisma/schema.prisma`).
+- Added root scripts for local DB and API operations:
+  - `db:up`, `db:down`, `db:migrate`, `db:seed`, `api:dev`
+- Added setup docs: `docs/LOCAL_DATABASE.md`
+
 ### 2026-02-25 to 2026-02-26 (Core platform + UX)
 - Added audience-separated pages and routing.
 - Refined homepage sections for scannability and conversion focus.
@@ -107,6 +165,14 @@ These are the exact points you asked to confirm:
 - `public/mockups/blog-creative-patterns.svg`
 - `public/sitemap.xml`
 - `docs/CHANGELOG.md`
+- `docs/LOCAL_DATABASE.md`
+- `docker-compose.yml`
+- `server/package.json`
+- `server/.env.example`
+- `server/src/index.js`
+- `server/prisma/schema.prisma`
+- `server/prisma/seed.js`
+- `.env.local-db.example`
 
 ## Files Updated (High Impact)
 - `src/App.tsx`
@@ -123,6 +189,7 @@ These are the exact points you asked to confirm:
 - `tailwind.config.ts`
 - `index.html`
 - `public/robots.txt`
+- `package.json`
 
 ## Current Known Notes
 - Build is passing.

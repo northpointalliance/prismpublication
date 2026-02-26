@@ -1,188 +1,91 @@
-# AI Flow Network
+# AI Flow Network Docs
 
-A modern landing page website built with React, TypeScript, Vite, and shadcn/ui components.
+This folder is the source of truth for project context, architecture, and operational setup.
 
-## 🚀 Quick Start
+## Current Product Snapshot
+
+The website is now a multi-page marketing/product experience with:
+
+- Home (`/`)
+- Product (`/product`)
+- Publishers (`/publishers`)
+- Advertisers (`/advertisers`)
+- How It Works / SDK (`/sdk`)
+- Company (`/company`)
+- Demo (`/demo`)
+- Admin (`/admin`, key-protected)
+- Blog (`/blog`) and article pages (`/blog/:slug`)
+
+## Tech Stack
+
+- Frontend: React 18 + TypeScript + Vite
+- UI: Tailwind + shadcn/ui + Lucide icons
+- Routing: React Router
+- Data Layer (current): Supabase client remains active
+- Local DB option (added): PostgreSQL + Prisma + Node API (`server/`)
+
+## Database Status
+
+Supabase was **not removed**.
+
+- Existing frontend Supabase integration remains in `src/integrations/supabase`.
+- Local-first DB foundation was added in parallel for future scalability.
+- You can migrate incrementally endpoint-by-endpoint without breaking current frontend behavior.
+
+See: [LOCAL_DATABASE.md](/home/tokyo/Desktop/AIADS/docs/LOCAL_DATABASE.md)
+
+## SEO/Indexing Status
+
+- Sitemap exists at `public/sitemap.xml`
+- Robots references sitemap in `public/robots.txt`
+- Blog/article routes are included in sitemap
+- Admin route is intentionally excluded from sitemap
+
+## Project Commands
+
+### Frontend
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
 npm run dev
-
-# Build for production
 npm run build
-
-# Preview production build
 npm run preview
-```
-
-## 📋 Project Overview
-
-### Technology Stack
-
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite 5
-- **Styling**: Tailwind CSS with shadcn/ui components
-- **Routing**: React Router DOM
-- **Data Fetching**: TanStack React Query
-- **Database**: Supabase (Edge Functions)
-- **Icons**: Lucide React
-- **Forms**: React Hook Form with Zod validation
-
-### Project Structure
-
-```
-src/
-├── components/           # React components
-│   ├── ui/              # shadcn/ui component library
-│   ├── Navbar.tsx       # Main navigation
-│   ├── HeroSection.tsx  # Hero/landing section
-│   ├── HowItWorksSection.tsx
-│   ├── AudienceSection.tsx
-│   ├── StatsSection.tsx
-│   ├── FAQSection.tsx
-│   ├── CTASection.tsx   # Call-to-action section
-│   └── Footer.tsx
-├── pages/               # Page components
-│   ├── Index.tsx        # Home/landing page
-│   ├── Demo.tsx         # Interactive product demo
-│   └── NotFound.tsx     # 404 page
-├── hooks/               # Custom React hooks
-├── integrations/        # Third-party integrations
-│   └── supabase/       # Supabase client & types
-├── lib/                 # Utility functions
-├── App.tsx              # Main app component with routing
-├── main.tsx             # Entry point
-└── index.css            # Global styles
-```
-
-### Components
-
-The website consists of the following main sections:
-
-1. **Navbar** - Top navigation with links to all sections
-2. **HeroSection** - Hero banner with main headline and CTA
-3. **HowItWorksSection** - Explains how the service works
-4. **AudienceSection** - Target audience/who it's for
-5. **StatsSection** - Key metrics and statistics
-6. **FAQSection** - Frequently asked questions
-7. **CTASection** - Final call-to-action
-8. **Footer** - Footer with links and copyright
-
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build for production |
-| `npm run build:dev` | Build in development mode |
-| `npm run lint` | Run ESLint |
-| `npm run preview` | Preview production build |
-| `npm run test` | Run tests once |
-| `npm run test:watch` | Run tests in watch mode |
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
-```
-
-### Tailwind Configuration
-
-Tailwind is configured in:
-- `tailwind.config.ts` - Main Tailwind configuration
-- `postcss.config.js` - PostCSS configuration
-- `src/index.css` - Global styles and custom CSS
-
-### Supabase Integration
-
-The project includes Supabase integration for backend functionality:
-- Edge Functions in `supabase/functions/`
-- Client configuration in `src/integrations/supabase/`
-- Types in `src/integrations/supabase/types.ts`
-
-## 🎨 Customization
-
-### Adding New Components
-
-Use the shadcn/ui CLI to add new components:
-
-```bash
-npx shadcn@latest add button
-npx shadcn@latest add dialog
-npx shadcn@latest add card
-```
-
-### Modifying Styles
-
-- Global styles: `src/index.css`
-- Component-specific styles: Inline with Tailwind classes
-- shadcn/ui components: `src/components/ui/`
-
-### Adding New Pages
-
-1. Create a new component in `src/pages/`
-2. Add a route in `src/App.tsx`:
-
-```tsx
-import NewPage from "./pages/NewPage";
-
-// Add route:
-<Route path="/new-page" element={<NewPage />} />
-```
-
-## 🧪 Testing
-
-```bash
-# Run tests once
+npm run lint
 npm run test
-
-# Run tests in watch mode
-npm run test:watch
 ```
 
-## 📦 Dependencies
+### Local DB + API (new)
 
-### Core Dependencies
-- react & react-dom
-- react-router-dom
-- @tanstack/react-query
-- @supabase/supabase-js
+```bash
+npm run db:up
+npm run db:migrate
+npm run db:seed
+npm run api:dev
+npm run db:down
+```
 
-### UI Components (shadcn/ui)
-- @radix-ui/* (various components)
-- lucide-react (icons)
-- class-variance-authority
-- tailwind-merge
-- clsx
+### Full local stack (background)
 
-### Form & Validation
-- react-hook-form
-- @hookform/resolvers
-- zod
+```bash
+./scripts/prism_stack.sh start
+./scripts/prism_stack.sh status
+./scripts/prism_stack.sh logs
+./scripts/prism_stack.sh stop
+```
 
-### Development Dependencies
-- vite
-- typescript
-- tailwindcss
-- eslint
-- vitest
+This now starts:
+- Local API (`:8787`)
+- Vite (`:8080`)
+- Cloudflare tunnel
 
-## 🌐 Browser Support
+## Documentation Map
 
-The project uses modern browser features. For production, consider adding appropriate polyfills or use a tool like browserslist to manage browser compatibility.
+- [CHANGELOG.md](/home/tokyo/Desktop/AIADS/docs/CHANGELOG.md): Evolution log and verification checklist
+- [LOCAL_DATABASE.md](/home/tokyo/Desktop/AIADS/docs/LOCAL_DATABASE.md): Local Postgres + Prisma setup
+- [DEEP_DIVE.md](/home/tokyo/Desktop/AIADS/docs/DEEP_DIVE.md): Technical deep-dive
+- [INTEGRATION_EXAMPLES.md](/home/tokyo/Desktop/AIADS/docs/INTEGRATION_EXAMPLES.md): SDK/integration examples
+- [BUSINESS_IDEA.md](/home/tokyo/Desktop/AIADS/docs/BUSINESS_IDEA.md): Product/business framing
 
-## 📄 License
+## Notes
 
-Private - All rights reserved
-
-## 🆘 Support
-
-For issues or questions, please refer to the project documentation or contact the development team.
+- Build is passing.
+- Lint has existing warning-only entries in shared UI/sdk files (`react-refresh/only-export-components`).
