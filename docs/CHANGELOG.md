@@ -2,6 +2,26 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (CI + rate limiting + RBAC hardening)
+
+- Authorization and role safety:
+  - removed implicit admin fallback for unknown membership roles.
+  - added strict role-to-organization compatibility checks.
+  - added per-organization membership role prioritization to avoid duplicate workspace ambiguity.
+- Credential safety:
+  - removed non-production default fallbacks for `BOTGRID_API_KEY` and `ADMIN_API_KEY`.
+  - API now fails startup when either key is missing.
+- Rate limiting:
+  - extracted limiter into `server/src/rate-limit.js`.
+  - added optional Upstash Redis REST support via `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`.
+  - added automatic in-memory fallback if external limiter is unavailable.
+- Testing:
+  - added backend tests for rate limiting store/middleware behavior.
+  - expanded backend role tests for unknown roles, compatibility, and role priority.
+  - added frontend route guard tests covering auth/workspace/role redirects.
+- CI:
+  - added GitHub Actions workflow to run lint, frontend tests, server tests, and build on push/PR.
+
 ## 2026-02-26 (Security baseline tightening + demo route hardening)
 
 - Auth/session hardening:

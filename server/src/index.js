@@ -3,7 +3,13 @@ import cors from "cors";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { mapMembershipRoleToPortalRole, isAdminMembershipRole } from "./portal-roles.js";
+import {
+  getMembershipRolePriority,
+  isAdminMembershipRole,
+  isRoleCompatibleWithOrganizationType,
+  mapMembershipRoleToPortalRole,
+} from "./portal-roles.js";
+import { createIpRateLimiter } from "./rate-limit.js";
 import { getBearerToken, secureEqual } from "./security-utils.js";
 
 const app = express();
@@ -17,11 +23,11 @@ const supabaseUrl =
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || "";
 const supabasePublishableKey =
   process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
-const sdkApiKey = process.env.BOTGRID_API_KEY || (isProduction ? "" : "local-demo-key");
-const adminApiKey = process.env.ADMIN_API_KEY || (isProduction ? "" : "local-admin-key");
+const sdkApiKey = process.env.BOTGRID_API_KEY || "";
+const adminApiKey = process.env.ADMIN_API_KEY || "";
 
-if (isProduction && (!sdkApiKey || !adminApiKey)) {
-  throw new Error("BOTGRID_API_KEY and ADMIN_API_KEY are required in production.");
+if (!sdkApiKey || !adminApiKey) {
+  throw new Error("BOTGRID_API_KEY and ADMIN_API_KEY are required.");
 }
 if (isProduction && allowInsecureDevAuth) {
   throw new Error("ALLOW_INSECURE_DEV_AUTH must be false in production.");
@@ -53,31 +59,10 @@ app.use((req, res, next) => {
   next();
 });
 
-const makeIpRateLimiter = ({ windowMs, maxRequests }) => {
-  const bucket = new Map();
-
-  return (req, res, next) => {
-    const now = Date.now();
-    const ip = String(req.ip || req.headers["x-forwarded-for"] || "unknown");
-    const existing = bucket.get(ip);
-
-    if (!existing || now > existing.resetAt) {
-      bucket.set(ip, { count: 1, resetAt: now + windowMs });
-      return next();
-    }
-
-    existing.count += 1;
-    if (existing.count > maxRequests) {
-      return res.status(429).json({ error: "Too many requests" });
-    }
-    return next();
-  };
-};
-
-const authRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 180 });
-const adminRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 240 });
-const demoRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 240 });
-const leadRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 60 });
+const authRateLimiter = createIpRateLimiter({ prefix: "auth", windowMs: 10 * 60 * 1000, maxRequests: 180 });
+const adminRateLimiter = createIpRateLimiter({ prefix: "admin", windowMs: 10 * 60 * 1000, maxRequests: 240 });
+const demoRateLimiter = createIpRateLimiter({ prefix: "demo", windowMs: 10 * 60 * 1000, maxRequests: 240 });
+const leadRateLimiter = createIpRateLimiter({ prefix: "lead", windowMs: 10 * 60 * 1000, maxRequests: 60 });
 
 const httpUrlSchema = z
   .string()
@@ -314,6 +299,23 @@ const validatePortalSession = async (req, expectedEmail = "") => {
   return { ok: true, sessionEmail: verifiedUser.email };
 };
 
+const selectBestMembershipPerOrganization = (memberships = []) => {
+  const byOrganizationId = new Map();
+
+  for (const membership of memberships) {
+    if (!membership?.organization) continue;
+    if (!isRoleCompatibleWithOrganizationType(membership.role, membership.organization.type)) continue;
+
+    const orgId = membership.organization.id;
+    const current = byOrganizationId.get(orgId);
+    if (!current || getMembershipRolePriority(membership.role) > getMembershipRolePriority(current.role)) {
+      byOrganizationId.set(orgId, membership);
+    }
+  }
+
+  return [...byOrganizationId.values()];
+};
+
 const buildEntryContextByUserId = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -326,8 +328,10 @@ const buildEntryContextByUserId = async (userId) => {
 
   if (!user) return null;
 
-  const workspaces = user.memberships.map((membership) => {
+  const memberships = selectBestMembershipPerOrganization(user.memberships);
+  const workspaces = memberships.flatMap((membership) => {
     const role = mapMembershipRoleToPortalRole(membership.role);
+    if (!role) return [];
     const copy = roleToWorkspaceCopy[role];
     return {
       id: membership.organization.id,
@@ -392,9 +396,11 @@ const resolvePortalWorkspace = async (userId) => {
 
   if (!user || !user.memberships.length) return null;
 
+  const memberships = selectBestMembershipPerOrganization(user.memberships);
+  if (!memberships.length) return null;
+
   const selectedMembership =
-    user.memberships.find((membership) => membership.organizationId === user.defaultOrganizationId) ||
-    user.memberships[0];
+    memberships.find((membership) => membership.organizationId === user.defaultOrganizationId) || memberships[0];
 
   return {
     user,
@@ -961,12 +967,14 @@ app.post("/api/me/default-workspace", requirePortalUser, async (req, res) => {
   }
 
   try {
-    const membership = await prisma.organizationMember.findFirst({
+    const memberships = await prisma.organizationMember.findMany({
       where: {
         userId: req.portalUser.id,
         organizationId: parsed.data.workspaceId,
       },
+      include: { organization: true },
     });
+    const membership = selectBestMembershipPerOrganization(memberships)[0];
 
     if (!membership) {
       return res.status(403).json({ error: "Workspace not accessible for this user" });
@@ -997,19 +1005,23 @@ app.post("/api/me/switch-organization", requirePortalUser, async (req, res) => {
   }
 
   try {
-    const membership = await prisma.organizationMember.findFirst({
+    const memberships = await prisma.organizationMember.findMany({
       where: {
         userId: req.portalUser.id,
         organizationId: parsed.data.workspaceId,
       },
       include: { organization: true },
     });
+    const membership = selectBestMembershipPerOrganization(memberships)[0];
 
     if (!membership) {
       return res.status(403).json({ error: "Organization not accessible for this user" });
     }
 
     const role = mapMembershipRoleToPortalRole(membership.role);
+    if (!role) {
+      return res.status(403).json({ error: "Organization role is not valid for portal access" });
+    }
     return res.json({
       workspaceId: membership.organizationId,
       role,

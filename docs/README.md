@@ -62,6 +62,12 @@ npm run test
 npm run test:server
 ```
 
+CI (GitHub Actions) runs the same validation stack on push/PR:
+- `npm run lint`
+- `npm run test`
+- `npm run test:server`
+- `npm run build`
+
 ### Local DB + API (new)
 
 ```bash
@@ -101,10 +107,12 @@ Use `/app/login` and:
 
 - Local credential files (`.env`, `server/.env`) are intentionally not tracked.
 - Use `.env.example` and `server/.env.example` as templates.
+- API startup requires both `BOTGRID_API_KEY` and `ADMIN_API_KEY`.
 - Portal API calls are expected to include Supabase bearer session tokens for authenticated workspace routes.
 - `GET /api/leads` is admin-key protected (same key family as other admin endpoints).
 - Browser-bundled `VITE_*` vars must not contain `BOTGRID_API_KEY` or `ADMIN_API_KEY`.
 - `/api/demo/*` endpoints are rate-limited and are intended only for scripted public demo playback.
+- Distributed rate limiting is supported via optional `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` in `server/.env`.
 
 ## Documentation Map
 

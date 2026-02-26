@@ -50,7 +50,10 @@ Key middleware and controls in `server/src/index.js`:
 - CORS allowlist from `API_CORS_ORIGIN`
 - JSON body size cap (`64kb`)
 - secure headers (`X-Content-Type-Options`, `X-Frame-Options`, etc.)
-- route-level rate limiting for `/api/auth`, `/api/me`, `/api/admin`, `/api/demo`, and `/api/leads`
+- route-level rate limiting for `/api/auth`, `/api/me`, `/api/admin`, `/api/demo`, and `/api/leads` via `server/src/rate-limit.js`
+  - default in-memory limiter
+  - optional distributed limiter through Upstash Redis REST
+  - automatic fallback to in-memory limiter on external failures
 - timing-safe key comparisons
 
 Auth modes:
@@ -59,6 +62,7 @@ Auth modes:
 - Admin key routes require `x-admin-key`.
 - Admin workspace bootstrap (`POST /api/me/create-workspace` with `type=admin`) requires `x-admin-key`.
 - Insecure session bypass is disabled by default and only enabled with `ALLOW_INSECURE_DEV_AUTH="true"`.
+- API startup now requires both `BOTGRID_API_KEY` and `ADMIN_API_KEY` in all environments.
 
 Lead security:
 
@@ -78,6 +82,12 @@ Portal role mapping:
 - `advertiser_*` -> advertiser portal
 - `publisher_*` -> bot developer portal
 - `reviewer|admin|super_admin` -> admin portal
+- unknown roles -> rejected (no admin fallback)
+
+Membership normalization:
+
+- API selects one effective membership per organization (highest-priority compatible role).
+- Incompatible role/org combinations are excluded from workspace entry context.
 
 The frontend keeps one session and switches workspace context via:
 
@@ -194,6 +204,14 @@ All-in-one stack:
 
 ## 10) Current Gaps
 
-- Backend integration tests are still early and should expand beyond utility-level checks.
+- Backend integration tests should expand from utility/middleware checks into full endpoint-flow scenarios.
 - Admin moderation/risk workflows are still basic compared to the full product plan.
-- More route-level and component-level tests are needed for portal flows.
+- More end-to-end and cross-service tests are needed for portal flows.
+
+## 11) Quality Gates
+
+- CI workflow (`.github/workflows/ci.yml`) runs on push/PR:
+  - `npm run lint`
+  - `npm run test`
+  - `npm run test:server`
+  - `npm run build`

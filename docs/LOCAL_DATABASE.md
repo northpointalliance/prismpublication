@@ -72,6 +72,13 @@ Required keys (from `server/.env`):
 - `BOTGRID_API_KEY` for SDK requests (`Authorization: Bearer ...`)
 - `ADMIN_API_KEY` for admin endpoints (`x-admin-key`)
 - `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for backend token verification
+- Optional distributed rate limiting:
+  - `UPSTASH_REDIS_REST_URL`
+  - `UPSTASH_REDIS_REST_TOKEN`
+
+Startup behavior:
+
+- API startup fails if `BOTGRID_API_KEY` or `ADMIN_API_KEY` is missing.
 
 Frontend optional env (root `.env`):
 
