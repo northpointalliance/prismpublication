@@ -83,6 +83,17 @@ This now starts:
 - Vite (`:8080`)
 - Cloudflare tunnel
 
+## Development Test Users
+
+Use these in `/app/login` for quick role-based portal tests without creating accounts:
+
+- Advertiser:
+  - Email: `advertiser.demo@local.test`
+  - Password: `Advertiser123!`
+- Bot Developer:
+  - Email: `botdev.demo@local.test`
+  - Password: `BotDeveloper123!`
+
 ## Documentation Map
 
 - [CHANGELOG.md](/home/tokyo/Desktop/AIADS/docs/CHANGELOG.md): Evolution log and verification checklist

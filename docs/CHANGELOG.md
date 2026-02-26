@@ -30,6 +30,9 @@ This file tracks the website evolution from the first major redesign pass to the
 - Runtime note:
   - In this sandbox, direct port binding for `:8080` and `:8787` is restricted (`EPERM`), so live port checks here are limited.
   - On your machine, after `server` deps + Prisma setup, `./scripts/prism_stack.sh restart` should run the full stack.
+- Added local development test credentials for role testing in `/app/login`:
+  - advertiser: `advertiser.demo@local.test` / `Advertiser123!`
+  - bot developer: `botdev.demo@local.test` / `BotDeveloper123!`
 
 ## 2026-02-26 (Changelog refresh: verification + runbook)
 

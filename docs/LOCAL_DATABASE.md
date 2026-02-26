@@ -86,6 +86,13 @@ This enables one-login + multi-workspace routing for:
 - Bot developer portal
 - Admin portal
 
+## Local login test accounts
+
+For frontend role-flow testing, these credentials are available in `/app/login`:
+
+- `advertiser.demo@local.test` / `Advertiser123!`
+- `botdev.demo@local.test` / `BotDeveloper123!`
+
 ## Production migration path
 
 When ready, point `DATABASE_URL` to managed Postgres (Supabase Postgres, RDS, Neon, etc.) and run migrations. No schema rewrite required.

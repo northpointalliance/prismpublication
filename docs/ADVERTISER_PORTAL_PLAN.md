@@ -322,3 +322,14 @@ This architecture gives three clear experiences with strict permission boundarie
 - Advertisers buy and optimize demand.
 - Bot Developers supply inventory and monitor monetization.
 - Admin runs trust, quality, and economics across the entire platform.
+
+## Development Test Credentials
+
+Use these credentials in `/app/login` for local role testing:
+
+- Advertiser test user:
+  - Email: `advertiser.demo@local.test`
+  - Password: `Advertiser123!`
+- Bot developer test user:
+  - Email: `botdev.demo@local.test`
+  - Password: `BotDeveloper123!`

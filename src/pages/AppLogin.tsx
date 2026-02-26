@@ -100,7 +100,7 @@ const AppLogin = () => {
               </button>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              In this phase, emails containing <code>admin</code> or <code>owner</code> auto-provision admin workspace.
+              Dev test users are available in docs for advertiser and bot developer portal testing.
             </p>
           </CardContent>
         </Card>
