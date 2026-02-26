@@ -2,6 +2,31 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Stability + security + maintainability fix pass)
+
+- Security:
+  - protected `GET /api/leads` with admin key auth.
+  - added admin portal workspace middleware for role-checked portal admin API access.
+- App role flow:
+  - enabled admin workspace bootstrap in `/api/me/create-workspace` with `x-admin-key`.
+  - expanded `/app/choose-workspace` to support admin workspace creation and additional workspace creation after onboarding.
+- Admin portal:
+  - added real overview API endpoint: `GET /api/admin/portal/overview`.
+  - updated `/app/admin` portal page to load live overview metrics.
+- SDK:
+  - updated React hook/component options to support `baseUrl`.
+  - React hook now rebuilds SDK instance when config changes.
+- Frontend performance:
+  - migrated page routes to lazy-loading with `React.lazy` + `Suspense`.
+  - added manual vendor chunk splitting in Vite config.
+- Testing and reliability:
+  - added server tests for auth/security and role mapping helpers.
+  - added `server` test script (`npm --prefix server run test`).
+- Ops and docs:
+  - made `scripts/prism_stack.sh` project-path portable.
+  - refreshed `docs/DEEP_DIVE.md` to match the current architecture.
+  - aligned docs for admin requirements and protected lead listing.
+
 ## 2026-02-26 (Security hardening pass)
 
 - Hardened backend request handling:

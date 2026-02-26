@@ -1,9 +1,10 @@
 import "dotenv/config";
-import crypto from "node:crypto";
 import cors from "cors";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
+import { mapMembershipRoleToPortalRole, isAdminMembershipRole } from "./portal-roles.js";
+import { getBearerToken, secureEqual } from "./security-utils.js";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -151,19 +152,9 @@ const selectWorkspaceSchema = z.object({
 });
 
 const createWorkspaceSchema = z.object({
-  type: z.enum(["advertiser", "publisher"]),
+  type: z.enum(["advertiser", "publisher", "admin"]),
   name: z.string().trim().min(2).max(120).optional(),
 });
-
-const getBearerToken = (authorizationHeader = "") =>
-  authorizationHeader.startsWith("Bearer ") ? authorizationHeader.slice(7).trim() : "";
-
-const secureEqual = (left = "", right = "") => {
-  const a = Buffer.from(String(left));
-  const b = Buffer.from(String(right));
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
-};
 
 const requireSdkKey = (req, res, next) => {
   const token = getBearerToken(req.headers.authorization);
@@ -218,12 +209,6 @@ const roleToWorkspaceCopy = {
     title: "Platform Admin",
     description: "Operate moderation, risk, finance, and platform-wide controls.",
   },
-};
-
-const mapMembershipRoleToPortalRole = (role) => {
-  if (role.startsWith("advertiser_")) return "advertiser";
-  if (role.startsWith("publisher_")) return "publisher";
-  return "admin";
 };
 
 const readUserEmail = (req) => String(req.headers["x-user-email"] || "").trim().toLowerCase();
@@ -381,6 +366,15 @@ const resolvePortalWorkspace = async (userId) => {
     organization: selectedMembership.organization,
     membership: selectedMembership,
   };
+};
+
+const requireAdminPortalUser = async (req, res, next) => {
+  const workspace = await resolvePortalWorkspace(req.portalUser.id);
+  if (!workspace || workspace.organization.type !== "admin" || !isAdminMembershipRole(workspace.membership.role)) {
+    return res.status(403).json({ error: "Admin workspace required" });
+  }
+  req.portalWorkspace = workspace;
+  return next();
 };
 
 const seedAdvertiserWorkspaceMockData = async ({ organization }) => {
@@ -634,7 +628,16 @@ app.post("/api/me/create-workspace", requirePortalUser, async (req, res) => {
   const defaultName =
     type === "advertiser"
       ? `${req.portalUser.name} Advertiser Workspace`
-      : `${req.portalUser.name} Bot Developer Workspace`;
+      : type === "publisher"
+        ? `${req.portalUser.name} Bot Developer Workspace`
+        : `${req.portalUser.name} Admin Workspace`;
+
+  if (type === "admin") {
+    const suppliedKey = String(req.headers["x-admin-key"] || "");
+    if (!suppliedKey || !secureEqual(suppliedKey, adminApiKey)) {
+      return res.status(401).json({ error: "Unauthorized admin key for admin workspace bootstrap" });
+    }
+  }
 
   try {
     const organization = await prisma.organization.create({
@@ -648,7 +651,12 @@ app.post("/api/me/create-workspace", requirePortalUser, async (req, res) => {
       data: {
         userId: req.portalUser.id,
         organizationId: organization.id,
-        role: type === "advertiser" ? "advertiser_owner" : "publisher_owner",
+        role:
+          type === "advertiser"
+            ? "advertiser_owner"
+            : type === "publisher"
+              ? "publisher_owner"
+              : "super_admin",
       },
     });
 
@@ -1076,7 +1084,7 @@ app.post("/api/leads", async (req, res) => {
   }
 });
 
-app.get("/api/leads", async (_req, res) => {
+app.get("/api/leads", requireAdminKey, async (_req, res) => {
   try {
     const leads = await prisma.lead.findMany({
       orderBy: { createdAt: "desc" },
@@ -1086,6 +1094,30 @@ app.get("/api/leads", async (_req, res) => {
   } catch (err) {
     console.error("Lead list failed", err);
     return res.status(500).json({ error: "Failed to fetch leads" });
+  }
+});
+
+app.get("/api/admin/portal/overview", requirePortalUser, requireAdminPortalUser, async (_req, res) => {
+  try {
+    const [campaignsPending, activeAds, totalEvents, totalLeads] = await Promise.all([
+      prisma.ad.count({ where: { isActive: false } }),
+      prisma.ad.count({ where: { isActive: true } }),
+      prisma.adEvent.count(),
+      prisma.lead.count(),
+    ]);
+
+    return res.json({
+      campaignsPending,
+      botReviewsPending: 0,
+      riskAlerts: 0,
+      incidentsOpen: 0,
+      activeAds,
+      totalEvents,
+      totalLeads,
+    });
+  } catch (err) {
+    console.error("Admin portal overview failed", err);
+    return res.status(500).json({ error: "Failed to load admin portal overview" });
   }
 });
 

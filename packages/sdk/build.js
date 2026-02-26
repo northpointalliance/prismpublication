@@ -165,6 +165,7 @@ export interface BotGridAdProps {
   botId: string;
   position?: 'inline' | 'sidebar' | 'floating';
   adFormat?: 'text' | 'card' | 'banner';
+  baseUrl?: string;
   topic?: string;
   userId?: string;
   frequency?: number;

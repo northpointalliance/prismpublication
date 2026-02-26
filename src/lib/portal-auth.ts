@@ -14,7 +14,7 @@ export interface WorkspaceOption {
   description: string;
 }
 
-export type WorkspaceKind = "advertiser" | "publisher";
+export type WorkspaceKind = "advertiser" | "publisher" | "admin";
 
 export interface EntryContextResponse {
   user: PortalUser;

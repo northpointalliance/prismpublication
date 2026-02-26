@@ -21,7 +21,7 @@ interface PortalAuthContextValue {
   signUp: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   selectWorkspace: (workspaceId: string) => Promise<void>;
-  createWorkspace: (type: WorkspaceKind, name?: string) => Promise<void>;
+  createWorkspace: (type: WorkspaceKind, name?: string, adminKey?: string) => Promise<void>;
   refreshEntryContext: () => Promise<void>;
 }
 
@@ -218,8 +218,13 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
     applyEntryContext(entry);
   };
 
-  const createWorkspace = async (type: WorkspaceKind, name?: string) => {
+  const createWorkspace = async (type: WorkspaceKind, name?: string, adminKey?: string) => {
     const email = await readActiveEmail();
+    const headers = await getPortalHeaders(email);
+    if (type === "admin" && adminKey?.trim()) {
+      headers["x-admin-key"] = adminKey.trim();
+    }
+
     const entry = await apiRequest<EntryContextResponse>(
       "/me/create-workspace",
       {
@@ -229,7 +234,7 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
           ...(name?.trim() ? { name: name.trim() } : {}),
         }),
       },
-      await getPortalHeaders(email),
+      headers,
     );
     applyEntryContext(entry);
   };

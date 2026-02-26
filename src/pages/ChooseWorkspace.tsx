@@ -1,15 +1,18 @@
 import { Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { routeForRole, WorkspaceKind, WorkspaceOption } from "@/lib/portal-auth";
-import { Building2, Bot, ArrowRight } from "lucide-react";
+import { runtimeConfig } from "@/lib/api";
+import { Building2, Bot, ArrowRight, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 const ChooseWorkspace = () => {
   const navigate = useNavigate();
   const { user, loading, workspaces, selectWorkspace, createWorkspace, currentWorkspaceId } = usePortalAuth();
   const [submitting, setSubmitting] = useState<WorkspaceKind | "select" | null>(null);
+  const [adminKey, setAdminKey] = useState(runtimeConfig.adminKey || "");
   const [error, setError] = useState("");
 
   if (!loading && !user) {
@@ -30,12 +33,15 @@ const ChooseWorkspace = () => {
     }
   };
 
-  const createFirstWorkspace = async (type: WorkspaceKind) => {
+  const createNewWorkspace = async (type: WorkspaceKind) => {
     setSubmitting(type);
     setError("");
     try {
-      await createWorkspace(type);
-      navigate(type === "advertiser" ? "/app/advertiser" : "/app/publisher", { replace: true });
+      if (type === "admin" && !adminKey.trim()) {
+        throw new Error("Admin key is required to create an admin workspace.");
+      }
+      await createWorkspace(type, undefined, type === "admin" ? adminKey : undefined);
+      navigate(routeForRole(type), { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to create workspace";
       setError(message);
@@ -68,34 +74,77 @@ const ChooseWorkspace = () => {
         )}
 
         {workspaces.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {workspaces.map((workspace) => (
-              <Card
-                key={workspace.id}
-                className={`border-border/80 bg-card/90 shadow-sm ${
-                  currentWorkspaceId === workspace.id ? "ring-2 ring-primary/40" : ""
-                }`}
-              >
-                <CardHeader>
-                  <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">{workspace.role}</p>
-                  <CardTitle className="text-2xl font-bold">{workspace.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="mb-4 text-sm text-muted-foreground">{workspace.description}</p>
+          <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-3">
+              {workspaces.map((workspace) => (
+                <Card
+                  key={workspace.id}
+                  className={`border-border/80 bg-card/90 shadow-sm ${
+                    currentWorkspaceId === workspace.id ? "ring-2 ring-primary/40" : ""
+                  }`}
+                >
+                  <CardHeader>
+                    <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">{workspace.role}</p>
+                    <CardTitle className="text-2xl font-bold">{workspace.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="mb-4 text-sm text-muted-foreground">{workspace.description}</p>
+                    <Button
+                      variant="hero"
+                      className="w-full"
+                      disabled={submitting !== null}
+                      onClick={() => void onSelect(workspace)}
+                    >
+                      {submitting === "select" ? "Opening..." : `Open ${workspace.title}`}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Card className="border-border/80 bg-card/90 shadow-sm">
+              <CardHeader>
+                <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Expand Access</p>
+                <CardTitle className="text-2xl font-bold">Create Another Workspace</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Add advertiser, bot developer, or admin access under this account.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="hero-outline"
+                    disabled={submitting !== null}
+                    onClick={() => void createNewWorkspace("advertiser")}
+                  >
+                    Create Advertiser
+                  </Button>
+                  <Button
+                    variant="hero-outline"
+                    disabled={submitting !== null}
+                    onClick={() => void createNewWorkspace("publisher")}
+                  >
+                    Create Bot Developer
+                  </Button>
                   <Button
                     variant="hero"
-                    className="w-full"
                     disabled={submitting !== null}
-                    onClick={() => void onSelect(workspace)}
+                    onClick={() => void createNewWorkspace("admin")}
                   >
-                    {submitting === "select" ? "Opening..." : `Open ${workspace.title}`}
+                    Create Admin
                   </Button>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+                <Input
+                  type="password"
+                  placeholder="Admin key (required for admin workspace)"
+                  value={adminKey}
+                  onChange={(event) => setAdminKey(event.target.value)}
+                />
+              </CardContent>
+            </Card>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <Card className="border-border/80 bg-card/90 shadow-sm">
               <CardHeader>
                 <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
@@ -112,7 +161,7 @@ const ChooseWorkspace = () => {
                   variant="hero"
                   className="w-full"
                   disabled={submitting !== null}
-                  onClick={() => void createFirstWorkspace("advertiser")}
+                  onClick={() => void createNewWorkspace("advertiser")}
                 >
                   {submitting === "advertiser" ? "Creating..." : "Continue as Advertiser"}
                   <ArrowRight className="h-4 w-4" />
@@ -136,9 +185,39 @@ const ChooseWorkspace = () => {
                   variant="hero"
                   className="w-full"
                   disabled={submitting !== null}
-                  onClick={() => void createFirstWorkspace("publisher")}
+                  onClick={() => void createNewWorkspace("publisher")}
                 >
                   {submitting === "publisher" ? "Creating..." : "Continue as Bot Developer"}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/80 bg-card/90 shadow-sm">
+              <CardHeader>
+                <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Platform Side</p>
+                <CardTitle className="text-2xl font-bold">Admin Workspace</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Operate moderation, risk, finance, and platform controls.
+                </p>
+                <Input
+                  type="password"
+                  placeholder="Admin key required"
+                  value={adminKey}
+                  onChange={(event) => setAdminKey(event.target.value)}
+                />
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  disabled={submitting !== null}
+                  onClick={() => void createNewWorkspace("admin")}
+                >
+                  {submitting === "admin" ? "Creating..." : "Continue as Admin"}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>

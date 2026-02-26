@@ -57,8 +57,9 @@ API default:
 - `POST /api/ads` (SDK ad serving)
 - `POST /api/track/:eventType` (SDK events: impression/click/revenue)
 - `POST /api/leads`
-- `GET /api/leads`
+- `GET /api/leads` (admin key required)
 - `GET /api/admin/overview` (admin key required)
+- `GET /api/admin/portal/overview` (admin workspace session required)
 - `GET/POST /api/admin/ads` (admin key required)
 - `PATCH /api/admin/ads/:id` (admin key required)
 - `GET /api/admin/events` (admin key required)

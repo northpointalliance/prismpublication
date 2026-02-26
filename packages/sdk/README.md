@@ -53,6 +53,7 @@ function ChatMessage() {
   const { ad, loading, refresh } = useBotGridAd({
     apiKey: 'YOUR_API_KEY',
     botId: 'your-bot-id',
+    baseUrl: 'http://localhost:8787/api',
     topic: 'technology',
     userId: 'user-123',
     frequency: 5
@@ -76,6 +77,7 @@ function App() {
     <BotGridAdComponent
       apiKey="YOUR_API_KEY"
       botId="your-bot-id"
+      baseUrl="http://localhost:8787/api"
       topic="tech"
       userId="user-123"
       frequency={5}

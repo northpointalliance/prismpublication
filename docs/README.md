@@ -59,6 +59,7 @@ npm run build
 npm run preview
 npm run lint
 npm run test
+npm run test:server
 ```
 
 ### Local DB + API (new)
@@ -91,8 +92,9 @@ There are no hardcoded portal test credentials now.
 
 Use `/app/login` and:
 - Create a new account.
-- On first login, choose Advertiser or Bot Developer.
+- On first login, choose Advertiser, Bot Developer, or Admin.
 - The selected role creates the first workspace automatically.
+- Admin workspace creation requires `ADMIN_API_KEY` and is intended for platform operators.
 - Dashboard pages load mock records through real API endpoints backed by database rows.
 
 ## Security Baseline
@@ -100,6 +102,7 @@ Use `/app/login` and:
 - Local credential files (`.env`, `server/.env`) are intentionally not tracked.
 - Use `.env.example` and `server/.env.example` as templates.
 - Portal API calls are expected to include Supabase bearer session tokens for authenticated workspace routes.
+- `GET /api/leads` is admin-key protected (same key family as other admin endpoints).
 
 ## Documentation Map
 

@@ -8,6 +8,35 @@ Replace the single advertiser-only plan with a full platform plan that supports:
 
 Use one unified login entrypoint, then route users by selected role/workspace.
 
+## Current Implementation Status (2026-02-26)
+
+Implemented now:
+- Unified app login and workspace picker:
+  - `/app/login`
+  - `/app/choose-workspace`
+- Workspace creation supports:
+  - Advertiser
+  - Bot Developer
+  - Admin (requires `x-admin-key` / `ADMIN_API_KEY`)
+- Role-gated app routes:
+  - `/app/advertiser`
+  - `/app/publisher`
+  - `/app/admin`
+- Live backend dashboard APIs:
+  - `GET /api/advertiser/dashboard`
+  - `GET /api/publisher/dashboard`
+  - `GET /api/admin/portal/overview` (admin workspace session required)
+- Security hardening in place:
+  - session bearer validation for portal routes
+  - admin-key protection for admin key routes
+  - `GET /api/leads` admin-key protected
+
+Still planned / partial:
+- deeper moderation/review queue workflows
+- risk tooling and incident management UX
+- finance reconciliation workflows
+- granular role administration UX
+
 ## Portal Overview
 
 ## 1) Advertiser Portal

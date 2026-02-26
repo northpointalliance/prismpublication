@@ -4,13 +4,13 @@
  * React hooks for integrating BotGrid ads into React applications
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BotGridAds, type BotGridConfig, type Ad, type FormattedAd } from './index';
 
 // Re-export types
 export type { BotGridConfig, Ad, FormattedAd };
 
-export interface UseBotGridAdOptions extends Omit<BotGridConfig, 'baseUrl'> {
+export interface UseBotGridAdOptions extends BotGridConfig {
   /** Topic for ad targeting */
   topic?: string;
   /** User ID for tracking */
@@ -54,6 +54,7 @@ export function useBotGridAd(options: UseBotGridAdOptions) {
     botId,
     position = 'inline',
     adFormat = 'text',
+    baseUrl,
     topic,
     userId,
     frequency = 5,
@@ -63,9 +64,14 @@ export function useBotGridAd(options: UseBotGridAdOptions) {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [sdk] = useState<BotGridAds>(() => {
-    return new BotGridAds({ apiKey, botId, position, adFormat });
-  });
+  const sdk = useMemo(() => {
+    return new BotGridAds({ apiKey, botId, position, adFormat, baseUrl });
+  }, [apiKey, botId, position, adFormat, baseUrl]);
+
+  useEffect(() => {
+    setAd(null);
+    setError(null);
+  }, [sdk]);
 
   const fetchAd = useCallback(async () => {
     setLoading(true);
@@ -156,6 +162,8 @@ export interface BotGridAdProps {
   position?: 'inline' | 'sidebar' | 'floating';
   /** Ad format type */
   adFormat?: 'text' | 'card' | 'banner';
+  /** Base API URL */
+  baseUrl?: string;
   /** Topic for ad targeting */
   topic?: string;
   /** User ID for tracking */
@@ -183,6 +191,7 @@ export function BotGridAdComponent({
   botId,
   position = 'inline',
   adFormat = 'text',
+  baseUrl,
   topic,
   userId,
   frequency = 5,
@@ -194,11 +203,12 @@ export function BotGridAdComponent({
   emptyComponent,
   className,
 }: BotGridAdProps) {
-  const { ad, formattedAd, loading, error, refresh } = useBotGridAd({
+  const { ad, formattedAd, loading, error } = useBotGridAd({
     apiKey,
     botId,
     position,
     adFormat,
+    baseUrl,
     topic,
     userId,
     frequency,
