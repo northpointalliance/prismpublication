@@ -60,7 +60,7 @@ const SDK = () => {
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li>Use frequency guards (`shouldShowAd`) to avoid over-serving.</li>
               <li>Log and monitor `trackImpression` / `trackClick` for performance.</li>
-              <li>Use `/admin` to manage ad inventory and review event logs.</li>
+              <li>Use `/notadmin` to manage ad inventory and review event logs.</li>
             </ul>
 
             <div className="mt-7 rounded-xl border border-border bg-background p-4">

@@ -120,7 +120,7 @@ const AdminPortal = () => {
             <p className="text-sm text-muted-foreground">
               Existing campaign control panel remains available for ad inventory operations.
             </p>
-            <Link to="/admin">
+            <Link to="/notadmin">
               <Button className="mt-4" variant="hero-outline">
                 Open Existing Panel
               </Button>

@@ -347,20 +347,32 @@ const ensureSeedPublisherBotRecords = async ({ organizationId, seedBots }) => {
   }
 };
 
-const createPublisherSdkKey = async ({ botId, label }) => {
+const createPublisherSdkKey = async ({ botId, label, revokeExisting = false }) => {
   const token = createSdkToken();
   const tokenHash = hashSecret(token);
   const prefix = token.slice(0, 10);
   const last4 = token.slice(-4);
 
-  const created = await prisma.botSdkKey.create({
-    data: {
-      botId,
-      label,
-      tokenHash,
-      prefix,
-      last4,
-    },
+  const created = await prisma.$transaction(async (tx) => {
+    if (revokeExisting) {
+      await tx.botSdkKey.updateMany({
+        where: {
+          botId,
+          revokedAt: null,
+        },
+        data: { revokedAt: new Date() },
+      });
+    }
+
+    return tx.botSdkKey.create({
+      data: {
+        botId,
+        label,
+        tokenHash,
+        prefix,
+        last4,
+      },
+    });
   });
 
   return {
@@ -1373,6 +1385,42 @@ app.patch("/api/publisher/bots/:id", requirePortalUser, async (req, res) => {
   }
 });
 
+app.delete("/api/publisher/bots/:id", requirePortalUser, async (req, res) => {
+  try {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    const existing = await prisma.publisherBot.findFirst({
+      where: {
+        id: req.params.id,
+        organizationId: workspace.organization.id,
+      },
+      select: { id: true, name: true, publicId: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: "Bot not found" });
+    }
+
+    await prisma.publisherBot.delete({
+      where: { id: existing.id },
+    });
+
+    return res.json({
+      success: true,
+      deleted: {
+        id: existing.id,
+        name: existing.name,
+        botId: existing.publicId,
+      },
+    });
+  } catch (err) {
+    console.error("Publisher bot delete failed", err);
+    return res.status(500).json({ error: "Failed to delete bot" });
+  }
+});
+
 app.post("/api/publisher/bots/:id/keys", requirePortalUser, async (req, res) => {
   const parsed = publisherCreateSdkKeySchema.safeParse(req.body || {});
   if (!parsed.success) {
@@ -1402,6 +1450,7 @@ app.post("/api/publisher/bots/:id/keys", requirePortalUser, async (req, res) => 
     const key = await createPublisherSdkKey({
       botId: bot.id,
       label: parsed.data.label,
+      revokeExisting: true,
     });
     return res.status(201).json({
       botId: bot.publicId,
