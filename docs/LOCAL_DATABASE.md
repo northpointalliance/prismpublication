@@ -53,7 +53,15 @@ API default:
 - `POST /api/me/default-workspace` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `POST /api/me/switch-organization` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `GET /api/advertiser/dashboard` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/advertiser/campaigns` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/advertiser/campaigns` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `PATCH /api/advertiser/campaigns/:id` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `GET /api/publisher/dashboard` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/publisher/bots` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/publisher/bots` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `PATCH /api/publisher/bots/:id` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/publisher/bots/:id/keys` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/publisher/bots/:id/metrics` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `POST /api/demo/ads` (public demo ad fetch route with rate limiting)
 - `POST /api/demo/track/:eventType` (public demo tracking route, impression/click only, rate limited)
 - `POST /api/ads` (SDK ad serving)
@@ -70,6 +78,7 @@ API default:
 Required keys (from `server/.env`):
 
 - `BOTGRID_API_KEY` for SDK requests (`Authorization: Bearer ...`)
+- Bot-specific SDK keys can be created from `/app/publisher` and used instead of the master key.
 - `ADMIN_API_KEY` for admin endpoints (`x-admin-key`)
 - `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for backend token verification
 - Optional distributed rate limiting:

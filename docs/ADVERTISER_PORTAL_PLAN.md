@@ -26,10 +26,21 @@ Implemented now:
   - `GET /api/advertiser/dashboard`
   - `GET /api/publisher/dashboard`
   - `GET /api/admin/portal/overview` (admin workspace session required)
+- Advertiser self-serve campaign management:
+  - `GET /api/advertiser/campaigns`
+  - `POST /api/advertiser/campaigns`
+  - `PATCH /api/advertiser/campaigns/:id`
+- Bot developer self-serve bot/key management:
+  - `GET /api/publisher/bots`
+  - `POST /api/publisher/bots`
+  - `PATCH /api/publisher/bots/:id`
+  - `POST /api/publisher/bots/:id/keys`
+  - `GET /api/publisher/bots/:id/metrics`
 - Security hardening in place:
   - session bearer validation for portal routes
   - admin-key protection for admin key routes
   - `GET /api/leads` admin-key protected
+  - bot-scoped SDK key validation for `/api/ads` and `/api/track/:eventType`
 
 Still planned / partial:
 - deeper moderation/review queue workflows

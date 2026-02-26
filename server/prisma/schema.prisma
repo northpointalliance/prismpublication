@@ -51,6 +51,18 @@ enum OrganizationMemberRole {
   super_admin
 }
 
+enum BotEnvironment {
+  development
+  staging
+  production
+}
+
+enum BotHealth {
+  healthy
+  warning
+  degraded
+}
+
 model Lead {
   id        String     @id @default(cuid())
   role      LeadRole   @default(general)
@@ -88,6 +100,7 @@ model Organization {
   type             OrganizationType
   members          OrganizationMember[]
   usersWithDefault User[]               @relation("DefaultOrganization")
+  publisherBots    PublisherBot[]
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
 
@@ -148,4 +161,43 @@ model AdEvent {
   @@index([adId, createdAt])
   @@index([botId, createdAt])
   @@map("ad_events")
+}
+
+model PublisherBot {
+  id              String         @id @default(cuid())
+  organizationId  String
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name            String
+  publicId        String         @unique
+  environment     BotEnvironment @default(production)
+  health          BotHealth      @default(healthy)
+  requests7d      Int            @default(0)
+  fillRateHint    Float          @default(0)
+  sdkErrorsHint   Int            @default(0)
+  placementPolicy Json?
+  isActive        Boolean        @default(true)
+  sdkKeys         BotSdkKey[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, isActive])
+  @@map("publisher_bots")
+}
+
+model BotSdkKey {
+  id        String       @id @default(cuid())
+  botId     String
+  bot       PublisherBot @relation(fields: [botId], references: [id], onDelete: Cascade)
+  label     String
+  tokenHash String       @unique
+  prefix    String
+  last4     String
+  revokedAt DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([botId, createdAt])
+  @@index([botId, revokedAt])
+  @@map("bot_sdk_keys")
 }

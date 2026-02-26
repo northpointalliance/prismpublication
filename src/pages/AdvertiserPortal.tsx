@@ -3,6 +3,7 @@ import PortalShell from "@/components/portal/PortalShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
 import { getPortalHeaders } from "@/lib/portal-api";
@@ -27,45 +28,136 @@ interface AdvertiserDashboardResponse {
   }>;
 }
 
+interface AdvertiserCampaignDraft {
+  title: string;
+  description: string;
+  ctaText: string;
+  clickUrl: string;
+  imageUrl: string;
+  topics: string;
+  format: "text" | "card" | "banner";
+  weight: string;
+}
+
 const formatCurrency = (cents: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format((cents || 0) / 100);
+
+const emptyDraft: AdvertiserCampaignDraft = {
+  title: "",
+  description: "",
+  ctaText: "",
+  clickUrl: "",
+  imageUrl: "",
+  topics: "ai, performance",
+  format: "card",
+  weight: "1",
+};
 
 const AdvertiserPortal = () => {
   const { user } = usePortalAuth();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [data, setData] = useState<AdvertiserDashboardResponse | null>(null);
+  const [draft, setDraft] = useState<AdvertiserCampaignDraft>(emptyDraft);
+  const [notice, setNotice] = useState("");
+
+  const loadDashboard = async (email: string, cancelledRef?: { current: boolean }) => {
+    setLoading(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const headers = await getPortalHeaders(email);
+      const response = await apiRequest<AdvertiserDashboardResponse>("/advertiser/dashboard", undefined, headers);
+      if (!cancelledRef?.current) {
+        setData(response);
+      }
+    } catch (err) {
+      if (!cancelledRef?.current) {
+        const message = err instanceof Error ? err.message : "Failed to load advertiser data";
+        setError(message);
+      }
+    } finally {
+      if (!cancelledRef?.current) {
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!user?.email) return;
 
-    let cancelled = false;
-    setLoading(true);
-    setError("");
-
-    getPortalHeaders(user.email)
-      .then((headers) => apiRequest<AdvertiserDashboardResponse>("/advertiser/dashboard", undefined, headers))
-      .then((response) => {
-        if (!cancelled) {
-          setData(response);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Failed to load advertiser data";
-          setError(message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+    const cancelledRef = { current: false };
+    void loadDashboard(user.email, cancelledRef);
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
     };
   }, [user?.email]);
+
+  const createCampaign = async () => {
+    if (!user?.email) return;
+    setSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const headers = await getPortalHeaders(user.email);
+      await apiRequest(
+        "/advertiser/campaigns",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            title: draft.title,
+            description: draft.description,
+            ctaText: draft.ctaText,
+            clickUrl: draft.clickUrl,
+            imageUrl: draft.imageUrl || undefined,
+            topics: draft.topics
+              .split(",")
+              .map((value) => value.trim())
+              .filter(Boolean),
+            format: draft.format,
+            weight: Number(draft.weight || 1),
+          }),
+        },
+        headers,
+      );
+      setDraft(emptyDraft);
+      setNotice("Campaign created in review state.");
+      await loadDashboard(user.email);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create campaign");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleCampaign = async (campaignId: string, nextLiveState: boolean) => {
+    if (!user?.email) return;
+    setSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const headers = await getPortalHeaders(user.email);
+      await apiRequest(
+        `/advertiser/campaigns/${campaignId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ isActive: nextLiveState }),
+        },
+        headers,
+      );
+      setNotice(nextLiveState ? "Campaign is now live." : "Campaign moved to review.");
+      await loadDashboard(user.email);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update campaign");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const summaryCards = useMemo(() => {
     if (!data) {
@@ -128,6 +220,16 @@ const AdvertiserPortal = () => {
                       <p>7d CTR: {campaign.ctr7d.toFixed(2)}%</p>
                       <p>Weight: {campaign.weight}</p>
                     </div>
+                    <div className="mt-3">
+                      <Button
+                        size="sm"
+                        variant={campaign.status === "Live" ? "outline" : "hero-outline"}
+                        disabled={saving}
+                        onClick={() => void toggleCampaign(campaign.id, campaign.status !== "Live")}
+                      >
+                        {campaign.status === "Live" ? "Move to Review" : "Go Live"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 {!data?.campaigns?.length && (
@@ -135,22 +237,68 @@ const AdvertiserPortal = () => {
                 )}
               </div>
             )}
-            <Button className="mt-4" variant="hero">
-              New Campaign
-            </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Budget and Billing</CardTitle>
+            <CardTitle className="text-xl font-bold">Create Campaign</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Set daily caps, monitor pacing, and keep campaigns within spend targets.
-            </p>
-            <Button className="mt-4" variant="hero-outline">
-              Open Billing
+          <CardContent className="space-y-3">
+            <Input
+              placeholder="Title"
+              value={draft.title}
+              onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))}
+            />
+            <Input
+              placeholder="Description"
+              value={draft.description}
+              onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input
+                placeholder="CTA text"
+                value={draft.ctaText}
+                onChange={(event) => setDraft((prev) => ({ ...prev, ctaText: event.target.value }))}
+              />
+              <Input
+                placeholder="Click URL"
+                value={draft.clickUrl}
+                onChange={(event) => setDraft((prev) => ({ ...prev, clickUrl: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+              <Input
+                placeholder="Topics (comma separated)"
+                value={draft.topics}
+                onChange={(event) => setDraft((prev) => ({ ...prev, topics: event.target.value }))}
+              />
+              <select
+                className="h-10 rounded-full border border-border bg-background px-4 text-sm"
+                value={draft.format}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, format: event.target.value as AdvertiserCampaignDraft["format"] }))
+                }
+              >
+                <option value="card">Card</option>
+                <option value="text">Text</option>
+                <option value="banner">Banner</option>
+              </select>
+              <Input
+                className="w-24"
+                placeholder="Weight"
+                value={draft.weight}
+                onChange={(event) => setDraft((prev) => ({ ...prev, weight: event.target.value }))}
+              />
+            </div>
+            <Input
+              placeholder="Image URL (optional)"
+              value={draft.imageUrl}
+              onChange={(event) => setDraft((prev) => ({ ...prev, imageUrl: event.target.value }))}
+            />
+            {notice && <p className="text-xs text-emerald-700">{notice}</p>}
+            <Button className="w-full" variant="hero" disabled={saving} onClick={() => void createCampaign()}>
+              {saving ? "Saving..." : "Create Campaign"}
             </Button>
           </CardContent>
         </Card>

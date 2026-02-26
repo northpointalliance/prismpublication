@@ -8,6 +8,18 @@ BotGrid Ad Network SDK for AI Chatbots - Integrate ads into your AI and start mo
 npm install @botgrid/sdk
 ```
 
+## Getting Credentials
+
+From the Bot Developer portal (`/app/publisher`):
+
+1. Create or select a bot.
+2. Copy that bot's `botId`.
+3. Create an SDK key (full token is shown only at creation time).
+4. Use:
+   - `apiKey` = SDK key token
+   - `botId` = portal bot ID
+   - `baseUrl` = your API base (for local: `http://localhost:8787/api`)
+
 ## Quick Start
 
 ```javascript

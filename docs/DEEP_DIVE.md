@@ -76,6 +76,8 @@ Core entities:
 - `User`
 - `Organization` (`advertiser`, `publisher`, `admin`)
 - `OrganizationMember` (role-scoped membership)
+- `PublisherBot`
+- `BotSdkKey`
 
 Portal role mapping:
 
@@ -107,10 +109,18 @@ Shared auth/workspace:
 Advertiser:
 
 - `GET /api/advertiser/dashboard`
+- `GET /api/advertiser/campaigns`
+- `POST /api/advertiser/campaigns`
+- `PATCH /api/advertiser/campaigns/:id`
 
 Publisher:
 
 - `GET /api/publisher/dashboard`
+- `GET /api/publisher/bots`
+- `POST /api/publisher/bots`
+- `PATCH /api/publisher/bots/:id`
+- `POST /api/publisher/bots/:id/keys`
+- `GET /api/publisher/bots/:id/metrics`
 
 Admin:
 
@@ -125,6 +135,8 @@ SDK and tracking:
 
 - `POST /api/ads`
 - `POST /api/track/:eventType`
+- Supports both platform master SDK key and bot-scoped SDK keys.
+- Bot-scoped keys are restricted to their own `botId`.
 
 Demo runtime:
 

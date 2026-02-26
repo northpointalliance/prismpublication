@@ -2,6 +2,31 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Advertiser + bot developer self-serve operations)
+
+- Advertiser portal:
+  - added campaign self-serve APIs:
+    - `GET /api/advertiser/campaigns`
+    - `POST /api/advertiser/campaigns`
+    - `PATCH /api/advertiser/campaigns/:id`
+  - updated `/app/advertiser` UI to create campaigns and toggle Review/Live state.
+- Bot developer portal:
+  - added bot management APIs:
+    - `GET /api/publisher/bots`
+    - `POST /api/publisher/bots`
+    - `PATCH /api/publisher/bots/:id`
+    - `POST /api/publisher/bots/:id/keys`
+    - `GET /api/publisher/bots/:id/metrics`
+  - updated `/app/publisher` UI to register bots and rotate SDK keys.
+- SDK key model and auth:
+  - added Prisma models for publisher bots and SDK keys.
+  - SDK auth now supports master key and bot-specific keys.
+  - bot-specific SDK keys are enforced to their own `botId` for ad fetch/track endpoints.
+- Publisher dashboard enrichment:
+  - dashboard now incorporates persisted bot registry + active key metadata.
+- Docs:
+  - refreshed setup/portal docs to include new self-serve flows.
+
 ## 2026-02-26 (CI + rate limiting + RBAC hardening)
 
 - Authorization and role safety:

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import crypto from "node:crypto";
 import cors from "cors";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
@@ -149,12 +150,223 @@ const createWorkspaceSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
 });
 
-const requireSdkKey = (req, res, next) => {
+const advertiserCampaignCreateSchema = z.object({
+  title: z.string().trim().min(4).max(140),
+  description: z.string().trim().min(8).max(400),
+  ctaText: z.string().trim().min(2).max(60),
+  clickUrl: httpUrlSchema,
+  imageUrl: httpUrlSchema.optional(),
+  topics: z.array(z.string().trim().min(1).max(60)).default([]),
+  format: z.enum(["text", "card", "banner"]).default("card"),
+  weight: z.number().int().min(1).max(100).default(1),
+  isActive: z.boolean().optional(),
+});
+
+const advertiserCampaignUpdateSchema = advertiserCampaignCreateSchema
+  .pick({
+    title: true,
+    description: true,
+    ctaText: true,
+    clickUrl: true,
+    imageUrl: true,
+    topics: true,
+    format: true,
+    weight: true,
+    isActive: true,
+  })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, "At least one field is required");
+
+const publisherBotCreateSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  environment: z.enum(["development", "staging", "production"]).default("production"),
+  health: z.enum(["healthy", "warning", "degraded"]).default("healthy"),
+  placementPolicy: z.record(z.string().max(120), metadataValueSchema).optional(),
+});
+
+const publisherBotUpdateSchema = z
+  .object({
+    name: z.string().trim().min(2).max(120).optional(),
+    environment: z.enum(["development", "staging", "production"]).optional(),
+    health: z.enum(["healthy", "warning", "degraded"]).optional(),
+    isActive: z.boolean().optional(),
+    placementPolicy: z.record(z.string().max(120), metadataValueSchema).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, "At least one field is required");
+
+const publisherCreateSdkKeySchema = z.object({
+  label: z.string().trim().min(2).max(60).default("Primary"),
+});
+
+const hashSecret = (value = "") => crypto.createHash("sha256").update(String(value)).digest("hex");
+
+const createSdkToken = () => `bgsk_${crypto.randomBytes(20).toString("hex")}`;
+
+const createBotPublicId = ({ organizationId, name }) => {
+  const baseSlug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  const suffix = crypto.randomBytes(3).toString("hex");
+  return `orgbot_${organizationId}_${baseSlug || "bot"}_${suffix}`;
+};
+
+const toPublicSdkKey = (key) => ({
+  id: key.id,
+  label: key.label,
+  prefix: key.prefix,
+  last4: key.last4,
+  createdAt: key.createdAt,
+  revokedAt: key.revokedAt,
+});
+
+const requireSdkKey = async (req, res, next) => {
   const token = getBearerToken(req.headers.authorization);
-  if (!token || !secureEqual(token, sdkApiKey)) {
+  if (!token) {
     return res.status(401).json({ error: "Unauthorized SDK key" });
   }
-  return next();
+
+  if (secureEqual(token, sdkApiKey)) {
+    req.sdkAuth = { mode: "master" };
+    return next();
+  }
+
+  try {
+    const tokenHash = hashSecret(token);
+    const sdkKey = await prisma.botSdkKey.findFirst({
+      where: { tokenHash, revokedAt: null },
+      include: { bot: true },
+    });
+
+    if (!sdkKey?.bot) {
+      return res.status(401).json({ error: "Unauthorized SDK key" });
+    }
+
+    req.sdkAuth = {
+      mode: "bot",
+      botId: sdkKey.bot.id,
+      botPublicId: sdkKey.bot.publicId,
+      keyId: sdkKey.id,
+    };
+    return next();
+  } catch (err) {
+    console.error("SDK auth failed", err);
+    return res.status(500).json({ error: "Failed to validate SDK key" });
+  }
+};
+
+const ensureSdkBotScope = (req, botId) => {
+  if (req.sdkAuth?.mode !== "bot") return { ok: true };
+  if (req.sdkAuth.botPublicId !== botId) {
+    return { ok: false, status: 403, error: "SDK key is not authorized for this botId" };
+  }
+  return { ok: true };
+};
+
+const requireAdvertiserWorkspace = async (userId) => {
+  const workspace = await resolvePortalWorkspace(userId);
+  if (!workspace || workspace.organization.type !== "advertiser") {
+    return null;
+  }
+  return workspace;
+};
+
+const requirePublisherWorkspace = async (userId) => {
+  const workspace = await resolvePortalWorkspace(userId);
+  if (!workspace || workspace.organization.type !== "publisher") {
+    return null;
+  }
+  return workspace;
+};
+
+const summarizeBotMetrics = (events = [], bot) => {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  let impressions = 0;
+  let clicks = 0;
+  let revenueTodayCents = 0;
+  let metadataRequests = Number(bot?.requests7d || 0);
+  let metadataFillRate = Number(bot?.fillRateHint || 0);
+  let metadataErrors = Number(bot?.sdkErrorsHint || 0);
+  let metadataSeen = false;
+
+  for (const event of events) {
+    if (event.eventType === "impression") impressions += 1;
+    if (event.eventType === "click") clicks += 1;
+    if (event.eventType === "revenue" && event.createdAt >= todayStart) {
+      revenueTodayCents += Math.max(Number(event.amount || 0), 0);
+    }
+
+    if (!metadataSeen && event.metadata && typeof event.metadata === "object") {
+      metadataSeen = true;
+      metadataRequests = Number(event.metadata.requests7d || metadataRequests || 0);
+      metadataFillRate = Number(event.metadata.fillRate || metadataFillRate || 0);
+      metadataErrors = Number(event.metadata.sdkErrors || metadataErrors || 0);
+    }
+  }
+
+  const computedRequests = metadataRequests > 0 ? metadataRequests : Math.max(impressions, 1);
+  const computedFillRate = metadataFillRate > 0 ? metadataFillRate : (impressions / computedRequests) * 100;
+
+  return {
+    requests7d: computedRequests,
+    fillRate7d: Math.max(0, Math.min(computedFillRate, 100)),
+    revenueTodayCents,
+    sdkErrors: Math.max(0, metadataErrors),
+    impressions,
+    clicks,
+  };
+};
+
+const ensureSeedPublisherBotRecords = async ({ organizationId, seedBots }) => {
+  for (const bot of seedBots) {
+    const existing = await prisma.publisherBot.findFirst({
+      where: {
+        organizationId,
+        publicId: bot.id,
+      },
+      select: { id: true },
+    });
+    if (existing) continue;
+
+    await prisma.publisherBot.create({
+      data: {
+        organizationId,
+        name: bot.name,
+        publicId: bot.id,
+        environment: bot.environment,
+        health: bot.health,
+        requests7d: bot.requests7d,
+        fillRateHint: bot.fillRate,
+        sdkErrorsHint: bot.health === "warning" ? 1 : 0,
+      },
+    });
+  }
+};
+
+const createPublisherSdkKey = async ({ botId, label }) => {
+  const token = createSdkToken();
+  const tokenHash = hashSecret(token);
+  const prefix = token.slice(0, 10);
+  const last4 = token.slice(-4);
+
+  const created = await prisma.botSdkKey.create({
+    data: {
+      botId,
+      label,
+      tokenHash,
+      prefix,
+      last4,
+    },
+  });
+
+  return {
+    ...toPublicSdkKey(created),
+    token,
+  };
 };
 
 const requireAdminKey = (req, res, next) => {
@@ -517,15 +729,6 @@ const seedAdvertiserWorkspaceMockData = async ({ organization }) => {
 
 const seedPublisherWorkspaceMockData = async ({ organization }) => {
   const botPrefix = `orgbot_${organization.id}_`;
-  const existingEvents = await prisma.adEvent.count({
-    where: {
-      botId: {
-        startsWith: botPrefix,
-      },
-    },
-  });
-  if (existingEvents > 0) return;
-
   const bots = [
     {
       id: `${botPrefix}support-copilot`,
@@ -561,6 +764,17 @@ const seedPublisherWorkspaceMockData = async ({ organization }) => {
       clickCount: 6,
     },
   ];
+
+  await ensureSeedPublisherBotRecords({ organizationId: organization.id, seedBots: bots });
+
+  const existingEvents = await prisma.adEvent.count({
+    where: {
+      botId: {
+        startsWith: botPrefix,
+      },
+    },
+  });
+  if (existingEvents > 0) return;
 
   for (const bot of bots) {
     const events = [];
@@ -720,8 +934,8 @@ app.post("/api/me/create-workspace", requirePortalUser, async (req, res) => {
 
 app.get("/api/advertiser/dashboard", requirePortalUser, async (req, res) => {
   try {
-    const workspace = await resolvePortalWorkspace(req.portalUser.id);
-    if (!workspace || workspace.organization.type !== "advertiser") {
+    const workspace = await requireAdvertiserWorkspace(req.portalUser.id);
+    if (!workspace) {
       return res.status(403).json({ error: "Advertiser workspace required" });
     }
 
@@ -827,113 +1041,438 @@ app.get("/api/advertiser/dashboard", requirePortalUser, async (req, res) => {
 
 app.get("/api/publisher/dashboard", requirePortalUser, async (req, res) => {
   try {
-    const workspace = await resolvePortalWorkspace(req.portalUser.id);
-    if (!workspace || workspace.organization.type !== "publisher") {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
       return res.status(403).json({ error: "Bot developer workspace required" });
     }
 
     await seedWorkspaceMockData({ organization: workspace.organization });
 
-    const botPrefix = `orgbot_${workspace.organization.id}_`;
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const events = await prisma.adEvent.findMany({
+    const bots = await prisma.publisherBot.findMany({
       where: {
-        botId: {
-          startsWith: botPrefix,
-        },
-        createdAt: {
-          gte: sevenDaysAgo,
+        organizationId: workspace.organization.id,
+      },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        sdkKeys: {
+          where: { revokedAt: null },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            label: true,
+            prefix: true,
+            last4: true,
+            createdAt: true,
+            revokedAt: true,
+          },
         },
       },
-      orderBy: { createdAt: "desc" },
+    });
+
+    const botIds = bots.map((bot) => bot.publicId);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const events = botIds.length
+      ? await prisma.adEvent.findMany({
+          where: {
+            botId: { in: botIds },
+            createdAt: { gte: sevenDaysAgo },
+          },
+          orderBy: { createdAt: "desc" },
+          select: {
+            botId: true,
+            eventType: true,
+            amount: true,
+            createdAt: true,
+            metadata: true,
+          },
+          take: 3000,
+        })
+      : [];
+
+    const eventsByBotId = new Map();
+    for (const event of events) {
+      if (!eventsByBotId.has(event.botId)) eventsByBotId.set(event.botId, []);
+      eventsByBotId.get(event.botId).push(event);
+    }
+
+    const payloadBots = bots.map((bot) => {
+      const botEvents = eventsByBotId.get(bot.publicId) || [];
+      const metrics = summarizeBotMetrics(botEvents, bot);
+      const newestKey = bot.sdkKeys[0] || null;
+      return {
+        id: bot.id,
+        botId: bot.publicId,
+        name: bot.name,
+        environment: bot.environment,
+        health: bot.health,
+        requests7d: metrics.requests7d,
+        fillRate7d: metrics.fillRate7d,
+        revenueTodayCents: metrics.revenueTodayCents,
+        sdkErrors: metrics.sdkErrors,
+        isActive: bot.isActive,
+        activeKeyCount: bot.sdkKeys.length,
+        lastKeyPrefix: newestKey?.prefix || null,
+        lastKeyCreatedAt: newestKey?.createdAt || null,
+      };
+    });
+
+    const totalRequests = payloadBots.reduce((acc, bot) => acc + bot.requests7d, 0);
+    const weightedFillRate =
+      totalRequests > 0
+        ? payloadBots.reduce((acc, bot) => acc + bot.fillRate7d * bot.requests7d, 0) / totalRequests
+        : 0;
+    const revenueTodayCents = payloadBots.reduce((acc, bot) => acc + bot.revenueTodayCents, 0);
+    const sdkErrors = payloadBots.reduce((acc, bot) => acc + bot.sdkErrors, 0);
+
+    return res.json({
+      summary: {
+        registeredBots: payloadBots.length,
+        fillRate7d: weightedFillRate,
+        revenueTodayCents,
+        sdkErrors,
+      },
+      bots: payloadBots,
+    });
+  } catch (err) {
+    console.error("Publisher dashboard failed", err);
+    return res.status(500).json({ error: "Failed to load publisher dashboard" });
+  }
+});
+
+app.get("/api/advertiser/campaigns", requirePortalUser, async (req, res) => {
+  try {
+    const workspace = await requireAdvertiserWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Advertiser workspace required" });
+    }
+
+    const advertiserKey = `org:${workspace.organization.id}`;
+    const campaigns = await prisma.ad.findMany({
+      where: { advertiser: advertiserKey },
+      orderBy: { updatedAt: "desc" },
+      take: 200,
+    });
+    return res.json(campaigns);
+  } catch (err) {
+    console.error("Advertiser campaign list failed", err);
+    return res.status(500).json({ error: "Failed to fetch campaigns" });
+  }
+});
+
+app.post("/api/advertiser/campaigns", requirePortalUser, async (req, res) => {
+  const parsed = advertiserCampaignCreateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid campaign payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const workspace = await requireAdvertiserWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Advertiser workspace required" });
+    }
+
+    const advertiserKey = `org:${workspace.organization.id}`;
+    const campaign = await prisma.ad.create({
+      data: {
+        title: parsed.data.title,
+        description: parsed.data.description,
+        ctaText: parsed.data.ctaText,
+        clickUrl: parsed.data.clickUrl,
+        imageUrl: parsed.data.imageUrl,
+        advertiser: advertiserKey,
+        topics: parsed.data.topics,
+        format: parsed.data.format,
+        weight: parsed.data.weight,
+        isActive: parsed.data.isActive ?? false,
+      },
+    });
+    return res.status(201).json(campaign);
+  } catch (err) {
+    console.error("Advertiser campaign create failed", err);
+    return res.status(500).json({ error: "Failed to create campaign" });
+  }
+});
+
+app.patch("/api/advertiser/campaigns/:id", requirePortalUser, async (req, res) => {
+  const parsed = advertiserCampaignUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid campaign update payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const workspace = await requireAdvertiserWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Advertiser workspace required" });
+    }
+
+    const advertiserKey = `org:${workspace.organization.id}`;
+    const existing = await prisma.ad.findFirst({
+      where: {
+        id: req.params.id,
+        advertiser: advertiserKey,
+      },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Campaign not found" });
+    }
+
+    const campaign = await prisma.ad.update({
+      where: { id: existing.id },
+      data: parsed.data,
+    });
+    return res.json(campaign);
+  } catch (err) {
+    console.error("Advertiser campaign update failed", err);
+    return res.status(500).json({ error: "Failed to update campaign" });
+  }
+});
+
+app.get("/api/publisher/bots", requirePortalUser, async (req, res) => {
+  try {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    await seedWorkspaceMockData({ organization: workspace.organization });
+
+    const bots = await prisma.publisherBot.findMany({
+      where: { organizationId: workspace.organization.id },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        sdkKeys: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            label: true,
+            prefix: true,
+            last4: true,
+            createdAt: true,
+            revokedAt: true,
+          },
+        },
+      },
+    });
+
+    return res.json(
+      bots.map((bot) => ({
+        id: bot.id,
+        botId: bot.publicId,
+        name: bot.name,
+        environment: bot.environment,
+        health: bot.health,
+        isActive: bot.isActive,
+        requests7dHint: bot.requests7d,
+        fillRateHint: bot.fillRateHint,
+        sdkErrorsHint: bot.sdkErrorsHint,
+        sdkKeys: bot.sdkKeys.map((key) => toPublicSdkKey(key)),
+        createdAt: bot.createdAt,
+        updatedAt: bot.updatedAt,
+      })),
+    );
+  } catch (err) {
+    console.error("Publisher bot list failed", err);
+    return res.status(500).json({ error: "Failed to fetch bots" });
+  }
+});
+
+app.post("/api/publisher/bots", requirePortalUser, async (req, res) => {
+  const parsed = publisherBotCreateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid bot payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    const bot = await prisma.publisherBot.create({
+      data: {
+        organizationId: workspace.organization.id,
+        name: parsed.data.name,
+        publicId: createBotPublicId({
+          organizationId: workspace.organization.id,
+          name: parsed.data.name,
+        }),
+        environment: parsed.data.environment,
+        health: parsed.data.health,
+        placementPolicy: parsed.data.placementPolicy,
+      },
+    });
+
+    const initialSdkKey = await createPublisherSdkKey({
+      botId: bot.id,
+      label: "Primary",
+    });
+
+    return res.status(201).json({
+      bot: {
+        id: bot.id,
+        botId: bot.publicId,
+        name: bot.name,
+        environment: bot.environment,
+        health: bot.health,
+        isActive: bot.isActive,
+      },
+      initialSdkKey,
+    });
+  } catch (err) {
+    console.error("Publisher bot create failed", err);
+    return res.status(500).json({ error: "Failed to create bot" });
+  }
+});
+
+app.patch("/api/publisher/bots/:id", requirePortalUser, async (req, res) => {
+  const parsed = publisherBotUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid bot update payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    const existing = await prisma.publisherBot.findFirst({
+      where: {
+        id: req.params.id,
+        organizationId: workspace.organization.id,
+      },
+      select: { id: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: "Bot not found" });
+    }
+
+    const updated = await prisma.publisherBot.update({
+      where: { id: existing.id },
+      data: parsed.data,
+    });
+    return res.json(updated);
+  } catch (err) {
+    console.error("Publisher bot update failed", err);
+    return res.status(500).json({ error: "Failed to update bot" });
+  }
+});
+
+app.post("/api/publisher/bots/:id/keys", requirePortalUser, async (req, res) => {
+  const parsed = publisherCreateSdkKeySchema.safeParse(req.body || {});
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid key payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    const bot = await prisma.publisherBot.findFirst({
+      where: {
+        id: req.params.id,
+        organizationId: workspace.organization.id,
+      },
+      select: { id: true, publicId: true, name: true },
+    });
+    if (!bot) {
+      return res.status(404).json({ error: "Bot not found" });
+    }
+
+    const key = await createPublisherSdkKey({
+      botId: bot.id,
+      label: parsed.data.label,
+    });
+    return res.status(201).json({
+      botId: bot.publicId,
+      key,
+    });
+  } catch (err) {
+    console.error("Publisher key create failed", err);
+    return res.status(500).json({ error: "Failed to create SDK key" });
+  }
+});
+
+app.get("/api/publisher/bots/:id/metrics", requirePortalUser, async (req, res) => {
+  try {
+    const workspace = await requirePublisherWorkspace(req.portalUser.id);
+    if (!workspace) {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    const bot = await prisma.publisherBot.findFirst({
+      where: {
+        id: req.params.id,
+        organizationId: workspace.organization.id,
+      },
       select: {
-        botId: true,
+        id: true,
+        publicId: true,
+        name: true,
+        requests7d: true,
+        fillRateHint: true,
+        sdkErrorsHint: true,
+      },
+    });
+    if (!bot) {
+      return res.status(404).json({ error: "Bot not found" });
+    }
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const events = await prisma.adEvent.findMany({
+      where: {
+        botId: bot.publicId,
+        createdAt: { gte: sevenDaysAgo },
+      },
+      select: {
         eventType: true,
         amount: true,
         createdAt: true,
         metadata: true,
       },
+      orderBy: { createdAt: "desc" },
       take: 1200,
     });
 
-    const botMap = new Map();
-    for (const event of events) {
-      const key = event.botId;
-      if (!botMap.has(key)) {
-        botMap.set(key, {
-          botId: key,
-          name: key.replace(botPrefix, "").replaceAll("-", " "),
-          environment: "production",
-          health: "healthy",
-          requests7d: 0,
-          impressions: 0,
-          clicks: 0,
-          revenueTodayCents: 0,
-          fillRate: 0,
-          sdkErrors: 0,
-          metadataSeen: false,
-        });
-      }
-      const current = botMap.get(key);
-
-      if (event.eventType === "impression") {
-        current.impressions += 1;
-      } else if (event.eventType === "click") {
-        current.clicks += 1;
-      } else if (event.eventType === "revenue" && event.createdAt >= todayStart) {
-        current.revenueTodayCents += Math.max(Number(event.amount || 0), 0);
-      }
-
-      if (!current.metadataSeen && event.metadata && typeof event.metadata === "object") {
-        const metadata = event.metadata;
-        current.name = String(metadata.botName || current.name);
-        current.environment = String(metadata.environment || current.environment);
-        current.health = String(metadata.health || current.health);
-        current.requests7d = Number(metadata.requests7d || current.requests7d || 0);
-        current.fillRate = Number(metadata.fillRate || current.fillRate || 0);
-        current.sdkErrors = Number(metadata.sdkErrors || current.sdkErrors || 0);
-        current.metadataSeen = true;
-      }
-    }
-
-    const bots = [...botMap.values()].map((bot) => {
-      const estimatedRequests = bot.requests7d > 0 ? bot.requests7d : Math.max(bot.impressions, 1);
-      const computedFillRate = bot.fillRate > 0 ? bot.fillRate : (bot.impressions / estimatedRequests) * 100;
-      return {
-        botId: bot.botId,
-        name: bot.name,
-        environment: bot.environment,
-        health: bot.health,
-        requests7d: estimatedRequests,
-        fillRate7d: Math.max(0, Math.min(computedFillRate, 100)),
-        revenueTodayCents: bot.revenueTodayCents,
-        sdkErrors: bot.sdkErrors,
-      };
-    });
-
-    const totalRequests = bots.reduce((acc, bot) => acc + bot.requests7d, 0);
-    const weightedFillRate =
-      totalRequests > 0
-        ? bots.reduce((acc, bot) => acc + bot.fillRate7d * bot.requests7d, 0) / totalRequests
-        : 0;
-    const revenueTodayCents = bots.reduce((acc, bot) => acc + bot.revenueTodayCents, 0);
-    const sdkErrors = bots.reduce((acc, bot) => acc + bot.sdkErrors, 0);
-
+    const metrics = summarizeBotMetrics(events, bot);
     return res.json({
-      summary: {
-        registeredBots: bots.length,
-        fillRate7d: weightedFillRate,
-        revenueTodayCents,
-        sdkErrors,
+      bot: {
+        id: bot.id,
+        botId: bot.publicId,
+        name: bot.name,
       },
-      bots,
+      metrics: {
+        requests7d: metrics.requests7d,
+        fillRate7d: metrics.fillRate7d,
+        revenueTodayCents: metrics.revenueTodayCents,
+        sdkErrors: metrics.sdkErrors,
+        impressions7d: metrics.impressions,
+        clicks7d: metrics.clicks,
+      },
     });
   } catch (err) {
-    console.error("Publisher dashboard failed", err);
-    return res.status(500).json({ error: "Failed to load publisher dashboard" });
+    console.error("Publisher bot metrics failed", err);
+    return res.status(500).json({ error: "Failed to fetch bot metrics" });
   }
 });
 
@@ -1106,6 +1645,11 @@ app.post("/api/ads", requireSdkKey, async (req, res) => {
   }
 
   try {
+    const scope = ensureSdkBotScope(req, parsed.data.botId);
+    if (!scope.ok) {
+      return res.status(scope.status).json({ error: scope.error });
+    }
+
     const selected = await selectAdForRequest({
       format: parsed.data.format,
       topic: parsed.data.context?.topic || "",
@@ -1136,6 +1680,11 @@ app.post("/api/track/:eventType", requireSdkKey, async (req, res) => {
   }
 
   try {
+    const scope = ensureSdkBotScope(req, parsed.data.botId);
+    if (!scope.ok) {
+      return res.status(scope.status).json({ error: scope.error });
+    }
+
     await prisma.adEvent.create({
       data: {
         eventType,

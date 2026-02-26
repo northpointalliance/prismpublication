@@ -101,7 +101,29 @@ Use `/app/login` and:
 - On first login, choose Advertiser, Bot Developer, or Admin.
 - The selected role creates the first workspace automatically.
 - Admin workspace creation requires `ADMIN_API_KEY` and is intended for platform operators.
-- Dashboard pages load mock records through real API endpoints backed by database rows.
+- Advertiser portal can create campaigns and move them between Review/Live states.
+- Bot Developer portal can register bots and generate/rotate SDK keys (token shown once at creation).
+- Dashboard pages load DB-backed records through real API endpoints.
+
+## Persona Quick Start
+
+### Advertiser
+
+1. Go to `/app/advertiser`.
+2. Use **Create Campaign** to add title/description/CTA/click URL/format/topics/weight.
+3. Campaigns are created in **Review** by default.
+4. Use **Go Live / Move to Review** actions in campaign cards to control active state.
+
+### Bot Developer
+
+1. Go to `/app/publisher`.
+2. Use **Add Bot** to register a bot/environment.
+3. An initial SDK key is created immediately (full token shown once).
+4. Use **New SDK Key** per bot for rotation.
+5. Integrate with:
+   - `Authorization: Bearer <sdk-key>`
+   - `botId` value shown in portal bot list
+   - `POST /api/ads` + `POST /api/track/:eventType`
 
 ## Security Baseline
 
@@ -113,6 +135,7 @@ Use `/app/login` and:
 - Browser-bundled `VITE_*` vars must not contain `BOTGRID_API_KEY` or `ADMIN_API_KEY`.
 - `/api/demo/*` endpoints are rate-limited and are intended only for scripted public demo playback.
 - Distributed rate limiting is supported via optional `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` in `server/.env`.
+- SDK keys created by bot developers are scoped to their bot `botId` for `/api/ads` and `/api/track/:eventType`.
 
 ## Documentation Map
 
