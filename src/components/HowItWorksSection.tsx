@@ -48,7 +48,7 @@ const HowItWorksSection = () => {
               className="group relative rounded-2xl glow-border bg-card p-8 hover:shadow-lg transition-all duration-500"
               role="listitem"
             >
-              <div className="absolute top-6 right-6 text-5xl font-black text-muted/30 font-mono" aria-hidden="true">
+              <div className="absolute top-6 right-6 text-5xl font-bold text-muted/30 font-mono" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </div>
               <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${step.accent} flex items-center justify-center mb-6`} aria-hidden="true">

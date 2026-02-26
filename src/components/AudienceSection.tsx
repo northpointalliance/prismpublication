@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Bot, Megaphone, Shield, TrendingUp, Users, Layers } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const publisherFeatures = [
   { icon: Bot, text: "Works with any chatbot framework — OpenAI, LangChain, Rasa, custom agents" },
@@ -27,8 +28,7 @@ const AudienceSection = () => {
                 Monetize every <span className="text-gradient-primary">conversation</span>
               </h3>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                Turn your chatbot's engagement into revenue without degrading user experience.
-                BotGrid's AI ensures ads feel like helpful suggestions, boosting both satisfaction and earnings. Whether you run a GPT wrapper, a customer support bot, or an AI tutor, our SDK integrates in minutes.
+                Connect your chatbot, set pacing rules, and monetize high-intent sessions while keeping conversation quality intact.
               </p>
               <ul className="space-y-4 mb-10" aria-label="Publisher benefits">
                 {publisherFeatures.map((f) => (
@@ -41,9 +41,11 @@ const AudienceSection = () => {
                 ))}
               </ul>
             </div>
-            <Button variant="hero" className="w-fit">
-              Start Publishing <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
-            </Button>
+            <Link to="/publishers">
+              <Button variant="hero" className="w-fit">
+                Start Publishing <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
+              </Button>
+            </Link>
           </article>
 
           {/* Advertisers */}
@@ -54,8 +56,7 @@ const AudienceSection = () => {
                 Ads that feel like <span className="text-gradient-primary">answers</span>
               </h3>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                Reach users at the exact moment they're asking about your product category.
-                BotGrid's intent-matched, conversational ad placements are trusted by users because they arrive as natural recommendations — not banner interruptions. Ideal for SaaS, e-commerce, fintech, and health brands.
+                Reach users while they are actively asking relevant questions instead of passively scrolling through generic inventory.
               </p>
               <ul className="space-y-4 mb-10" aria-label="Advertiser benefits">
                 {advertiserFeatures.map((f) => (
@@ -68,9 +69,11 @@ const AudienceSection = () => {
                 ))}
               </ul>
             </div>
-            <Button variant="hero-outline" className="w-fit">
-              Launch a Campaign <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
-            </Button>
+            <Link to="/advertisers">
+              <Button variant="hero-outline" className="w-fit">
+                Launch a Campaign <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
+              </Button>
+            </Link>
           </article>
         </div>
       </div>

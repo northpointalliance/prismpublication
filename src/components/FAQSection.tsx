@@ -7,36 +7,28 @@ import {
 
 const faqs = [
   {
-    q: "What is BotGrid and how does chatbot advertising work?",
-    a: "BotGrid is the first ad network built specifically for AI chatbot conversations. Unlike traditional display advertising that uses banners and pop-ups, BotGrid serves context-aware ads inside chatbot conversations as natural recommendations. When a user asks a chatbot about a topic, BotGrid's AI analyzes the conversation in real-time and delivers a relevant ad that feels like a helpful suggestion rather than an interruption. This results in 4.7x higher click-through rates compared to traditional display ads.",
+    q: "Will ads hurt my chatbot user experience?",
+    a: "Not if they are paced correctly. BotGrid is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely.",
   },
   {
-    q: "What types of chatbots can integrate with BotGrid?",
-    a: "BotGrid works with virtually any chatbot platform or framework. This includes GPT-based wrappers and assistants, LangChain agents, Rasa bots, Dialogflow bots, custom Python or Node.js chatbots, customer support bots, e-commerce shopping assistants, healthcare chatbots, educational AI tutors, and more. Integration takes just three lines of code via our lightweight SDK, and we support REST API integration for custom implementations.",
+    q: "How long does integration take?",
+    a: "Most teams can get the SDK running quickly, then iterate on placement and pacing rules over time. You can start in a test mode before enabling broader traffic.",
   },
   {
-    q: "How much can I earn as a chatbot publisher on BotGrid?",
-    a: "Earnings depend on your chatbot's conversation volume, audience demographics, and the ad categories served. On average, BotGrid publishers earn 3.2x more than they would with traditional display advertising. Our network has paid out over $42 million to publishers in the last 12 months. You earn on both impressions (CPM) and clicks (CPC), with monthly payouts and full revenue transparency through your publisher dashboard.",
+    q: "Which chatbot stacks are supported?",
+    a: "BotGrid can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic.",
   },
   {
-    q: "How does BotGrid ensure ads don't harm the chatbot user experience?",
-    a: "User experience is core to BotGrid's approach. Our AI engine analyzes conversation context, user sentiment, and conversation flow before deciding whether to serve an ad. Ads are only shown when they're genuinely relevant to the conversation topic. We maintain a 0.3% user complaint rate — far below industry standards — because our ads feel like helpful recommendations rather than disruptive interruptions. Publishers can also set frequency caps and content filters.",
+    q: "How do advertisers target campaigns?",
+    a: "Campaigns are matched to conversation context and topic intent instead of generic banner inventory. Teams can configure placement and category controls based on campaign goals.",
   },
   {
-    q: "How is BotGrid different from Google AdSense or other ad networks?",
-    a: "Google AdSense and traditional ad networks were built for websites and web pages — they serve visual display ads, banners, and video ads on static content. BotGrid is purpose-built for conversational AI interfaces where traditional display ads don't work. Instead of showing banners, BotGrid inserts contextual text-based recommendations directly into chatbot responses. This conversational ad format delivers much higher engagement because users are actively seeking information, not passively browsing.",
+    q: "Can publishers control what gets shown?",
+    a: "Yes. Publishers can apply frequency limits, topic restrictions, and guardrails so sponsored content aligns with brand standards and user expectations.",
   },
   {
-    q: "What targeting options are available for advertisers on BotGrid?",
-    a: "BotGrid offers intent-level targeting that no other ad network can match. Because ads are served within active conversations, we can target based on real-time user intent — what the user is actually asking about right now. Targeting options include conversation topic, user intent category, chatbot vertical (e-commerce, support, education, health), geographic location, language, device type, and time of day. This intent-based targeting consistently delivers 4.7x higher CTR than traditional display advertising.",
-  },
-  {
-    q: "How do I get started with BotGrid as a publisher or advertiser?",
-    a: "Getting started takes under 10 minutes. For publishers: sign up, add three lines of SDK code to your chatbot, configure your ad preferences and content filters, and start earning. For advertisers: create an account, set your budget and targeting preferences, upload your ad creatives (text-based recommendations), and launch your campaign. Both publishers and advertisers get access to real-time dashboards for tracking performance, revenue, and conversions.",
-  },
-  {
-    q: "Does BotGrid comply with privacy regulations like GDPR and CCPA?",
-    a: "Yes. BotGrid is fully compliant with GDPR, CCPA, and other major privacy regulations. We do not store or process personal conversation data for ad targeting. Our context-aware matching works on anonymized, real-time conversation signals without building user profiles. All data processing happens in real-time and is immediately discarded after ad selection. We also provide publishers with tools to manage consent and data processing preferences for their users.",
+    q: "What about privacy and compliance requirements?",
+    a: "BotGrid is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment.",
   },
 ];
 
@@ -50,7 +42,7 @@ const FAQSection = () => {
             Frequently asked <span className="text-gradient-primary">questions</span>
           </h2>
           <p className="text-muted-foreground mt-4">
-            Everything you need to know about chatbot advertising, monetization, and the BotGrid ad network.
+            Objection-first answers for publishers and advertisers evaluating conversational ads.
           </p>
         </header>
 

@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // Required when serving dev server through Cloudflare Tunnel/custom hostnames.
+    allowedHosts: true,
     hmr: {
       overlay: false,
     },

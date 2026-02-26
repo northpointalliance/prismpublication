@@ -1,31 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { Bot, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
+const primaryLinks = [
+  { label: "Publishers", to: "/publishers" },
+  { label: "Advertisers", to: "/advertisers" },
+  { label: "How It Works", to: "/sdk" },
+  { label: "Company", to: "/company" },
+];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobileMenu = () => setMobileOpen(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass" aria-label="Main navigation">
-      <div className="container mx-auto flex items-center justify-between h-16 px-6">
-        <a href="/" className="flex items-center gap-2" aria-label="BotGrid home">
+    <nav
+      className="fixed left-1/2 top-4 z-50 w-[min(1120px,calc(100%-1.5rem))] -translate-x-1/2"
+      aria-label="Main navigation"
+    >
+      <div className="flex h-16 items-center justify-between rounded-full border border-white/20 bg-background/80 px-5 shadow-[0_18px_45px_-28px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+        <Link to="/" className="flex items-center gap-2" aria-label="BotGrid home" onClick={closeMobileMenu}>
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center" aria-hidden="true">
             <Bot className="h-5 w-5 text-primary" />
           </div>
           <span className="text-lg font-bold tracking-tight">BotGrid</span>
-        </a>
+        </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a>
-          <a href="#publishers" className="hover:text-foreground transition-colors">Publishers</a>
-          <a href="#advertisers" className="hover:text-foreground transition-colors">Advertisers</a>
-          <a href="#stats" className="hover:text-foreground transition-colors">Network</a>
-          <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+          {primaryLinks.map((link) => (
+            <Link key={link.label} to={link.to} className="hover:text-foreground transition-colors font-medium">
+              {link.label}
+            </Link>
+          ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm">Sign In</Button>
-          <Button variant="hero" size="sm">Get Started</Button>
+        <div className="hidden md:flex items-center">
+          <Link to="/demo">
+            <Button variant="hero" size="sm">Run Demo</Button>
+          </Link>
         </div>
 
         <button
@@ -40,12 +53,26 @@ const Navbar = () => {
       </div>
 
       {mobileOpen && (
-        <div id="mobile-menu" className="md:hidden bg-card border-t border-border px-6 py-4 space-y-3" role="menu">
-          <a href="#how-it-works" className="block text-sm text-muted-foreground hover:text-foreground" role="menuitem">How It Works</a>
-          <a href="#publishers" className="block text-sm text-muted-foreground hover:text-foreground" role="menuitem">Publishers</a>
-          <a href="#advertisers" className="block text-sm text-muted-foreground hover:text-foreground" role="menuitem">Advertisers</a>
-          <a href="#faq" className="block text-sm text-muted-foreground hover:text-foreground" role="menuitem">FAQ</a>
-          <Button variant="hero" size="sm" className="w-full mt-2">Get Started</Button>
+        <div
+          id="mobile-menu"
+          className="md:hidden mt-3 rounded-2xl border border-white/20 bg-card/95 px-6 py-4 shadow-[0_20px_45px_-30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        >
+          <ul className="space-y-3 text-sm">
+            {primaryLinks.map((link) => (
+              <li key={link.label}>
+                <Link
+                  to={link.to}
+                  className="block text-muted-foreground hover:text-foreground"
+                  onClick={closeMobileMenu}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link to="/demo" onClick={closeMobileMenu}>
+            <Button variant="hero" size="sm" className="w-full mt-4">Run Demo</Button>
+          </Link>
         </div>
       )}
     </nav>

@@ -1,0 +1,77 @@
+import SiteShell from "@/components/SiteShell";
+import { Link } from "react-router-dom";
+import { ArrowRight, Layers, Megaphone, Target, TrendingUp } from "lucide-react";
+
+const advertiserPoints = [
+  {
+    icon: Target,
+    title: "Intent-level targeting",
+    description: "Serve campaigns while users are actively discussing relevant needs and product categories.",
+  },
+  {
+    icon: Megaphone,
+    title: "Native conversational creative",
+    description: "Run placements that appear as useful suggestions inside chat, not banner interruptions.",
+  },
+  {
+    icon: Layers,
+    title: "Placement controls",
+    description: "Tune category, pacing, and publisher quality to match campaign goals and brand risk tolerance.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Performance clarity",
+    description: "Measure impressions, CTR, and conversion trends by use case, topic, and inventory segment.",
+  },
+];
+
+const Advertisers = () => {
+  return (
+    <SiteShell>
+      <section className="relative overflow-hidden pt-32 pb-12">
+        <div className="absolute inset-0 grid-pattern opacity-60" aria-hidden="true" />
+        <div className="container relative z-10 mx-auto px-6">
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary">For Advertisers</p>
+          <h1 className="mt-3 text-4xl md:text-6xl font-bold tracking-tight max-w-3xl">
+            Reach high-intent users inside AI conversations.
+          </h1>
+          <p className="mt-5 max-w-2xl text-muted-foreground text-lg leading-relaxed">
+            This flow is designed for teams that want measurable campaign reach in chatbot ecosystems where users are already asking for answers.
+          </p>
+
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+            <Link
+              to="/demo"
+              className="btn-sweep inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+            >
+              See Ad Flow Demo
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/product"
+              className="btn-sweep inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-muted transition-colors"
+            >
+              Explore Product
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-20">
+        <div className="container mx-auto px-6 grid gap-4 md:grid-cols-2">
+          {advertiserPoints.map((point) => (
+            <article key={point.title} className="rounded-2xl glow-border bg-card p-6">
+              <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <point.icon className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold">{point.title}</h2>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{point.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </SiteShell>
+  );
+};
+
+export default Advertisers;

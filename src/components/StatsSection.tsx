@@ -1,10 +1,10 @@
-const stats = [
-  { value: "$42M+", label: "Paid to Chatbot Publishers", sub: "Last 12 months" },
-  { value: "187", label: "Countries Reached", sub: "Global chatbot ad coverage" },
-  { value: "340ms", label: "Avg Ad Response Time", sub: "Real-time conversational ad serving" },
-  { value: "98.7%", label: "Uptime SLA", sub: "Enterprise-grade reliability" },
-  { value: "0.3%", label: "User Complaint Rate", sub: "Ads that don't annoy chatbot users" },
-  { value: "24/7", label: "Publisher Support", sub: "Dedicated account team" },
+const highlights = [
+  { title: "Publisher Controls", sub: "Set ad frequency caps, category filters, and pacing rules per chatbot." },
+  { title: "Intent Matching", sub: "Place ads when users are already discussing relevant topics." },
+  { title: "Advertiser Guardrails", sub: "Run campaigns with placement controls and brand-safety preferences." },
+  { title: "Fast Integration", sub: "Deploy the SDK quickly and iterate without heavy infrastructure changes." },
+  { title: "Operational Visibility", sub: "Track impressions, clicks, and quality signals in one workflow." },
+  { title: "Privacy-Forward Design", sub: "Use contextual signals without relying on personal profile targeting." },
 ];
 
 const StatsSection = () => {
@@ -19,23 +19,23 @@ const StatsSection = () => {
         <header className="text-center mb-20">
           <span className="text-xs font-mono text-primary uppercase tracking-widest">The Network</span>
           <h2 id="stats-heading" className="text-4xl md:text-5xl font-bold mt-4 tracking-tight">
-            Scale that <span className="text-gradient-primary">speaks</span>
+            Built for <span className="text-gradient-primary">trust and outcomes</span>
           </h2>
           <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            BotGrid powers chatbot advertising at scale across every major AI platform, serving billions of ad impressions monthly to engaged conversational audiences worldwide.
+            Conversion performance matters, but long-term retention matters more.
+            BotGrid is designed to help teams grow revenue without damaging the chat experience.
           </p>
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6" role="list" aria-label="Network performance metrics">
-          {stats.map((stat) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="list" aria-label="Platform highlights">
+          {highlights.map((item) => (
             <article
-              key={stat.label}
-              className="rounded-2xl glow-border bg-card p-8 text-center hover:shadow-md transition-all duration-300"
+              key={item.title}
+              className="rounded-2xl glow-border bg-card p-8 hover:shadow-md transition-all duration-300"
               role="listitem"
             >
-              <div className="text-3xl md:text-4xl font-bold font-mono text-primary mb-2">{stat.value}</div>
-              <div className="text-sm font-medium mb-1">{stat.label}</div>
-              <div className="text-xs text-muted-foreground">{stat.sub}</div>
+              <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.sub}</p>
             </article>
           ))}
         </div>

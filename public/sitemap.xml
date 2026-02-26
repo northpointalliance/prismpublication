@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://botgrid.ai/</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/product</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/publishers</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/advertisers</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/sdk</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/company</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/demo</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/blog</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/blog/intent-signals-for-conversational-ads</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/blog/publisher-ad-load-without-conversation-fatigue</loc>
+  </url>
+  <url>
+    <loc>https://botgrid.ai/blog/creative-patterns-for-native-chatbot-ads</loc>
+  </url>
+</urlset>

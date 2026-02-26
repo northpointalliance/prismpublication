@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32"
     >
       {/* Grid background */}
-      <div className="absolute inset-0 grid-pattern opacity-40" aria-hidden="true" />
+      <div className="absolute inset-0 grid-pattern opacity-60" aria-hidden="true" />
 
       {/* Glow orbs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse-glow" aria-hidden="true" />
@@ -18,52 +19,47 @@ const HeroSection = () => {
         {/* Badge */}
         <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-mono text-primary mb-8">
           <Zap className="h-3 w-3" aria-hidden="true" />
-          The ad network built for conversational AI
+          Conversational ad platform for chatbot teams
         </div>
 
         {/* Headline */}
         <h1
           id="hero-heading"
-          className="animate-fade-up-delay-1 text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.9] mb-6"
+          className="animate-fade-up-delay-1 text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.9] mb-6"
         >
-          Google connected
+          Monetize AI chatbot
           <br />
-          <span className="text-gradient-primary">websites.</span>
+          conversations with
           <br />
-          We connect
-          <br />
-          <span className="text-gradient-primary">chatbots.</span>
+          <span className="text-gradient-primary">native ads.</span>
         </h1>
 
         {/* Subheadline */}
         <p className="animate-fade-up-delay-2 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-          BotGrid is the first ad network purpose-built for AI conversations.
-          Monetize your chatbot or reach millions of users through the bots people already trust every day.
+          BotGrid helps publishers earn from chat sessions and helps advertisers reach users in high-intent moments.
+          Ads appear as relevant recommendations, not disruptive banners.
         </p>
 
         {/* CTAs */}
-        <div className="animate-fade-up-delay-3 flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="hero" size="lg" className="text-base px-8 py-6">
-            Start Monetizing Your Chatbot
-            <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
-          </Button>
-          <Button variant="hero-outline" size="lg" className="text-base px-8 py-6">
-            Run Ads on Chatbots
-          </Button>
+        <div className="animate-fade-up-delay-3 flex flex-col items-center gap-4">
+          <Link to="/demo">
+            <Button variant="hero" size="lg" className="text-base px-8 py-6">
+              Run Interactive Demo
+              <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
+            </Button>
+          </Link>
+          <p className="text-xs text-muted-foreground">No signup required. See the full flow in under 2 minutes.</p>
         </div>
 
-        {/* Live counter */}
-        <div className="animate-fade-up-delay-3 mt-16 flex flex-wrap justify-center gap-8 md:gap-16" role="list" aria-label="Network statistics">
+        <div className="animate-fade-up-delay-3 mt-14 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground" role="list" aria-label="Core value points">
           {[
-            { value: "12,400+", label: "Chatbots Connected" },
-            { value: "2.1B", label: "Monthly Impressions" },
-            { value: "4.7x", label: "Higher CTR vs Display Ads" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center" role="listitem">
-              <div className="text-2xl md:text-3xl font-bold font-mono text-primary" aria-label={`${stat.value} ${stat.label}`}>
-                {stat.value}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
+            "Publisher pacing controls",
+            "Context-aware ad matching",
+            "SDK integration in minutes",
+          ].map((item) => (
+            <div key={item} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2" role="listitem">
+              <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
+              {item}
             </div>
           ))}
         </div>
