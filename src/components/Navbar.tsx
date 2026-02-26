@@ -7,7 +7,7 @@ import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 const primaryLinks = [
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
-  { label: "How It Works", to: "/sdk" },
+  { label: "How It Works", to: "/demo" },
   { label: "Company", to: "/company" },
 ];
 

@@ -5,8 +5,7 @@ import { Link } from "react-router-dom";
 const exploreLinks = [
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
-  { label: "How It Works", to: "/sdk" },
-  { label: "Live Demo", to: "/demo" },
+  { label: "How It Works + Demo", to: "/demo" },
 ];
 
 const companyLinks = [
@@ -14,7 +13,7 @@ const companyLinks = [
   { label: "Product", to: "/product" },
   { label: "Use Cases", to: "/use-cases" },
   { label: "Documentation", to: "/docs" },
-  { label: "SDK", to: "/sdk" },
+  { label: "SDK", to: "/demo" },
   { label: "Blog", to: "/blog" },
 ];
 

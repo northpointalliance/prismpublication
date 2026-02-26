@@ -24,11 +24,12 @@ Public marketing routes:
 - `/product`
 - `/publishers`
 - `/advertisers`
-- `/sdk`
+- `/demo` (How It Works + live demo page)
+- `/sdk` (legacy redirect to `/demo`)
 - `/company`
+- `/contact`
 - `/blog`
 - `/blog/:slug`
-- `/demo`
 - `/docs`
 
 Application routes:
@@ -142,6 +143,11 @@ Demo runtime:
 
 - `POST /api/demo/ads`
 - `POST /api/demo/track/:eventType` (impression/click)
+- Frontend demo currently uses a deterministic sponsored fallback sequence with local assets:
+  - `/public/demo-ads/nikeairforce1.jpg`
+  - `/public/demo-ads/sushinewyork.avif`
+  - `/public/demo-ads/florista.webp`
+- Demo ad CTAs route users to `/contact` with query metadata for lead source attribution.
 
 Leads:
 

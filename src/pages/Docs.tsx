@@ -46,8 +46,8 @@ const Docs = () => {
             Use this page as the operational handbook for BotGrid setup, debugging, and day-to-day troubleshooting.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link to="/sdk" className="btn-sweep inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-              SDK Reference
+            <Link to="/demo" className="btn-sweep inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+              How It Works + Demo
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link to="/demo" className="btn-sweep inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold">

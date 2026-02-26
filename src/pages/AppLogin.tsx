@@ -138,7 +138,12 @@ const AppLogin = () => {
               {error && (
                 <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
               )}
-              <Button type="submit" variant="hero" className="w-full" disabled={disabled || submitting || loading}>
+              <Button
+                type="submit"
+                variant="hero"
+                className="w-full"
+                disabled={disabled || submitting || loading}
+              >
                 {submitting ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
               </Button>
             </form>

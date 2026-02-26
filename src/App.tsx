@@ -15,7 +15,6 @@ const Index = lazy(() => import("./pages/Index"));
 const Demo = lazy(() => import("./pages/Demo"));
 const Product = lazy(() => import("./pages/Product"));
 const UseCases = lazy(() => import("./pages/UseCases"));
-const SDK = lazy(() => import("./pages/SDK"));
 const Publishers = lazy(() => import("./pages/Publishers"));
 const Advertisers = lazy(() => import("./pages/Advertisers"));
 const Company = lazy(() => import("./pages/Company"));
@@ -23,6 +22,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogArticle = lazy(() => import("./pages/BlogArticle"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Docs = lazy(() => import("./pages/Docs"));
+const Contact = lazy(() => import("./pages/Contact"));
 const AppLogin = lazy(() => import("./pages/AppLogin"));
 const ChooseWorkspace = lazy(() => import("./pages/ChooseWorkspace"));
 const AdvertiserPortal = lazy(() => import("./pages/AdvertiserPortal"));
@@ -46,8 +46,9 @@ const App = () => (
               <Route path="/use-cases" element={<UseCases />} />
               <Route path="/publishers" element={<Publishers />} />
               <Route path="/advertisers" element={<Advertisers />} />
-              <Route path="/sdk" element={<SDK />} />
+              <Route path="/sdk" element={<Navigate to="/demo" replace />} />
               <Route path="/company" element={<Company />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/docs" element={<Docs />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogArticle />} />

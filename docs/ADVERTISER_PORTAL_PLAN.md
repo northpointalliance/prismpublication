@@ -294,8 +294,9 @@ Benefits:
   - `/`
   - `/publishers`
   - `/advertisers`
-  - `/sdk`
-  - `/demo`
+  - `/demo` (How It Works + live demo)
+  - `/sdk` (redirects to `/demo`)
+  - `/contact`
 - App shell:
   - `/app/login`
   - `/app/choose-workspace`

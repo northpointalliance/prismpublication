@@ -2,6 +2,28 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Unified demo/docs/contact refresh)
+
+- Routing and IA:
+  - unified "How It Works" + demo experience onto `/demo`.
+  - `/sdk` now redirects to `/demo`.
+  - navbar/footer links updated to point to unified demo page.
+  - added `/contact` page route.
+- Demo page UX:
+  - redesigned above-the-fold layout so the live demo is visible immediately.
+  - converted demo styling to white/light presentation optimized for sales messaging.
+  - added smoother conversation playback with per-character typing and slower pacing.
+  - updated sponsored sequence to local creatives: Nike, Tokyo Sushi, Florista.
+- Ad click flow:
+  - demo CTA clicks now route to `/contact` with lead source query params.
+- Contact page:
+  - added working contact form with required-field + email validation.
+  - added submit loading/success states and source/ad query metadata display.
+- Frontend runtime:
+  - in non-production mode, app now unregisters stale service workers and clears runtime cache keys to reduce old UI/cache issues.
+- Docs:
+  - refreshed `docs/README.md`, `docs/DEEP_DIVE.md`, `src/pages/Docs.tsx`, and `public/demo-ads/README.md` to match the current routes and demo behavior.
+
 ## 2026-02-26 (Advertiser + bot developer self-serve operations)
 
 - Advertiser portal:

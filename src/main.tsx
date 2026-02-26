@@ -31,4 +31,21 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
       window.location.reload();
     }
   });
+} else if ("serviceWorker" in navigator) {
+  // In dev/tunnel mode, remove stale production SWs that may still control this origin.
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister().catch(() => undefined);
+    });
+  });
+
+  if ("caches" in window) {
+    caches.keys().then((keys) => {
+      keys
+        .filter((key) => key.startsWith("botgrid-runtime-"))
+        .forEach((key) => {
+          caches.delete(key).catch(() => undefined);
+        });
+    });
+  }
 }

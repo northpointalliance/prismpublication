@@ -10,9 +10,10 @@ The website is now a multi-page marketing/product experience with:
 - Product (`/product`)
 - Publishers (`/publishers`)
 - Advertisers (`/advertisers`)
-- How It Works / SDK (`/sdk`)
+- How It Works + Demo (`/demo`)
+- Legacy SDK URL redirect (`/sdk` -> `/demo`)
 - Company (`/company`)
-- Demo (`/demo`)
+- Contact (`/contact`)
 - Website Docs (`/docs`)
 - Admin (`/admin`, key-protected)
 - App Login (`/app/login`)
@@ -21,6 +22,11 @@ The website is now a multi-page marketing/product experience with:
 - Bot Developer App (`/app/publisher`)
 - Admin App (`/app/admin`)
 - Blog (`/blog`) and article pages (`/blog/:slug`)
+
+Demo page notes:
+- `/demo` now combines "How It Works", SDK quickstart snippets, and live conversation playback in one page.
+- Demo playback uses a scripted sponsored sequence with local creative assets in `public/demo-ads/`.
+- Demo CTA buttons ("Shop Nike Air Force 1", "Reserve a Table", "Order Flowers") route to `/contact` with source metadata.
 
 ## Tech Stack
 
