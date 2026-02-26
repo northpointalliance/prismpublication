@@ -90,6 +90,11 @@ const selectWorkspaceSchema = z.object({
   workspaceId: z.string().trim().min(3).max(120),
 });
 
+const createWorkspaceSchema = z.object({
+  type: z.enum(["advertiser", "publisher"]),
+  name: z.string().trim().min(2).max(120).optional(),
+});
+
 const getBearerToken = (authorizationHeader = "") =>
   authorizationHeader.startsWith("Bearer ") ? authorizationHeader.slice(7).trim() : "";
 
@@ -212,6 +217,225 @@ const requirePortalUser = async (req, res, next) => {
   return next();
 };
 
+const resolvePortalWorkspace = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      memberships: {
+        include: { organization: true },
+      },
+    },
+  });
+
+  if (!user || !user.memberships.length) return null;
+
+  const selectedMembership =
+    user.memberships.find((membership) => membership.organizationId === user.defaultOrganizationId) ||
+    user.memberships[0];
+
+  return {
+    user,
+    organization: selectedMembership.organization,
+    membership: selectedMembership,
+  };
+};
+
+const seedAdvertiserWorkspaceMockData = async ({ organization }) => {
+  const advertiserKey = `org:${organization.id}`;
+  const existingCount = await prisma.ad.count({
+    where: { advertiser: advertiserKey },
+  });
+  if (existingCount > 0) return;
+
+  const templates = [
+    {
+      title: "AI Writing Assistant Launch",
+      description: "Promote your AI writing assistant in high-intent productivity conversations.",
+      ctaText: "Start Free Trial",
+      clickUrl: "https://example.com/ai-writing-assistant",
+      imageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978",
+      topics: ["ai", "productivity", "writing"],
+      format: "card",
+      weight: 3,
+      isActive: true,
+      impressionCount: 28,
+      clickCount: 7,
+      revenueCents: 21450,
+    },
+    {
+      title: "Cloud Security Webinar",
+      description: "Drive qualified security buyers to your next zero-trust webinar.",
+      ctaText: "Reserve Seat",
+      clickUrl: "https://example.com/cloud-security-webinar",
+      imageUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4",
+      topics: ["security", "cloud", "devops"],
+      format: "card",
+      weight: 2,
+      isActive: false,
+      impressionCount: 12,
+      clickCount: 2,
+      revenueCents: 6900,
+    },
+    {
+      title: "CRM Migration Suite",
+      description: "Capture migration-ready teams evaluating CRM automation workflows.",
+      ctaText: "Book Demo",
+      clickUrl: "https://example.com/crm-migration-suite",
+      imageUrl: "https://images.unsplash.com/photo-1557804506-669a67965ba0",
+      topics: ["crm", "sales", "automation"],
+      format: "card",
+      weight: 2,
+      isActive: true,
+      impressionCount: 24,
+      clickCount: 5,
+      revenueCents: 17300,
+    },
+  ];
+
+  for (const [index, template] of templates.entries()) {
+    const ad = await prisma.ad.create({
+      data: {
+        title: template.title,
+        description: template.description,
+        ctaText: template.ctaText,
+        clickUrl: template.clickUrl,
+        imageUrl: template.imageUrl,
+        advertiser: advertiserKey,
+        topics: template.topics,
+        format: template.format,
+        weight: template.weight,
+        isActive: template.isActive,
+      },
+    });
+
+    const events = [];
+    for (let i = 0; i < template.impressionCount; i += 1) {
+      events.push({
+        adId: ad.id,
+        eventType: "impression",
+        botId: `orgbot_${organization.id}_seed_${index + 1}`,
+        topic: template.topics[0],
+      });
+    }
+    for (let i = 0; i < template.clickCount; i += 1) {
+      events.push({
+        adId: ad.id,
+        eventType: "click",
+        botId: `orgbot_${organization.id}_seed_${index + 1}`,
+        topic: template.topics[0],
+      });
+    }
+    events.push({
+      adId: ad.id,
+      eventType: "revenue",
+      botId: `orgbot_${organization.id}_seed_${index + 1}`,
+      topic: template.topics[0],
+      amount: template.revenueCents,
+    });
+
+    await prisma.adEvent.createMany({ data: events });
+  }
+};
+
+const seedPublisherWorkspaceMockData = async ({ organization }) => {
+  const botPrefix = `orgbot_${organization.id}_`;
+  const existingEvents = await prisma.adEvent.count({
+    where: {
+      botId: {
+        startsWith: botPrefix,
+      },
+    },
+  });
+  if (existingEvents > 0) return;
+
+  const bots = [
+    {
+      id: `${botPrefix}support-copilot`,
+      name: "Support Copilot",
+      environment: "production",
+      health: "healthy",
+      requests7d: 42100,
+      fillRate: 74.2,
+      revenueTodayCents: 4822,
+      impressionCount: 32,
+      clickCount: 8,
+    },
+    {
+      id: `${botPrefix}sales-assistant`,
+      name: "Sales Assistant",
+      environment: "staging",
+      health: "warning",
+      requests7d: 9300,
+      fillRate: 61.4,
+      revenueTodayCents: 2108,
+      impressionCount: 20,
+      clickCount: 4,
+    },
+    {
+      id: `${botPrefix}onboarding-guide`,
+      name: "Onboarding Guide",
+      environment: "production",
+      health: "healthy",
+      requests7d: 31700,
+      fillRate: 69.8,
+      revenueTodayCents: 3640,
+      impressionCount: 27,
+      clickCount: 6,
+    },
+  ];
+
+  for (const bot of bots) {
+    const events = [];
+    for (let i = 0; i < bot.impressionCount; i += 1) {
+      events.push({
+        eventType: "impression",
+        botId: bot.id,
+        topic: "ai",
+        metadata: {
+          botName: bot.name,
+          environment: bot.environment,
+          health: bot.health,
+          requests7d: bot.requests7d,
+          fillRate: bot.fillRate,
+          sdkErrors: bot.health === "warning" ? 1 : 0,
+        },
+      });
+    }
+    for (let i = 0; i < bot.clickCount; i += 1) {
+      events.push({
+        eventType: "click",
+        botId: bot.id,
+        topic: "ai",
+      });
+    }
+    events.push({
+      eventType: "revenue",
+      botId: bot.id,
+      topic: "ai",
+      amount: bot.revenueTodayCents,
+      metadata: {
+        botName: bot.name,
+        environment: bot.environment,
+        health: bot.health,
+        requests7d: bot.requests7d,
+        fillRate: bot.fillRate,
+        sdkErrors: bot.health === "warning" ? 1 : 0,
+      },
+    });
+    await prisma.adEvent.createMany({ data: events });
+  }
+};
+
+const seedWorkspaceMockData = async ({ organization }) => {
+  if (organization.type === "advertiser") {
+    await seedAdvertiserWorkspaceMockData({ organization });
+    return;
+  }
+  if (organization.type === "publisher") {
+    await seedPublisherWorkspaceMockData({ organization });
+  }
+};
+
 app.get("/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -241,65 +465,278 @@ app.post("/api/auth/sync-user", async (req, res) => {
       create: { email, name },
     });
 
-    const memberships = await prisma.organizationMember.count({
-      where: { userId: user.id },
-    });
-
-    if (memberships === 0) {
-      const [advertiserOrg, publisherOrg] = await Promise.all([
-        prisma.organization.create({
-          data: {
-            name: `${name} Advertiser Workspace`,
-            type: "advertiser",
-          },
-        }),
-        prisma.organization.create({
-          data: {
-            name: `${name} Publisher Workspace`,
-            type: "publisher",
-          },
-        }),
-      ]);
-
-      const memberData = [
-        {
-          userId: user.id,
-          organizationId: advertiserOrg.id,
-          role: "advertiser_owner",
-        },
-        {
-          userId: user.id,
-          organizationId: publisherOrg.id,
-          role: "publisher_owner",
-        },
-      ];
-
-      if (email.includes("admin") || email.includes("owner")) {
-        const adminOrg = await prisma.organization.create({
-          data: {
-            name: "Platform Admin Workspace",
-            type: "admin",
-          },
-        });
-        memberData.push({
-          userId: user.id,
-          organizationId: adminOrg.id,
-          role: "admin",
-        });
-      }
-
-      await prisma.organizationMember.createMany({ data: memberData });
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { defaultOrganizationId: advertiserOrg.id },
-      });
-    }
-
     const entry = await buildEntryContextByUserId(user.id);
     return res.json(entry);
   } catch (err) {
     console.error("User sync failed", err);
     return res.status(500).json({ error: "Failed to sync user" });
+  }
+});
+
+app.post("/api/me/create-workspace", requirePortalUser, async (req, res) => {
+  const parsed = createWorkspaceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid workspace create payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const { type, name } = parsed.data;
+  const defaultName =
+    type === "advertiser"
+      ? `${req.portalUser.name} Advertiser Workspace`
+      : `${req.portalUser.name} Bot Developer Workspace`;
+
+  try {
+    const organization = await prisma.organization.create({
+      data: {
+        name: name || defaultName,
+        type,
+      },
+    });
+
+    await prisma.organizationMember.create({
+      data: {
+        userId: req.portalUser.id,
+        organizationId: organization.id,
+        role: type === "advertiser" ? "advertiser_owner" : "publisher_owner",
+      },
+    });
+
+    await prisma.user.update({
+      where: { id: req.portalUser.id },
+      data: {
+        defaultOrganizationId: organization.id,
+      },
+    });
+
+    await seedWorkspaceMockData({ organization });
+
+    const entry = await buildEntryContextByUserId(req.portalUser.id);
+    return res.status(201).json(entry);
+  } catch (err) {
+    console.error("Create workspace failed", err);
+    return res.status(500).json({ error: "Failed to create workspace" });
+  }
+});
+
+app.get("/api/advertiser/dashboard", requirePortalUser, async (req, res) => {
+  try {
+    const workspace = await resolvePortalWorkspace(req.portalUser.id);
+    if (!workspace || workspace.organization.type !== "advertiser") {
+      return res.status(403).json({ error: "Advertiser workspace required" });
+    }
+
+    await seedWorkspaceMockData({ organization: workspace.organization });
+
+    const advertiserKey = `org:${workspace.organization.id}`;
+    const campaigns = await prisma.ad.findMany({
+      where: { advertiser: advertiserKey },
+      orderBy: { updatedAt: "desc" },
+      take: 50,
+    });
+
+    const campaignIds = campaigns.map((campaign) => campaign.id);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const events = campaignIds.length
+      ? await prisma.adEvent.findMany({
+          where: {
+            adId: { in: campaignIds },
+            createdAt: { gte: sevenDaysAgo },
+          },
+          select: {
+            adId: true,
+            eventType: true,
+            amount: true,
+            createdAt: true,
+          },
+        })
+      : [];
+
+    const statsByCampaignId = new Map();
+    let totalImpressions = 0;
+    let totalClicks = 0;
+    let spendTodayCents = 0;
+
+    for (const event of events) {
+      const key = event.adId || "";
+      if (!statsByCampaignId.has(key)) {
+        statsByCampaignId.set(key, {
+          impressions: 0,
+          clicks: 0,
+          spendCents: 0,
+        });
+      }
+      const current = statsByCampaignId.get(key);
+
+      if (event.eventType === "impression") {
+        current.impressions += 1;
+        totalImpressions += 1;
+      }
+      if (event.eventType === "click") {
+        current.clicks += 1;
+        totalClicks += 1;
+      }
+      if (event.eventType === "revenue") {
+        const value = Math.max(Number(event.amount || 0), 0);
+        current.spendCents += value;
+        if (event.createdAt >= todayStart) {
+          spendTodayCents += value;
+        }
+      }
+    }
+
+    const payloadCampaigns = campaigns.map((campaign) => {
+      const stats = statsByCampaignId.get(campaign.id) || {
+        impressions: 0,
+        clicks: 0,
+        spendCents: 0,
+      };
+      return {
+        id: campaign.id,
+        title: campaign.title,
+        status: campaign.isActive ? "Live" : "Review",
+        format: campaign.format,
+        weight: campaign.weight,
+        impressions7d: stats.impressions,
+        clicks7d: stats.clicks,
+        ctr7d: stats.impressions > 0 ? (stats.clicks / stats.impressions) * 100 : 0,
+        spend7dCents: stats.spendCents,
+      };
+    });
+
+    const ctr7d = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+    const pendingReview = payloadCampaigns.filter((campaign) => campaign.status === "Review").length;
+    const activeCampaigns = payloadCampaigns.filter((campaign) => campaign.status === "Live").length;
+
+    return res.json({
+      summary: {
+        activeCampaigns,
+        pendingReview,
+        spendTodayCents,
+        ctr7d,
+      },
+      campaigns: payloadCampaigns,
+    });
+  } catch (err) {
+    console.error("Advertiser dashboard failed", err);
+    return res.status(500).json({ error: "Failed to load advertiser dashboard" });
+  }
+});
+
+app.get("/api/publisher/dashboard", requirePortalUser, async (req, res) => {
+  try {
+    const workspace = await resolvePortalWorkspace(req.portalUser.id);
+    if (!workspace || workspace.organization.type !== "publisher") {
+      return res.status(403).json({ error: "Bot developer workspace required" });
+    }
+
+    await seedWorkspaceMockData({ organization: workspace.organization });
+
+    const botPrefix = `orgbot_${workspace.organization.id}_`;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const events = await prisma.adEvent.findMany({
+      where: {
+        botId: {
+          startsWith: botPrefix,
+        },
+        createdAt: {
+          gte: sevenDaysAgo,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        botId: true,
+        eventType: true,
+        amount: true,
+        createdAt: true,
+        metadata: true,
+      },
+      take: 1200,
+    });
+
+    const botMap = new Map();
+    for (const event of events) {
+      const key = event.botId;
+      if (!botMap.has(key)) {
+        botMap.set(key, {
+          botId: key,
+          name: key.replace(botPrefix, "").replaceAll("-", " "),
+          environment: "production",
+          health: "healthy",
+          requests7d: 0,
+          impressions: 0,
+          clicks: 0,
+          revenueTodayCents: 0,
+          fillRate: 0,
+          sdkErrors: 0,
+          metadataSeen: false,
+        });
+      }
+      const current = botMap.get(key);
+
+      if (event.eventType === "impression") {
+        current.impressions += 1;
+      } else if (event.eventType === "click") {
+        current.clicks += 1;
+      } else if (event.eventType === "revenue" && event.createdAt >= todayStart) {
+        current.revenueTodayCents += Math.max(Number(event.amount || 0), 0);
+      }
+
+      if (!current.metadataSeen && event.metadata && typeof event.metadata === "object") {
+        const metadata = event.metadata;
+        current.name = String(metadata.botName || current.name);
+        current.environment = String(metadata.environment || current.environment);
+        current.health = String(metadata.health || current.health);
+        current.requests7d = Number(metadata.requests7d || current.requests7d || 0);
+        current.fillRate = Number(metadata.fillRate || current.fillRate || 0);
+        current.sdkErrors = Number(metadata.sdkErrors || current.sdkErrors || 0);
+        current.metadataSeen = true;
+      }
+    }
+
+    const bots = [...botMap.values()].map((bot) => {
+      const estimatedRequests = bot.requests7d > 0 ? bot.requests7d : Math.max(bot.impressions, 1);
+      const computedFillRate = bot.fillRate > 0 ? bot.fillRate : (bot.impressions / estimatedRequests) * 100;
+      return {
+        botId: bot.botId,
+        name: bot.name,
+        environment: bot.environment,
+        health: bot.health,
+        requests7d: estimatedRequests,
+        fillRate7d: Math.max(0, Math.min(computedFillRate, 100)),
+        revenueTodayCents: bot.revenueTodayCents,
+        sdkErrors: bot.sdkErrors,
+      };
+    });
+
+    const totalRequests = bots.reduce((acc, bot) => acc + bot.requests7d, 0);
+    const weightedFillRate =
+      totalRequests > 0
+        ? bots.reduce((acc, bot) => acc + bot.fillRate7d * bot.requests7d, 0) / totalRequests
+        : 0;
+    const revenueTodayCents = bots.reduce((acc, bot) => acc + bot.revenueTodayCents, 0);
+    const sdkErrors = bots.reduce((acc, bot) => acc + bot.sdkErrors, 0);
+
+    return res.json({
+      summary: {
+        registeredBots: bots.length,
+        fillRate7d: weightedFillRate,
+        revenueTodayCents,
+        sdkErrors,
+      },
+      bots,
+    });
+  } catch (err) {
+    console.error("Publisher dashboard failed", err);
+    return res.status(500).json({ error: "Failed to load publisher dashboard" });
   }
 });
 

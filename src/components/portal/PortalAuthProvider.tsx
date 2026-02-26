@@ -2,7 +2,13 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api";
-import { EntryContextResponse, PortalRole, PortalUser, WorkspaceOption } from "@/lib/portal-auth";
+import {
+  EntryContextResponse,
+  PortalRole,
+  PortalUser,
+  WorkspaceKind,
+  WorkspaceOption,
+} from "@/lib/portal-auth";
 
 interface PortalAuthContextValue {
   user: PortalUser | null;
@@ -14,71 +20,20 @@ interface PortalAuthContextValue {
   signUp: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   selectWorkspace: (workspaceId: string) => Promise<void>;
+  createWorkspace: (type: WorkspaceKind, name?: string) => Promise<void>;
   refreshEntryContext: () => Promise<void>;
 }
 
 const PortalAuthContext = createContext<PortalAuthContextValue | null>(null);
 
 const getUserHeader = (email: string) => ({ "x-user-email": email.toLowerCase() });
-const LOCAL_DEV_SESSION_KEY = "botgrid_local_dev_session";
 
-interface LocalDevAccount {
-  email: string;
-  password: string;
-  user: PortalUser;
-  workspaces: WorkspaceOption[];
-  defaultWorkspaceId: string;
-}
-
-const LOCAL_DEV_ACCOUNTS: LocalDevAccount[] = [
-  {
-    email: "advertiser.demo@local.test",
-    password: "Advertiser123!",
-    user: {
-      id: "local-advertiser-user",
-      email: "advertiser.demo@local.test",
-      name: "Advertiser Demo",
-    },
-    workspaces: [
-      {
-        id: "local-workspace-advertiser",
-        orgId: "local-workspace-advertiser",
-        role: "advertiser",
-        title: "Advertiser",
-        description: "Create campaigns, upload creatives, and manage budget controls.",
-      },
-    ],
-    defaultWorkspaceId: "local-workspace-advertiser",
-  },
-  {
-    email: "botdev.demo@local.test",
-    password: "BotDeveloper123!",
-    user: {
-      id: "local-botdev-user",
-      email: "botdev.demo@local.test",
-      name: "Bot Developer Demo",
-    },
-    workspaces: [
-      {
-        id: "local-workspace-publisher",
-        orgId: "local-workspace-publisher",
-        role: "publisher",
-        title: "Bot Developer",
-        description: "Manage bots, SDK keys, placements, and monetization performance.",
-      },
-    ],
-    defaultWorkspaceId: "local-workspace-publisher",
-  },
-];
-
-const findLocalDevAccount = (email: string) =>
-  LOCAL_DEV_ACCOUNTS.find((account) => account.email.toLowerCase() === email.toLowerCase());
+const getSessionEmail = (session: Session | null) => session?.user.email?.trim().toLowerCase() || "";
 
 export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<PortalUser | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null);
-  const [localDevEmail, setLocalDevEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const currentRole = useMemo(() => {
@@ -86,51 +41,60 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
     return workspaces.find((item) => item.id === currentWorkspaceId)?.role || null;
   }, [currentWorkspaceId, workspaces]);
 
-  const clearState = () => {
+  const clearState = useCallback(() => {
     setUser(null);
     setWorkspaces([]);
     setCurrentWorkspaceId(null);
-    setLocalDevEmail(null);
-    localStorage.removeItem(LOCAL_DEV_SESSION_KEY);
-  };
-
-  const applyLocalDevAccount = useCallback((account: LocalDevAccount, workspaceId?: string | null) => {
-    setLocalDevEmail(account.email);
-    setUser(account.user);
-    setWorkspaces(account.workspaces);
-    setCurrentWorkspaceId(workspaceId || account.defaultWorkspaceId);
-    localStorage.setItem(
-      LOCAL_DEV_SESSION_KEY,
-      JSON.stringify({
-        email: account.email,
-        workspaceId: workspaceId || account.defaultWorkspaceId,
-      }),
-    );
   }, []);
 
-  const loadEntryContext = useCallback(async (session: Session) => {
-    const email = session.user.email?.toLowerCase();
-    if (!email) {
-      clearState();
+  const applyEntryContext = useCallback((entry: EntryContextResponse | null) => {
+    if (!entry) {
+      setUser(null);
+      setWorkspaces([]);
+      setCurrentWorkspaceId(null);
       return;
     }
 
-    const name = String(session.user.user_metadata?.full_name || email.split("@")[0] || "Portal User");
-
-    await apiRequest(
-      "/auth/sync-user",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, name }),
-      },
-      getUserHeader(email),
-    );
-
-    const entry = await apiRequest<EntryContextResponse>("/me/entry-context", undefined, getUserHeader(email));
     setUser(entry.user);
     setWorkspaces(entry.workspaces || []);
     setCurrentWorkspaceId(entry.defaultWorkspaceId || entry.workspaces[0]?.id || null);
   }, []);
+
+  const loadEntryContext = useCallback(
+    async (session: Session) => {
+      const email = getSessionEmail(session);
+      if (!email) {
+        clearState();
+        return;
+      }
+
+      const fallbackName = email.split("@")[0] || "Portal User";
+      const name = String(session.user.user_metadata?.full_name || fallbackName);
+
+      await apiRequest(
+        "/auth/sync-user",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, name }),
+        },
+        getUserHeader(email),
+      );
+
+      const entry = await apiRequest<EntryContextResponse>("/me/entry-context", undefined, getUserHeader(email));
+      applyEntryContext(entry);
+    },
+    [applyEntryContext, clearState],
+  );
+
+  const readActiveEmail = useCallback(async () => {
+    if (user?.email) return user.email.toLowerCase();
+    const { data } = await supabase.auth.getSession();
+    const email = getSessionEmail(data.session);
+    if (!email) {
+      throw new Error("No active user session");
+    }
+    return email;
+  }, [user?.email]);
 
   const refreshEntryContext = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
@@ -139,27 +103,16 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     await loadEntryContext(data.session);
-  }, [loadEntryContext]);
+  }, [clearState, loadEntryContext]);
 
   useEffect(() => {
     let mounted = true;
 
     const bootstrap = async () => {
       try {
-        const rawLocalSession = localStorage.getItem(LOCAL_DEV_SESSION_KEY);
-        if (rawLocalSession) {
-          const parsed = JSON.parse(rawLocalSession) as { email?: string; workspaceId?: string | null };
-          if (parsed.email) {
-            const localAccount = findLocalDevAccount(parsed.email);
-            if (localAccount) {
-              applyLocalDevAccount(localAccount, parsed.workspaceId || undefined);
-              return;
-            }
-          }
-        }
-
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
+
         if (data.session) {
           await loadEntryContext(data.session);
         } else {
@@ -178,14 +131,19 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
 
     const handleAuthChange = async (_event: AuthChangeEvent, session: Session | null) => {
       if (!mounted) return;
-      if (!session) {
-        clearState();
-        return;
-      }
+      setLoading(true);
       try {
-        await loadEntryContext(session);
+        if (session) {
+          await loadEntryContext(session);
+        } else {
+          clearState();
+        }
       } catch (_err) {
         clearState();
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -198,28 +156,26 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false;
       subscription.subscription.unsubscribe();
     };
-  }, [applyLocalDevAccount, loadEntryContext]);
+  }, [clearState, loadEntryContext]);
 
   const signIn = async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
-    const localAccount = findLocalDevAccount(normalizedEmail);
-    if (localAccount && localAccount.password === password) {
-      applyLocalDevAccount(localAccount);
-      return;
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
     });
     if (error) {
       throw error;
     }
+    if (data.session) {
+      await loadEntryContext(data.session);
+    }
   };
 
   const signUp = async (name: string, email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
       password,
       options: {
         data: {
@@ -230,13 +186,15 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) {
       throw error;
     }
+
+    if (!data.session) {
+      throw new Error("Account created. Confirm your email, then sign in.");
+    }
+
+    await loadEntryContext(data.session);
   };
 
   const logout = async () => {
-    if (localDevEmail) {
-      clearState();
-      return;
-    }
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw error;
@@ -245,17 +203,7 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const selectWorkspace = async (workspaceId: string) => {
-    if (localDevEmail) {
-      const localAccount = findLocalDevAccount(localDevEmail);
-      if (localAccount) {
-        applyLocalDevAccount(localAccount, workspaceId);
-      }
-      return;
-    }
-
-    const email = user?.email.toLowerCase();
-    if (!email) return;
-
+    const email = await readActiveEmail();
     const entry = await apiRequest<EntryContextResponse>(
       "/me/default-workspace",
       {
@@ -264,10 +212,23 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
       },
       getUserHeader(email),
     );
+    applyEntryContext(entry);
+  };
 
-    setLocalDevEmail(null);
-    setWorkspaces(entry.workspaces || []);
-    setCurrentWorkspaceId(entry.defaultWorkspaceId || workspaceId);
+  const createWorkspace = async (type: WorkspaceKind, name?: string) => {
+    const email = await readActiveEmail();
+    const entry = await apiRequest<EntryContextResponse>(
+      "/me/create-workspace",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          type,
+          ...(name?.trim() ? { name: name.trim() } : {}),
+        }),
+      },
+      getUserHeader(email),
+    );
+    applyEntryContext(entry);
   };
 
   return (
@@ -282,6 +243,7 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
         signUp,
         logout,
         selectWorkspace,
+        createWorkspace,
         refreshEntryContext,
       }}
     >

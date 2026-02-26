@@ -49,8 +49,11 @@ API default:
 - `POST /api/auth/sync-user`
 - `GET /api/me/entry-context` (requires `x-user-email`)
 - `GET /api/me/organizations` (requires `x-user-email`)
+- `POST /api/me/create-workspace` (requires `x-user-email`)
 - `POST /api/me/default-workspace` (requires `x-user-email`)
 - `POST /api/me/switch-organization` (requires `x-user-email`)
+- `GET /api/advertiser/dashboard` (requires `x-user-email`)
+- `GET /api/publisher/dashboard` (requires `x-user-email`)
 - `POST /api/ads` (SDK ad serving)
 - `POST /api/track/:eventType` (SDK events: impression/click/revenue)
 - `POST /api/leads`
@@ -86,12 +89,18 @@ This enables one-login + multi-workspace routing for:
 - Bot developer portal
 - Admin portal
 
-## Local login test accounts
+## App onboarding behavior
 
-For frontend role-flow testing, these credentials are available in `/app/login`:
+Portal credentials are not hardcoded.
 
-- `advertiser.demo@local.test` / `Advertiser123!`
-- `botdev.demo@local.test` / `BotDeveloper123!`
+For local role-flow testing:
+- Open `/app/login`
+- Create a new account
+- On first login, choose Advertiser or Bot Developer
+- The app calls `POST /api/me/create-workspace` and routes into the selected portal
+- Portal dashboards are populated from DB via:
+  - `GET /api/advertiser/dashboard`
+  - `GET /api/publisher/dashboard`
 
 ## Production migration path
 

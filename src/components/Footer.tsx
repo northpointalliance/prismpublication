@@ -13,6 +13,7 @@ const companyLinks = [
   { label: "Company", to: "/company" },
   { label: "Product", to: "/product" },
   { label: "Use Cases", to: "/use-cases" },
+  { label: "Documentation", to: "/docs" },
   { label: "SDK", to: "/sdk" },
   { label: "Blog", to: "/blog" },
 ];
@@ -96,7 +97,7 @@ const Footer = () => {
             <p>© {year} BotGrid. All rights reserved.</p>
             <div className="flex items-center gap-5">
               <Link to="/company" className="transition-colors hover:text-foreground">About</Link>
-              <Link to="/sdk" className="transition-colors hover:text-foreground">Docs</Link>
+              <Link to="/docs" className="transition-colors hover:text-foreground">Docs</Link>
               <Link to="/blog" className="transition-colors hover:text-foreground">Blog</Link>
               <Link to="/demo" className="transition-colors hover:text-foreground">Demo</Link>
             </div>

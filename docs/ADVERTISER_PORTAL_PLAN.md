@@ -323,13 +323,14 @@ This architecture gives three clear experiences with strict permission boundarie
 - Bot Developers supply inventory and monitor monetization.
 - Admin runs trust, quality, and economics across the entire platform.
 
-## Development Test Credentials
+## Current Onboarding Behavior
 
-Use these credentials in `/app/login` for local role testing:
-
-- Advertiser test user:
-  - Email: `advertiser.demo@local.test`
-  - Password: `Advertiser123!`
-- Bot developer test user:
-  - Email: `botdev.demo@local.test`
-  - Password: `BotDeveloper123!`
+- `/app/login` is a unified entrypoint (no role-specific login pages).
+- Users create their own credentials through Supabase auth.
+- First login without memberships opens role selection in `/app/choose-workspace`.
+- Role selection triggers workspace creation:
+  - Advertiser -> `POST /api/me/create-workspace` with `type: advertiser`
+  - Bot Developer -> `POST /api/me/create-workspace` with `type: publisher`
+- Dashboards load data through real backend endpoints and database rows:
+  - Advertiser -> `GET /api/advertiser/dashboard`
+  - Bot Developer -> `GET /api/publisher/dashboard`

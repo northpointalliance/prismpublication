@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CheckCircle2 } from "lucide-react";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 
 const AppLogin = () => {
@@ -45,25 +46,72 @@ const AppLogin = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background px-4 py-20">
+    <div className="relative min-h-screen overflow-hidden bg-background px-4 py-20 md:py-24">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute inset-0 grid-pattern opacity-60" />
+        <div className="absolute inset-0 grid-pattern opacity-65" />
         <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-primary/20 blur-[130px]" />
       </div>
-      <div className="relative mx-auto max-w-md">
-        <Card className="border-border/80 bg-card/90 shadow-xl backdrop-blur-xl">
+      <div className="relative mx-auto grid w-full max-w-5xl gap-6 md:grid-cols-[1.05fr_0.95fr]">
+        <Card className="border-border/80 bg-card/85 shadow-xl backdrop-blur-xl">
           <CardHeader>
-            <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Unified Login</p>
-            <CardTitle className="text-3xl font-bold tracking-tight">Access Portal</CardTitle>
+            <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">BotGrid App</p>
+            <CardTitle className="text-4xl font-bold tracking-tight">One Login. Two Workspaces.</CardTitle>
             <p className="text-sm text-muted-foreground">
-              One login for advertisers, bot developers, and platform admins.
+              Sign in once, then choose Advertiser or Bot Developer workspace.
             </p>
           </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              "Create account or sign in",
+              "Pick your first workspace after login",
+              "Start from pre-filled dashboard examples",
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-2 rounded-xl border border-border/70 bg-background/70 p-3">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                <p className="text-sm text-muted-foreground">{item}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 bg-card/90 shadow-xl backdrop-blur-xl">
+          <CardHeader>
+            <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Authentication</p>
+            <CardTitle className="text-3xl font-bold tracking-tight">
+              {mode === "signin" ? "Sign In" : "Create Account"}
+            </CardTitle>
+          </CardHeader>
           <CardContent>
+            <div className="mb-4 grid grid-cols-2 rounded-full border border-border/80 bg-background p-1 text-sm">
+              <button
+                type="button"
+                className={`rounded-full px-3 py-2 transition-colors ${
+                  mode === "signin"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setMode("signin")}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className={`rounded-full px-3 py-2 transition-colors ${
+                  mode === "signup"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setMode("signup")}
+              >
+                Sign Up
+              </button>
+            </div>
+
             <form className="space-y-4" onSubmit={submit}>
               {mode === "signup" && (
                 <Input
                   placeholder="Full name"
+                  autoComplete="name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />
@@ -71,15 +119,22 @@ const AppLogin = () => {
               <Input
                 placeholder="Email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
               <Input
                 placeholder="Password"
                 type="password"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
+              {mode === "signup" && (
+                <p className="text-xs text-muted-foreground">
+                  Use at least 8 characters with letters, numbers, and one symbol.
+                </p>
+              )}
               {error && (
                 <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
               )}
@@ -87,21 +142,6 @@ const AppLogin = () => {
                 {submitting ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
               </Button>
             </form>
-            <div className="mt-4 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">
-                {mode === "signin" ? "New here?" : "Already have an account?"}
-              </span>
-              <button
-                type="button"
-                className="font-semibold text-primary hover:underline"
-                onClick={() => setMode((current) => (current === "signin" ? "signup" : "signin"))}
-              >
-                {mode === "signin" ? "Create account" : "Sign in"}
-              </button>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Dev test users are available in docs for advertiser and bot developer portal testing.
-            </p>
           </CardContent>
         </Card>
       </div>

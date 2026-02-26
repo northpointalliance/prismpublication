@@ -67,6 +67,10 @@ const SDK = () => {
               <p className="mt-2 text-sm text-muted-foreground">
                 Validate placement and UX first, then move to production serving rules.
               </p>
+              <Link to="/docs" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                Open Full Documentation
+                <ArrowRight className="h-4 w-4" />
+              </Link>
               <Link to="/demo" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
                 Open Demo
                 <ArrowRight className="h-4 w-4" />

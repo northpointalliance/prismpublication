@@ -13,6 +13,7 @@ The website is now a multi-page marketing/product experience with:
 - How It Works / SDK (`/sdk`)
 - Company (`/company`)
 - Demo (`/demo`)
+- Website Docs (`/docs`)
 - Admin (`/admin`, key-protected)
 - App Login (`/app/login`)
 - Workspace Selector (`/app/choose-workspace`)
@@ -34,6 +35,7 @@ The website is now a multi-page marketing/product experience with:
 Supabase was **not removed**.
 
 - Existing frontend Supabase integration remains in `src/integrations/supabase`.
+- Login credentials are stored in Supabase Auth (database-backed, not hardcoded in code/docs).
 - Local-first DB foundation was added in parallel for future scalability.
 - Unified app login uses Supabase auth + backend entry-context APIs.
 - You can migrate incrementally endpoint-by-endpoint without breaking current frontend behavior.
@@ -83,16 +85,15 @@ This now starts:
 - Vite (`:8080`)
 - Cloudflare tunnel
 
-## Development Test Users
+## First-Run App Flow
 
-Use these in `/app/login` for quick role-based portal tests without creating accounts:
+There are no hardcoded portal test credentials now.
 
-- Advertiser:
-  - Email: `advertiser.demo@local.test`
-  - Password: `Advertiser123!`
-- Bot Developer:
-  - Email: `botdev.demo@local.test`
-  - Password: `BotDeveloper123!`
+Use `/app/login` and:
+- Create a new account.
+- On first login, choose Advertiser or Bot Developer.
+- The selected role creates the first workspace automatically.
+- Dashboard pages load mock records through real API endpoints backed by database rows.
 
 ## Documentation Map
 

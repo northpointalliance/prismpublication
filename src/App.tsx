@@ -14,6 +14,7 @@ import Company from "./pages/Company";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import Admin from "./pages/Admin";
+import Docs from "./pages/Docs";
 import AppLogin from "./pages/AppLogin";
 import ChooseWorkspace from "./pages/ChooseWorkspace";
 import AdvertiserPortal from "./pages/AdvertiserPortal";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/advertisers" element={<Advertisers />} />
             <Route path="/sdk" element={<SDK />} />
             <Route path="/company" element={<Company />} />
+            <Route path="/docs" element={<Docs />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
             <Route path="/demo" element={<Demo />} />

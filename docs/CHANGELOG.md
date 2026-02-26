@@ -2,6 +2,26 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Portal onboarding cleanup + UX pass)
+
+- Removed hardcoded local test credentials from portal auth flow.
+- Confirmed credentials are handled by Supabase Auth storage (database-backed auth path).
+- Updated backend onboarding behavior:
+  - `POST /api/auth/sync-user` now provisions user only.
+  - new `POST /api/me/create-workspace` creates first advertiser/publisher workspace on role pick.
+- Added DB-backed portal dashboard APIs:
+  - `GET /api/advertiser/dashboard`
+  - `GET /api/publisher/dashboard`
+- Workspace creation and dashboard load now seed/read mock records through normal DB/API integration flow.
+- Rebuilt `/app/login` UI for clearer first-time flow and reduced friction.
+- Rebuilt `/app/choose-workspace` UI:
+  - first-time users can choose Advertiser or Bot Developer and create workspace.
+  - existing users can switch/open existing workspaces.
+- Added richer mock dashboard data for:
+  - `/app/advertiser`
+  - `/app/publisher`
+- Removed static portal credential references from docs and docs page.
+
 ## 2026-02-26 (Unified app auth + workspace routing)
 
 - Implemented one-login app flow with role/workspace selection:
@@ -30,9 +50,17 @@ This file tracks the website evolution from the first major redesign pass to the
 - Runtime note:
   - In this sandbox, direct port binding for `:8080` and `:8787` is restricted (`EPERM`), so live port checks here are limited.
   - On your machine, after `server` deps + Prisma setup, `./scripts/prism_stack.sh restart` should run the full stack.
-- Added local development test credentials for role testing in `/app/login`:
-  - advertiser: `advertiser.demo@local.test` / `Advertiser123!`
-  - bot developer: `botdev.demo@local.test` / `BotDeveloper123!`
+
+## 2026-02-26 (Public documentation page)
+
+- Added new public documentation page at `/docs` with:
+  - SDK integration snippets
+  - direct API call example
+  - runtime stack commands
+  - common errors and fixes (Vite host, Rollup module, esbuild mismatch, Cloudflare 530/403, API auth)
+  - portal onboarding and troubleshooting reference
+- Wired docs links in footer and SDK page navigation.
+- Added `/docs` route to `public/sitemap.xml`.
 
 ## 2026-02-26 (Changelog refresh: verification + runbook)
 
