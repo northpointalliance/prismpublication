@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Bot, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 
 const primaryLinks = [
   { label: "Publishers", to: "/publishers" },
@@ -12,6 +13,7 @@ const primaryLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = usePortalAuth();
   const closeMobileMenu = () => setMobileOpen(false);
 
   return (
@@ -36,8 +38,8 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center">
-          <Link to="/demo">
-            <Button variant="hero" size="sm">Run Demo</Button>
+          <Link to={user ? "/app/choose-workspace" : "/app/login"}>
+            <Button variant="hero" size="sm">{user ? "Open App" : "Login"}</Button>
           </Link>
         </div>
 
@@ -70,8 +72,8 @@ const Navbar = () => {
               </li>
             ))}
           </ul>
-          <Link to="/demo" onClick={closeMobileMenu}>
-            <Button variant="hero" size="sm" className="w-full mt-4">Run Demo</Button>
+          <Link to={user ? "/app/choose-workspace" : "/app/login"} onClick={closeMobileMenu}>
+            <Button variant="hero" size="sm" className="w-full mt-4">{user ? "Open App" : "Login"}</Button>
           </Link>
         </div>
       )}

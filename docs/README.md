@@ -14,6 +14,11 @@ The website is now a multi-page marketing/product experience with:
 - Company (`/company`)
 - Demo (`/demo`)
 - Admin (`/admin`, key-protected)
+- App Login (`/app/login`)
+- Workspace Selector (`/app/choose-workspace`)
+- Advertiser App (`/app/advertiser`)
+- Bot Developer App (`/app/publisher`)
+- Admin App (`/app/admin`)
 - Blog (`/blog`) and article pages (`/blog/:slug`)
 
 ## Tech Stack
@@ -21,7 +26,7 @@ The website is now a multi-page marketing/product experience with:
 - Frontend: React 18 + TypeScript + Vite
 - UI: Tailwind + shadcn/ui + Lucide icons
 - Routing: React Router
-- Data Layer (current): Supabase client remains active
+- Data Layer (current): Supabase client remains active for auth/session
 - Local DB option (added): PostgreSQL + Prisma + Node API (`server/`)
 
 ## Database Status
@@ -30,6 +35,7 @@ Supabase was **not removed**.
 
 - Existing frontend Supabase integration remains in `src/integrations/supabase`.
 - Local-first DB foundation was added in parallel for future scalability.
+- Unified app login uses Supabase auth + backend entry-context APIs.
 - You can migrate incrementally endpoint-by-endpoint without breaking current frontend behavior.
 
 See: [LOCAL_DATABASE.md](/home/tokyo/Desktop/AIADS/docs/LOCAL_DATABASE.md)

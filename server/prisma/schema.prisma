@@ -33,6 +33,24 @@ enum AdEventType {
   revenue
 }
 
+enum OrganizationType {
+  advertiser
+  publisher
+  admin
+}
+
+enum OrganizationMemberRole {
+  advertiser_owner
+  advertiser_member
+  advertiser_finance
+  publisher_owner
+  publisher_dev
+  publisher_ops
+  reviewer
+  admin
+  super_admin
+}
+
 model Lead {
   id        String     @id @default(cuid())
   role      LeadRole   @default(general)
@@ -48,6 +66,49 @@ model Lead {
   @@index([email])
   @@index([role, createdAt])
   @@map("leads")
+}
+
+model User {
+  id                    String               @id @default(cuid())
+  email                 String               @unique
+  name                  String
+  defaultOrganizationId String?
+  defaultOrganization   Organization?        @relation("DefaultOrganization", fields: [defaultOrganizationId], references: [id], onDelete: SetNull)
+  memberships           OrganizationMember[]
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@index([email])
+  @@map("users")
+}
+
+model Organization {
+  id               String               @id @default(cuid())
+  name             String
+  type             OrganizationType
+  members          OrganizationMember[]
+  usersWithDefault User[]               @relation("DefaultOrganization")
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([type, createdAt])
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String                 @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrganizationMemberRole
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@unique([userId, organizationId, role])
+  @@index([organizationId, role])
+  @@index([userId, role])
+  @@map("organization_members")
 }
 
 model Ad {

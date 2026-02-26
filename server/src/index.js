@@ -81,6 +81,15 @@ const adminUpdateAdSchema = adminCreateAdSchema.partial().refine(
   "At least one field is required",
 );
 
+const syncUserSchema = z.object({
+  email: z.string().trim().email(),
+  name: z.string().trim().min(2).max(120).optional(),
+});
+
+const selectWorkspaceSchema = z.object({
+  workspaceId: z.string().trim().min(3).max(120),
+});
+
 const getBearerToken = (authorizationHeader = "") =>
   authorizationHeader.startsWith("Bearer ") ? authorizationHeader.slice(7).trim() : "";
 
@@ -124,12 +133,267 @@ const toSdkAd = (ad) => ({
   tags: ad.topics || [],
 });
 
+const roleToWorkspaceCopy = {
+  advertiser: {
+    title: "Advertiser",
+    description: "Create campaigns, upload creatives, and manage budget controls.",
+  },
+  publisher: {
+    title: "Bot Developer",
+    description: "Manage bots, SDK keys, placements, and monetization performance.",
+  },
+  admin: {
+    title: "Platform Admin",
+    description: "Operate moderation, risk, finance, and platform-wide controls.",
+  },
+};
+
+const mapMembershipRoleToPortalRole = (role) => {
+  if (role.startsWith("advertiser_")) return "advertiser";
+  if (role.startsWith("publisher_")) return "publisher";
+  return "admin";
+};
+
+const readUserEmail = (req) =>
+  String(req.headers["x-user-email"] || req.query.email || "").trim().toLowerCase();
+
+const buildEntryContextByUserId = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      memberships: {
+        include: { organization: true },
+      },
+    },
+  });
+
+  if (!user) return null;
+
+  const workspaces = user.memberships.map((membership) => {
+    const role = mapMembershipRoleToPortalRole(membership.role);
+    const copy = roleToWorkspaceCopy[role];
+    return {
+      id: membership.organization.id,
+      orgId: membership.organization.id,
+      role,
+      title: copy.title,
+      description: copy.description,
+    };
+  });
+
+  const defaultWorkspaceId =
+    user.defaultOrganizationId && workspaces.some((item) => item.orgId === user.defaultOrganizationId)
+      ? user.defaultOrganizationId
+      : workspaces[0]?.orgId || null;
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
+    workspaces,
+    defaultWorkspaceId,
+  };
+};
+
+const requirePortalUser = async (req, res, next) => {
+  const email = readUserEmail(req);
+  if (!email) {
+    return res.status(401).json({ error: "Missing x-user-email header" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    return res.status(401).json({ error: "User not provisioned. Call /api/auth/sync-user first." });
+  }
+
+  req.portalUser = user;
+  return next();
+};
+
 app.get("/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: "ok", database: "connected" });
   } catch (_err) {
     res.status(503).json({ status: "degraded", database: "unreachable" });
+  }
+});
+
+app.post("/api/auth/sync-user", async (req, res) => {
+  const parsed = syncUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid sync payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const email = parsed.data.email.toLowerCase();
+  const fallbackName = email.split("@")[0] || "Portal User";
+  const name = parsed.data.name?.trim() || fallbackName;
+
+  try {
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: { name },
+      create: { email, name },
+    });
+
+    const memberships = await prisma.organizationMember.count({
+      where: { userId: user.id },
+    });
+
+    if (memberships === 0) {
+      const [advertiserOrg, publisherOrg] = await Promise.all([
+        prisma.organization.create({
+          data: {
+            name: `${name} Advertiser Workspace`,
+            type: "advertiser",
+          },
+        }),
+        prisma.organization.create({
+          data: {
+            name: `${name} Publisher Workspace`,
+            type: "publisher",
+          },
+        }),
+      ]);
+
+      const memberData = [
+        {
+          userId: user.id,
+          organizationId: advertiserOrg.id,
+          role: "advertiser_owner",
+        },
+        {
+          userId: user.id,
+          organizationId: publisherOrg.id,
+          role: "publisher_owner",
+        },
+      ];
+
+      if (email.includes("admin") || email.includes("owner")) {
+        const adminOrg = await prisma.organization.create({
+          data: {
+            name: "Platform Admin Workspace",
+            type: "admin",
+          },
+        });
+        memberData.push({
+          userId: user.id,
+          organizationId: adminOrg.id,
+          role: "admin",
+        });
+      }
+
+      await prisma.organizationMember.createMany({ data: memberData });
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { defaultOrganizationId: advertiserOrg.id },
+      });
+    }
+
+    const entry = await buildEntryContextByUserId(user.id);
+    return res.json(entry);
+  } catch (err) {
+    console.error("User sync failed", err);
+    return res.status(500).json({ error: "Failed to sync user" });
+  }
+});
+
+app.get("/api/me/entry-context", requirePortalUser, async (req, res) => {
+  try {
+    const entry = await buildEntryContextByUserId(req.portalUser.id);
+    return res.json(entry);
+  } catch (err) {
+    console.error("Entry context failed", err);
+    return res.status(500).json({ error: "Failed to fetch entry context" });
+  }
+});
+
+app.get("/api/me/organizations", requirePortalUser, async (req, res) => {
+  try {
+    const entry = await buildEntryContextByUserId(req.portalUser.id);
+    return res.json({ workspaces: entry?.workspaces || [] });
+  } catch (err) {
+    console.error("Organization list failed", err);
+    return res.status(500).json({ error: "Failed to fetch organizations" });
+  }
+});
+
+app.post("/api/me/default-workspace", requirePortalUser, async (req, res) => {
+  const parsed = selectWorkspaceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid workspace payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const membership = await prisma.organizationMember.findFirst({
+      where: {
+        userId: req.portalUser.id,
+        organizationId: parsed.data.workspaceId,
+      },
+    });
+
+    if (!membership) {
+      return res.status(403).json({ error: "Workspace not accessible for this user" });
+    }
+
+    await prisma.user.update({
+      where: { id: req.portalUser.id },
+      data: {
+        defaultOrganizationId: parsed.data.workspaceId,
+      },
+    });
+
+    const entry = await buildEntryContextByUserId(req.portalUser.id);
+    return res.json(entry);
+  } catch (err) {
+    console.error("Default workspace update failed", err);
+    return res.status(500).json({ error: "Failed to set default workspace" });
+  }
+});
+
+app.post("/api/me/switch-organization", requirePortalUser, async (req, res) => {
+  const parsed = selectWorkspaceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid switch payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const membership = await prisma.organizationMember.findFirst({
+      where: {
+        userId: req.portalUser.id,
+        organizationId: parsed.data.workspaceId,
+      },
+      include: { organization: true },
+    });
+
+    if (!membership) {
+      return res.status(403).json({ error: "Organization not accessible for this user" });
+    }
+
+    const role = mapMembershipRoleToPortalRole(membership.role);
+    return res.json({
+      workspaceId: membership.organizationId,
+      role,
+      organization: {
+        id: membership.organization.id,
+        name: membership.organization.name,
+        type: membership.organization.type,
+      },
+    });
+  } catch (err) {
+    console.error("Organization switch failed", err);
+    return res.status(500).json({ error: "Failed to switch organization" });
   }
 });
 

@@ -2,6 +2,35 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Unified app auth + workspace routing)
+
+- Implemented one-login app flow with role/workspace selection:
+  - `/app/login`
+  - `/app/choose-workspace`
+  - role-routed portals:
+    - `/app/advertiser`
+    - `/app/publisher`
+    - `/app/admin`
+- Added frontend portal auth provider and route guards:
+  - Supabase session sign-in/sign-up/sign-out
+  - backend entry-context sync/load
+  - workspace switching and default workspace selection
+- Added backend user/org membership primitives and APIs:
+  - new Prisma models: `User`, `Organization`, `OrganizationMember`
+  - new endpoints:
+    - `POST /api/auth/sync-user`
+    - `GET /api/me/entry-context`
+    - `GET /api/me/organizations`
+    - `POST /api/me/default-workspace`
+    - `POST /api/me/switch-organization`
+- Verification run:
+  - `npm run build` passed
+  - `npm run lint` passed (warning-only fast-refresh rules)
+  - `npm run test` passed
+- Runtime note:
+  - In this sandbox, direct port binding for `:8080` and `:8787` is restricted (`EPERM`), so live port checks here are limited.
+  - On your machine, after `server` deps + Prisma setup, `./scripts/prism_stack.sh restart` should run the full stack.
+
 ## 2026-02-26 (Changelog refresh: verification + runbook)
 
 - Confirmed latest implementation state:

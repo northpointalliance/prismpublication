@@ -4,9 +4,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const [leadCount, adCount] = await Promise.all([
+  const [leadCount, adCount, organizationCount] = await Promise.all([
     prisma.lead.count(),
     prisma.ad.count(),
+    prisma.organization.count(),
   ]);
 
   if (leadCount === 0) {
@@ -69,6 +70,61 @@ async function main() {
           weight: 1,
         },
       ],
+    });
+  }
+
+  if (organizationCount === 0) {
+    const user = await prisma.user.create({
+      data: {
+        email: "owner@example.com",
+        name: "Owner User",
+      },
+    });
+
+    const [advertiserOrg, publisherOrg, adminOrg] = await Promise.all([
+      prisma.organization.create({
+        data: {
+          name: "Owner Advertiser Workspace",
+          type: "advertiser",
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          name: "Owner Publisher Workspace",
+          type: "publisher",
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          name: "Platform Admin Workspace",
+          type: "admin",
+        },
+      }),
+    ]);
+
+    await prisma.organizationMember.createMany({
+      data: [
+        {
+          userId: user.id,
+          organizationId: advertiserOrg.id,
+          role: "advertiser_owner",
+        },
+        {
+          userId: user.id,
+          organizationId: publisherOrg.id,
+          role: "publisher_owner",
+        },
+        {
+          userId: user.id,
+          organizationId: adminOrg.id,
+          role: "admin",
+        },
+      ],
+    });
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { defaultOrganizationId: advertiserOrg.id },
     });
   }
 

@@ -1,131 +1,324 @@
-# Advertiser Portal Plan
+# Multi-Portal Platform Plan (Advertisers + Bot Developers + Admin)
 
-## Goal
-Build a secure advertiser portal where users can:
-- sign up and log in
-- submit ad creatives in supported formats
-- define budget and targeting
-- track campaign status and performance
+## Objective
+Replace the single advertiser-only plan with a full platform plan that supports:
+- Advertisers who buy inventory
+- Bot Developers (publishers) who integrate SDK and monetize bots
+- Platform Admins who run policy, quality, billing, and operations
 
-## Primary Outcome
-An advertiser can go from account creation to a submitted campaign without manual engineering support.
+Use one unified login entrypoint, then route users by selected role/workspace.
 
-## Success Criteria
-- Advertiser account creation and login works reliably.
-- Advertiser can create campaign drafts and submit for review.
-- Reviewer/admin can approve or reject with reason.
-- Approved campaigns can be activated and served.
-- Advertiser can see core metrics: impressions, clicks, CTR, spend.
+## Portal Overview
 
-## Scope (MVP)
-1. Authentication and role-based access.
-2. Advertiser workspace/profile.
-3. Campaign creation flow.
-4. Creative management for `text`, `card`, `banner`.
-5. Budget setup (daily cap + total cap).
-6. Review workflow.
-7. Basic reporting dashboard.
+## 1) Advertiser Portal
+Who uses it:
+- Brand, agency, growth, performance teams
 
-## Out of Scope (MVP)
-- Advanced attribution modeling.
-- Complex billing automation (full invoicing engine).
-- Multi-currency treasury features.
+What they see:
+- Account and team
+- Campaigns and ad creatives
+- Targeting and budget controls
+- Approval status and policy feedback
+- Performance reporting (impressions, clicks, CTR, spend)
+
+What they can do:
+- Create/edit campaigns
+- Upload creatives by format (`text`, `card`, `banner`)
+- Set daily/total budget caps
+- Submit for review, pause/resume approved campaigns
+- View and export reports
+
+## 2) Bot Developer Portal
+Who uses it:
+- Bot builders, publishers, AI product teams
+
+What they see:
+- Bots and environments (dev/staging/prod)
+- SDK keys and integration settings
+- Placement rules and ad frequency controls
+- Revenue dashboard and payout history
+- Bot-level ad quality/performance
+
+What they can do:
+- Register/manage bots
+- Generate/rotate SDK keys
+- Configure placement rules (frequency, topics, exclusions)
+- View serving health and integration diagnostics
+- Manage payout and tax profile
+
+## 3) Admin Portal (Platform Operator)
+Who uses it:
+- You and internal operators/reviewers
+
+What you see:
+- Global system overview and health
+- Advertiser queue and campaign moderation
+- Bot developer approvals and integration quality checks
+- Fraud/risk alerts
+- Billing/payout controls
+- Support and audit logs
+
+What you can do:
+- Approve/reject campaigns and bots
+- Override statuses and freeze entities
+- Tune serving constraints globally
+- Manage users, roles, and organization access
+- Review incident timelines and event logs
+
+## Access and Role Model
+
+## Identity
+- Supabase Auth for user sign-in/session.
+- Local DB as source of truth for business entities and authorization mapping.
+- No separate advertiser vs publisher login pages.
+- One login, then role/workspace selection.
+
+## Organization Model
+- Every user belongs to at least one organization.
+- Organization type: `advertiser_org`, `publisher_org`, or both.
 
 ## Roles
-- `advertiser`: owns campaigns and creatives.
-- `reviewer`: reviews submissions.
-- `admin`: full system access, overrides, configuration.
+- Advertiser side:
+  - `advertiser_owner`
+  - `advertiser_member`
+  - `advertiser_finance`
+- Bot developer side:
+  - `publisher_owner`
+  - `publisher_dev`
+  - `publisher_ops`
+- Platform side:
+  - `reviewer`
+  - `admin`
+  - `super_admin`
 
-## Core User Flows
-1. Advertiser sign up -> create company profile -> create first campaign draft.
-2. Advertiser adds creatives + budget + targeting -> submits for review.
-3. Reviewer approves/rejects with feedback.
-4. Approved campaign goes live when active and funded.
-5. Advertiser monitors metrics and adjusts campaign.
+## Unified Login and Role Selection Flow
+1. User opens `/app/login` and signs in.
+2. System checks memberships in `organization_members`.
+3. If user has one valid workspace, redirect directly to that portal.
+4. If user has multiple workspaces/roles, show `/app/choose-workspace`:
+  - "I am an Advertiser"
+  - "I am a Bot Developer"
+  - Admin options if role exists
+5. Save last selection as `default_workspace_id` + `default_role`.
+6. Future logins go directly to default portal, with a "switch workspace" control in app header.
 
-## Suggested Architecture
-- Auth: Supabase Auth (email/password, reset, session).
-- Business data: local Postgres + Prisma.
-- API: Express service under `server/`.
-- Frontend: React routes under `src/pages`.
-- Event tracking: existing `ad_events` extended for spend reporting.
+Benefits:
+- Less friction (one auth flow).
+- Cleaner onboarding.
+- Easier for users who operate both demand and supply sides.
 
-## Data Model Additions
+## Main System Flows
+
+## A) Advertiser Campaign Lifecycle
+1. Create campaign draft.
+2. Add creatives + targeting + budget.
+3. Submit for review.
+4. Reviewer decision:
+  - Approve -> campaign can go live.
+  - Reject -> advertiser receives reason and edits.
+5. Live campaign serves if:
+  - active
+  - approved
+  - budget not exhausted
+  - not blocked by risk policy.
+
+## B) Bot Developer Integration Lifecycle
+1. Register bot and environment.
+2. Generate SDK key and configure base URL.
+3. Define placement/frequency policy.
+4. Integration health checks pass.
+5. Bot starts receiving eligible ads.
+6. Revenue and payout data accrues.
+
+## C) Admin Operations Lifecycle
+1. Monitor global dashboard.
+2. Triage moderation queues.
+3. Handle risk alerts and quality flags.
+4. Manage disputes/support tickets.
+5. Approve payouts and close billing periods.
+
+## What Each Portal Screen Should Contain
+
+## Advertiser UI
+- Overview:
+  - spend today
+  - active campaigns
+  - approvals pending
+  - top creatives
+- Campaigns:
+  - table with status, budget, spend, CTR
+- Campaign detail:
+  - creatives tab
+  - targeting tab
+  - budget tab
+  - policy feedback tab
+  - metrics tab
+- Billing:
+  - wallet balance
+  - transactions
+  - invoices (phase 2)
+
+## Bot Developer UI
+- Overview:
+  - total requests
+  - fill rate
+  - eCPM / revenue
+  - integration health
+- Bots:
+  - bot status, environments, keys
+- Integrations:
+  - SDK snippet, webhook config, error logs
+- Monetization:
+  - earnings and payout schedule
+- Settings:
+  - ad policy defaults
+  - team members
+
+## Admin UI
+- Global dashboard:
+  - active advertisers
+  - active bots
+  - events per minute
+  - anomaly alerts
+- Review queues:
+  - campaigns pending review
+  - bots pending verification
+- Risk console:
+  - suspicious click patterns
+  - quality violations
+- Finance console:
+  - spend ledger
+  - payout approvals
+  - reconciliation view
+- Audit console:
+  - status changes
+  - actor logs
+  - API key events
+
+## Unified Data Model (Proposed)
+- `users` (auth-linked)
 - `organizations`
 - `organization_members`
 - `advertiser_profiles`
+- `publisher_profiles`
+- `bots`
+- `bot_environments`
+- `sdk_keys`
 - `campaigns`
 - `ad_creatives`
 - `campaign_targeting`
 - `campaign_budget_rules`
-- `review_decisions`
+- `ad_events`
 - `spend_ledger`
-- `invoices` (phase 2)
+- `payout_ledger`
+- `review_decisions`
+- `risk_flags`
+- `audit_logs`
 
-## API Endpoints (Proposed)
+## API Surface (Proposed)
+
+## Shared
 - `POST /api/auth/sync-user`
-- `GET /api/advertiser/profile`
-- `PUT /api/advertiser/profile`
+- `GET /api/me/organizations`
+- `POST /api/me/switch-organization`
+- `GET /api/me/entry-context`
+- `POST /api/me/default-workspace`
+
+## Advertiser
+- `GET /api/advertiser/dashboard`
 - `GET /api/advertiser/campaigns`
 - `POST /api/advertiser/campaigns`
 - `PATCH /api/advertiser/campaigns/:id`
 - `POST /api/advertiser/campaigns/:id/submit`
 - `GET /api/advertiser/campaigns/:id/metrics`
-- `GET /api/reviewer/queue`
-- `POST /api/reviewer/campaigns/:id/decision`
 
-## Frontend Pages (Proposed)
-- `/portal/login`
-- `/portal/onboarding`
-- `/portal/campaigns`
-- `/portal/campaigns/:id/edit`
-- `/portal/campaigns/:id/metrics`
-- `/portal/billing` (phase 2)
-- `/reviewer/queue` (internal)
+## Bot Developer
+- `GET /api/publisher/dashboard`
+- `GET /api/publisher/bots`
+- `POST /api/publisher/bots`
+- `PATCH /api/publisher/bots/:id`
+- `POST /api/publisher/bots/:id/keys`
+- `GET /api/publisher/bots/:id/metrics`
 
-## Validation Rules (Key)
-- URL must be valid and HTTPS.
-- Image dimensions and size limits enforced by format.
-- Required copy fields enforced by format.
-- Budget must include positive daily and/or total cap.
-- Campaign cannot submit without at least one valid creative.
+## Admin
+- `GET /api/admin/overview`
+- `GET /api/admin/reviews/campaigns`
+- `POST /api/admin/reviews/campaigns/:id/decision`
+- `GET /api/admin/reviews/bots`
+- `POST /api/admin/reviews/bots/:id/decision`
+- `GET /api/admin/risk/flags`
+- `GET /api/admin/finance/reconciliation`
 
-## Delivery Plan
+## Routing Plan (Frontend)
+- Public:
+  - `/`
+  - `/publishers`
+  - `/advertisers`
+  - `/sdk`
+  - `/demo`
+- App shell:
+  - `/app/login`
+  - `/app/choose-workspace`
+- Advertiser portal:
+  - `/app/advertiser`
+  - `/app/advertiser/campaigns`
+  - `/app/advertiser/campaigns/:id`
+- Bot developer portal:
+  - `/app/publisher`
+  - `/app/publisher/bots`
+  - `/app/publisher/bots/:id`
+- Admin portal:
+  - `/app/admin`
+  - `/app/admin/reviews`
+  - `/app/admin/risk`
+  - `/app/admin/finance`
 
-## Phase 1 (1-2 weeks): Account + Submission
-- Supabase auth integration.
-- Advertiser profile + organization ownership.
-- Campaign draft create/edit.
-- Creative create/edit for all formats.
-- Submit for review.
-- Reviewer approve/reject flow.
+## Phased Delivery
 
-## Phase 2 (1-2 weeks): Budget + Reporting
-- Budget enforcement rules in serving path.
-- Spend ledger from event stream.
-- Advertiser metrics dashboard.
-- Campaign pause/resume controls.
+## Phase 1 (Core Access + Base Portals)
+- Unified auth + workspace switcher
+- Advertiser campaign draft + submission
+- Bot registration + SDK keys
+- Admin review queue for campaigns/bots
 
-## Phase 3 (1 week): Hardening
-- Audit logs and activity history.
-- Better policy checks and moderation helpers.
-- CSV export for reports.
-- UX polish and error handling improvements.
+## Phase 2 (Monetization Controls)
+- Budget enforcement in serving path
+- Publisher revenue dashboard
+- Advertiser spend dashboard
+- Admin reconciliation basics
 
-## Technical Risks and Mitigation
-- Auth/data split complexity:
-  - Keep Supabase for identity only; map to local `organization_members`.
-- Budget overspend risk:
-  - Enforce hard caps at serve time and track spend atomically.
-- Moderation bottleneck:
-  - Start with simple reviewer queue and status filters.
+## Phase 3 (Operational Hardening)
+- Risk detection and manual investigation tools
+- Full audit trails
+- Team invites and granular permissions
+- CSV exports and scheduled reporting
 
-## Implementation Checklist
-- [ ] Finalize schema and run Prisma migration.
-- [ ] Add auth middleware and role guards.
-- [ ] Build advertiser campaign CRUD APIs.
-- [ ] Build reviewer queue + decision APIs.
-- [ ] Build portal UI pages.
-- [ ] Add metrics queries and dashboard cards.
-- [ ] Add tests for campaign status transitions.
-- [ ] Update docs and runbook.
+## Phase 4 (Scale)
+- Automated moderation assist
+- Payout workflow automation
+- Alerting and SLO dashboards
+- Multi-region support considerations
+
+## Admin-First Visibility Requirements (Non-Negotiable)
+- You must always be able to answer:
+  - Which campaigns are live and why
+  - Which bots are serving and why
+  - Where spend came from and where revenue goes
+  - What changed, who changed it, and when
+- This means:
+  - mandatory status transition logs
+  - immutable event history for billing/review decisions
+  - organization-level and global rollup dashboards
+
+## Immediate Build Order
+1. Implement one login flow + workspace/role selector.
+2. Build advertiser and publisher minimal dashboards.
+3. Build one admin review surface for both campaign and bot approvals.
+4. Connect serve-time gating to approval + budget + risk status.
+5. Add reporting and audit views.
+
+## Result
+This architecture gives three clear experiences with strict permission boundaries:
+- Advertisers buy and optimize demand.
+- Bot Developers supply inventory and monitor monetization.
+- Admin runs trust, quality, and economics across the entire platform.

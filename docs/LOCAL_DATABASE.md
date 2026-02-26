@@ -46,6 +46,11 @@ npm run dev
 API default:
 
 - `GET /health`
+- `POST /api/auth/sync-user`
+- `GET /api/me/entry-context` (requires `x-user-email`)
+- `GET /api/me/organizations` (requires `x-user-email`)
+- `POST /api/me/default-workspace` (requires `x-user-email`)
+- `POST /api/me/switch-organization` (requires `x-user-email`)
 - `POST /api/ads` (SDK ad serving)
 - `POST /api/track/:eventType` (SDK events: impression/click/revenue)
 - `POST /api/leads`
@@ -66,6 +71,20 @@ Frontend optional env (root `.env`):
 - `VITE_API_BASE_URL` (defaults to `/api`)
 - `VITE_BOTGRID_API_KEY` (defaults to `local-demo-key`)
 - `VITE_ADMIN_KEY` (optional prefill for `/admin`)
+
+## Added multi-portal identity model
+
+New core Prisma entities:
+
+- `User`
+- `Organization`
+- `OrganizationMember`
+
+This enables one-login + multi-workspace routing for:
+
+- Advertiser portal
+- Bot developer portal
+- Admin portal
 
 ## Production migration path
 
