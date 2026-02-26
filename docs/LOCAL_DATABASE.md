@@ -54,6 +54,8 @@ API default:
 - `POST /api/me/switch-organization` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `GET /api/advertiser/dashboard` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `GET /api/publisher/dashboard` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/demo/ads` (public demo ad fetch route with rate limiting)
+- `POST /api/demo/track/:eventType` (public demo tracking route, impression/click only, rate limited)
 - `POST /api/ads` (SDK ad serving)
 - `POST /api/track/:eventType` (SDK events: impression/click/revenue)
 - `POST /api/leads`
@@ -74,8 +76,11 @@ Required keys (from `server/.env`):
 Frontend optional env (root `.env`):
 
 - `VITE_API_BASE_URL` (defaults to `/api`)
-- `VITE_BOTGRID_API_KEY` (set explicitly; do not rely on defaults for shared environments)
-- `VITE_ADMIN_KEY` (optional prefill for `/admin`)
+
+Important:
+
+- Do not put `BOTGRID_API_KEY` or `ADMIN_API_KEY` into `VITE_*` variables.
+- `VITE_*` values are bundled client-side and are public by design.
 
 ## Added multi-portal identity model
 
@@ -117,4 +122,4 @@ You can migrate incrementally by moving write paths to the local API first.
 
 - Keep `.env` and `server/.env` local only; use `.env.example` files as templates.
 - Rotate `BOTGRID_API_KEY` and `ADMIN_API_KEY` before any public deployment.
-- Set `ALLOW_INSECURE_DEV_AUTH="false"` in production (default behavior is strict in production).
+- `ALLOW_INSECURE_DEV_AUTH` is strict by default; only set it to `"true"` for local debugging.

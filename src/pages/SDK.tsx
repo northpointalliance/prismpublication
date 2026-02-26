@@ -6,11 +6,12 @@ const installSnippet = `npm install @botgrid/sdk`;
 
 const usageSnippet = `import { BotGridAds } from "@botgrid/sdk";
 
+// Keep API keys on your server; never bundle them in frontend env vars.
 const botGrid = new BotGridAds({
-  apiKey: import.meta.env.VITE_BOTGRID_API_KEY!,
+  apiKey: process.env.BOTGRID_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
-  baseUrl: import.meta.env.VITE_API_BASE_URL || "/api", // local API
+  baseUrl: process.env.BOTGRID_API_BASE_URL || "https://your-api.example.com/api",
 });
 
 export async function handleMessage(userId: string, topic: string) {

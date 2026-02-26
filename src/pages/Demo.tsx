@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Play, Pause, RotateCcw, Sparkles, MessageSquare, MousePointerClick, Radio } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
-import { BotGridAds, type Ad as DemoAd } from "@botgrid/sdk";
-import { runtimeConfig } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 const createMessageId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -41,24 +40,54 @@ interface Message {
   isTyping?: boolean;
 }
 
+interface DemoAd {
+  id: string;
+  title: string;
+  description: string;
+  ctaText: string;
+  clickUrl: string;
+  imageUrl?: string;
+  advertiser: string;
+  tags?: string[];
+}
+
 const Demo = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const messageListRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
-  const botGridRef = useRef<BotGridAds | null>(null);
   const playbackRef = useRef(false);
   const demoUserId = "demo-local-user";
-  
-  useEffect(() => {
-    botGridRef.current = new BotGridAds({
-      apiKey: runtimeConfig.botgridApiKey,
-      botId: "demo-bot",
-      adFormat: "card",
-      baseUrl: runtimeConfig.apiBaseUrl,
+
+  const requestDemoAd = async (topic: string, userId: string) => {
+    const response = await apiRequest<{ success: boolean; data?: DemoAd[]; error?: string }>(
+      "/demo/ads",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          position: "inline",
+          format: "card",
+          context: {
+            topic,
+            userId,
+          },
+        }),
+      },
+    );
+    return response.data?.[0] || null;
+  };
+
+  const trackDemoEvent = async (eventType: "impression" | "click", adId: string, userId: string) => {
+    await apiRequest<{ success: boolean }>(`/demo/track/${eventType}`, {
+      method: "POST",
+      body: JSON.stringify({
+        adId,
+        userId,
+        topic: "ai",
+      }),
     });
-  }, []);
+  };
 
   useEffect(() => {
     const container = messageListRef.current;
@@ -95,12 +124,9 @@ const Demo = () => {
       const item = conversationScript[i];
       
       if (item.role === 'ad') {
-        const ad = await botGridRef.current?.displayAd({
-          topic: "ai",
-          userId: demoUserId,
-        });
+        const ad = await requestDemoAd("ai", demoUserId);
         if (ad && playbackRef.current) {
-          void botGridRef.current?.trackImpression(ad.id, demoUserId);
+          void trackDemoEvent("impression", ad.id, demoUserId);
           const adMessage: Message = {
             id: createMessageId(),
             role: 'ad',
@@ -147,13 +173,12 @@ const Demo = () => {
   };
 
   const handleAdClick = (ad: DemoAd) => {
-    void botGridRef.current?.trackClick(ad.id, demoUserId);
+    void trackDemoEvent("click", ad.id, demoUserId);
     window.open(ad.clickUrl, "_blank", "noopener,noreferrer");
   };
 
   const messageCount = messages.filter(m => m.role !== "ad").length;
   const adCount = messages.filter(m => m.role === 'ad').length;
-  const hasSdkKey = Boolean(runtimeConfig.botgridApiKey);
 
   return (
     <SiteShell mainClassName="bg-slate-950">
@@ -184,12 +209,11 @@ const Demo = () => {
               <button
                 type="button"
                 onClick={playConversation}
-                disabled={!hasSdkKey}
                 className={`btn-sweep inline-flex min-w-40 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-all duration-300 ${
                   isPlaying
                     ? "bg-amber-500 hover:bg-amber-400 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.7)]"
                     : "bg-emerald-500 hover:bg-emerald-400 shadow-[0_10px_30px_-10px_rgba(16,185,129,0.75)]"
-                } ${!hasSdkKey ? "cursor-not-allowed opacity-50" : ""}`}
+                }`}
               >
                 {isPlaying ? (
                   <>
@@ -213,14 +237,8 @@ const Demo = () => {
               </button>
             </div>
 
-            {!hasSdkKey && (
-              <div className="mt-4 rounded-xl border border-amber-300/40 bg-amber-200/15 px-4 py-3 text-center text-xs text-amber-100">
-                Missing `VITE_BOTGRID_API_KEY`. Add it in local env to run ad serving in this demo.
-              </div>
-            )}
-
             <div className="mt-4 rounded-xl border border-cyan-200/30 bg-cyan-300/10 px-4 py-3 text-center text-xs text-cyan-100">
-              Simulation mode: this is a scripted playback to demonstrate placement logic. Message input is intentionally disabled.
+              Simulation mode: scripted playback using server-managed demo ad endpoints. Message input is intentionally disabled.
             </div>
 
             <div className="mt-6 grid gap-3 md:grid-cols-3">

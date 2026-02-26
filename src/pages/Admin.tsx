@@ -3,7 +3,7 @@ import SiteShell from "@/components/SiteShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { apiRequest, runtimeConfig } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 interface AdminOverview {
   totalAds: number;
@@ -77,7 +77,7 @@ const formatDate = (value: string) =>
   });
 
 const Admin = () => {
-  const [adminKeyInput, setAdminKeyInput] = useState(runtimeConfig.adminKey);
+  const [adminKeyInput, setAdminKeyInput] = useState("");
   const [adminKey, setAdminKey] = useState("");
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [ads, setAds] = useState<AdminAd[]>([]);
@@ -92,13 +92,6 @@ const Admin = () => {
     () => (adminKey ? { "x-admin-key": adminKey } : undefined),
     [adminKey],
   );
-
-  useEffect(() => {
-    if (runtimeConfig.adminKey) {
-      setAdminKey(runtimeConfig.adminKey);
-      setAdminKeyInput(runtimeConfig.adminKey);
-    }
-  }, []);
 
   const loadData = useCallback(async () => {
     if (!requestHeaders) return;

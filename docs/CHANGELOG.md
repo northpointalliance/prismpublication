@@ -2,6 +2,25 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Security baseline tightening + demo route hardening)
+
+- Auth/session hardening:
+  - changed `ALLOW_INSECURE_DEV_AUTH` behavior to strict-by-default.
+  - production now rejects startup when insecure auth bypass is explicitly enabled.
+- Frontend secret hygiene:
+  - removed `VITE_BOTGRID_API_KEY` and `VITE_ADMIN_KEY` usage from frontend runtime/env templates.
+  - admin key prefill was removed from `/admin` and `/app/choose-workspace`.
+- Demo isolation:
+  - added `POST /api/demo/ads` and `POST /api/demo/track/:eventType` for public scripted playback.
+  - moved `/demo` page to server-managed demo endpoints (no browser-bundled SDK key requirement).
+- Rate limiting:
+  - added route-level limiter for `/api/demo`.
+  - added route-level limiter for `/api/leads`.
+- Service worker safety:
+  - excluded `/api/*` and authorization-bearing requests from runtime cache handling.
+- Docs/env alignment:
+  - updated docs and env examples to avoid client-side secret patterns and document demo endpoints.
+
 ## 2026-02-26 (Stability + security + maintainability fix pass)
 
 - Security:

@@ -40,6 +40,8 @@
 
     const requestUrl = new URL(request.url);
     if (requestUrl.origin !== self.location.origin) return;
+    if (requestUrl.pathname.startsWith("/api/")) return;
+    if (request.headers.has("authorization")) return;
 
     event.respondWith(
       (async () => {

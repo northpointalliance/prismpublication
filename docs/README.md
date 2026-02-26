@@ -103,6 +103,8 @@ Use `/app/login` and:
 - Use `.env.example` and `server/.env.example` as templates.
 - Portal API calls are expected to include Supabase bearer session tokens for authenticated workspace routes.
 - `GET /api/leads` is admin-key protected (same key family as other admin endpoints).
+- Browser-bundled `VITE_*` vars must not contain `BOTGRID_API_KEY` or `ADMIN_API_KEY`.
+- `/api/demo/*` endpoints are rate-limited and are intended only for scripted public demo playback.
 
 ## Documentation Map
 

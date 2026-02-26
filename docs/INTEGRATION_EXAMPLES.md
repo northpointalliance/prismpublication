@@ -25,8 +25,8 @@ class BotGridAds {
         'Authorization': `Bearer ${this.apiKey}`
       },
       body: JSON.stringify({
-        bot_id: this.botId,
-        context: context,
+        botId: this.botId,
+        context,
         position: this.position,
         format: this.adFormat
       })
@@ -54,21 +54,21 @@ class BotGridAds {
           type: 'card',
           title: ad.title,
           description: ad.description,
-          cta: ad.cta_text,
-          url: ad.click_url,
-          image: ad.image_url
+          cta: ad.ctaText,
+          url: ad.clickUrl,
+          image: ad.imageUrl
         };
       case 'banner':
         return {
           type: 'banner',
-          image: ad.image_url,
-          url: ad.click_url,
+          image: ad.imageUrl,
+          url: ad.clickUrl,
           alt: ad.title
         };
       default: // text
         return {
           type: 'text',
-          content: `${ad.title}\n\n${ad.description}\n\n${ad.cta_text}: ${ad.click_url}`
+          content: `${ad.title}\n\n${ad.description}\n\n${ad.ctaText}: ${ad.clickUrl}`
         };
     }
   }
@@ -81,7 +81,7 @@ class BotGridAds {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
       },
-      body: JSON.stringify({ ad_id: adId })
+      body: JSON.stringify({ adId, botId: this.botId })
     });
   }
 
@@ -93,7 +93,7 @@ class BotGridAds {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
       },
-      body: JSON.stringify({ ad_id: adId })
+      body: JSON.stringify({ adId, botId: this.botId })
     });
   }
 }
@@ -114,7 +114,7 @@ async function handleUserMessage(userMessage) {
   if (messageCount % 5 === 0) {
     const ad = await botGrid.displayAd({ 
       topic: detectTopic(userMessage),
-      user_id: userId 
+      userId: userId 
     });
     
     if (ad) {

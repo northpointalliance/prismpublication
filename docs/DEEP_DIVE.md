@@ -50,7 +50,7 @@ Key middleware and controls in `server/src/index.js`:
 - CORS allowlist from `API_CORS_ORIGIN`
 - JSON body size cap (`64kb`)
 - secure headers (`X-Content-Type-Options`, `X-Frame-Options`, etc.)
-- route-level rate limiting for `/api/auth`, `/api/me`, and `/api/admin`
+- route-level rate limiting for `/api/auth`, `/api/me`, `/api/admin`, `/api/demo`, and `/api/leads`
 - timing-safe key comparisons
 
 Auth modes:
@@ -58,6 +58,7 @@ Auth modes:
 - Portal session routes require bearer token + email header.
 - Admin key routes require `x-admin-key`.
 - Admin workspace bootstrap (`POST /api/me/create-workspace` with `type=admin`) requires `x-admin-key`.
+- Insecure session bypass is disabled by default and only enabled with `ALLOW_INSECURE_DEV_AUTH="true"`.
 
 Lead security:
 
@@ -114,6 +115,11 @@ SDK and tracking:
 
 - `POST /api/ads`
 - `POST /api/track/:eventType`
+
+Demo runtime:
+
+- `POST /api/demo/ads`
+- `POST /api/demo/track/:eventType` (impression/click)
 
 Leads:
 

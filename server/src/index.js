@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 const port = Number(process.env.PORT || 8787);
 const corsOrigin = process.env.API_CORS_ORIGIN || "http://localhost:8080";
 const isProduction = process.env.NODE_ENV === "production";
-const allowInsecureDevAuth = process.env.ALLOW_INSECURE_DEV_AUTH === "true" || !isProduction;
+const allowInsecureDevAuth = process.env.ALLOW_INSECURE_DEV_AUTH === "true";
 const supabaseUrl =
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || "";
 const supabasePublishableKey =
@@ -22,6 +22,9 @@ const adminApiKey = process.env.ADMIN_API_KEY || (isProduction ? "" : "local-adm
 
 if (isProduction && (!sdkApiKey || !adminApiKey)) {
   throw new Error("BOTGRID_API_KEY and ADMIN_API_KEY are required in production.");
+}
+if (isProduction && allowInsecureDevAuth) {
+  throw new Error("ALLOW_INSECURE_DEV_AUTH must be false in production.");
 }
 
 const allowedOrigins = corsOrigin
@@ -73,6 +76,8 @@ const makeIpRateLimiter = ({ windowMs, maxRequests }) => {
 
 const authRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 180 });
 const adminRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 240 });
+const demoRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 240 });
+const leadRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 60 });
 
 const httpUrlSchema = z
   .string()
@@ -123,6 +128,9 @@ const trackEventSchema = z.object({
   topic: z.string().trim().max(120).optional(),
   metadata: z.record(z.string().max(120), metadataValueSchema).optional(),
 });
+
+const demoAdRequestSchema = adRequestSchema.omit({ botId: true });
+const demoTrackEventSchema = trackEventSchema.omit({ botId: true, amount: true, metadata: true });
 
 const adminCreateAdSchema = z.object({
   title: z.string().trim().min(4).max(140),
@@ -195,6 +203,31 @@ const toSdkAd = (ad) => ({
   advertiser: ad.advertiser,
   tags: ad.topics || [],
 });
+
+const sdkTrackEventTypes = new Set(["impression", "click", "revenue"]);
+const demoTrackEventTypes = new Set(["impression", "click"]);
+
+const selectAdForRequest = async ({ format, topic = "" }) => {
+  const activeAds = await prisma.ad.findMany({
+    where: {
+      isActive: true,
+      OR: [{ format }, { format: "card" }],
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 200,
+  });
+
+  if (!activeAds.length) {
+    return null;
+  }
+
+  const normalizedTopic = normalizeTopic(topic);
+  const topicMatched = normalizedTopic
+    ? activeAds.filter((ad) => ad.topics.some((value) => normalizeTopic(value).includes(normalizedTopic)))
+    : activeAds;
+
+  return weightedPick(topicMatched.length ? topicMatched : activeAds);
+};
 
 const roleToWorkspaceCopy = {
   advertiser: {
@@ -344,6 +377,8 @@ const requirePortalUser = async (req, res, next) => {
 app.use("/api/auth", authRateLimiter);
 app.use("/api/me", authRateLimiter);
 app.use("/api/admin", adminRateLimiter);
+app.use("/api/demo", demoRateLimiter);
+app.use("/api/leads", leadRateLimiter);
 
 const resolvePortalWorkspace = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -990,6 +1025,64 @@ app.post("/api/me/switch-organization", requirePortalUser, async (req, res) => {
   }
 });
 
+app.post("/api/demo/ads", async (req, res) => {
+  const parsed = demoAdRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid demo ad request",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const selected = await selectAdForRequest({
+      format: parsed.data.format,
+      topic: parsed.data.context?.topic || "",
+    });
+    if (!selected) {
+      return res.json({ success: true, data: [] });
+    }
+
+    return res.json({ success: true, data: [toSdkAd(selected)] });
+  } catch (err) {
+    console.error("Demo ad fetch failed", err);
+    return res.status(500).json({ success: false, error: "Failed to fetch demo ads" });
+  }
+});
+
+app.post("/api/demo/track/:eventType", async (req, res) => {
+  const eventType = req.params.eventType;
+  if (!demoTrackEventTypes.has(eventType)) {
+    return res.status(400).json({ error: "Invalid demo event type" });
+  }
+
+  const parsed = demoTrackEventSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid demo tracking payload",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    await prisma.adEvent.create({
+      data: {
+        eventType,
+        adId: parsed.data.adId,
+        botId: "demo-public",
+        userId: parsed.data.userId,
+        topic: parsed.data.topic,
+        metadata: { source: "public_demo" },
+      },
+    });
+    return res.status(201).json({ success: true });
+  } catch (err) {
+    console.error("Demo event track failed", err);
+    return res.status(500).json({ error: "Failed to track demo event" });
+  }
+});
+
 app.post("/api/ads", requireSdkKey, async (req, res) => {
   const parsed = adRequestSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1000,28 +1093,11 @@ app.post("/api/ads", requireSdkKey, async (req, res) => {
     });
   }
 
-  const { context, format } = parsed.data;
-  const topic = normalizeTopic(context.topic);
-
   try {
-    const activeAds = await prisma.ad.findMany({
-      where: {
-        isActive: true,
-        OR: [{ format }, { format: "card" }],
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 200,
+    const selected = await selectAdForRequest({
+      format: parsed.data.format,
+      topic: parsed.data.context?.topic || "",
     });
-
-    if (!activeAds.length) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const topicMatched = topic
-      ? activeAds.filter((ad) => ad.topics.some((value) => normalizeTopic(value).includes(topic)))
-      : activeAds;
-
-    const selected = weightedPick(topicMatched.length ? topicMatched : activeAds);
     if (!selected) {
       return res.json({ success: true, data: [] });
     }
@@ -1035,7 +1111,7 @@ app.post("/api/ads", requireSdkKey, async (req, res) => {
 
 app.post("/api/track/:eventType", requireSdkKey, async (req, res) => {
   const eventType = req.params.eventType;
-  if (!["impression", "click", "revenue"].includes(eventType)) {
+  if (!sdkTrackEventTypes.has(eventType)) {
     return res.status(400).json({ error: "Invalid event type" });
   }
 

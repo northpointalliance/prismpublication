@@ -6,10 +6,11 @@ import { ArrowRight, BookOpen, CheckCircle2, Network, Wrench } from "lucide-reac
 const sdkSnippet = `import { BotGridAds } from "@botgrid/sdk";
 
 const sdk = new BotGridAds({
-  apiKey: import.meta.env.VITE_BOTGRID_API_KEY!,
+  // Inject from secure server/runtime config, not Vite public env vars.
+  apiKey: process.env.BOTGRID_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
-  baseUrl: import.meta.env.VITE_API_BASE_URL || "/api",
+  baseUrl: process.env.BOTGRID_API_BASE_URL || "https://your-api.example.com/api",
 });
 
 const ad = await sdk.displayAd({ topic: "ai", userId: "u-123" });

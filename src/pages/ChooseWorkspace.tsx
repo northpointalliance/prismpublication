@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { routeForRole, WorkspaceKind, WorkspaceOption } from "@/lib/portal-auth";
-import { runtimeConfig } from "@/lib/api";
 import { Building2, Bot, ArrowRight, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
@@ -12,7 +11,7 @@ const ChooseWorkspace = () => {
   const navigate = useNavigate();
   const { user, loading, workspaces, selectWorkspace, createWorkspace, currentWorkspaceId } = usePortalAuth();
   const [submitting, setSubmitting] = useState<WorkspaceKind | "select" | null>(null);
-  const [adminKey, setAdminKey] = useState(runtimeConfig.adminKey || "");
+  const [adminKey, setAdminKey] = useState("");
   const [error, setError] = useState("");
 
   if (!loading && !user) {

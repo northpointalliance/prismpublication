@@ -55,6 +55,4 @@ export const apiRequest = async <T>(
 
 export const runtimeConfig = {
   apiBaseUrl: normalizedBase,
-  botgridApiKey: import.meta.env.VITE_BOTGRID_API_KEY || "",
-  adminKey: import.meta.env.VITE_ADMIN_KEY || "",
 };
