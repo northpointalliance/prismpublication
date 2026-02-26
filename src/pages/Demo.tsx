@@ -153,6 +153,7 @@ const Demo = () => {
 
   const messageCount = messages.filter(m => m.role !== "ad").length;
   const adCount = messages.filter(m => m.role === 'ad').length;
+  const hasSdkKey = Boolean(runtimeConfig.botgridApiKey);
 
   return (
     <SiteShell mainClassName="bg-slate-950">
@@ -183,11 +184,12 @@ const Demo = () => {
               <button
                 type="button"
                 onClick={playConversation}
+                disabled={!hasSdkKey}
                 className={`btn-sweep inline-flex min-w-40 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-all duration-300 ${
                   isPlaying
                     ? "bg-amber-500 hover:bg-amber-400 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.7)]"
                     : "bg-emerald-500 hover:bg-emerald-400 shadow-[0_10px_30px_-10px_rgba(16,185,129,0.75)]"
-                }`}
+                } ${!hasSdkKey ? "cursor-not-allowed opacity-50" : ""}`}
               >
                 {isPlaying ? (
                   <>
@@ -210,6 +212,12 @@ const Demo = () => {
                 Reset
               </button>
             </div>
+
+            {!hasSdkKey && (
+              <div className="mt-4 rounded-xl border border-amber-300/40 bg-amber-200/15 px-4 py-3 text-center text-xs text-amber-100">
+                Missing `VITE_BOTGRID_API_KEY`. Add it in local env to run ad serving in this demo.
+              </div>
+            )}
 
             <div className="mt-4 rounded-xl border border-cyan-200/30 bg-cyan-300/10 px-4 py-3 text-center text-xs text-cyan-100">
               Simulation mode: this is a scripted playback to demonstrate placement logic. Message input is intentionally disabled.

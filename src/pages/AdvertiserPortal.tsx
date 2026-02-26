@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
+import { getPortalHeaders } from "@/lib/portal-api";
 
 interface AdvertiserDashboardResponse {
   summary: {
@@ -42,9 +43,8 @@ const AdvertiserPortal = () => {
     setLoading(true);
     setError("");
 
-    apiRequest<AdvertiserDashboardResponse>("/advertiser/dashboard", undefined, {
-      "x-user-email": user.email.toLowerCase(),
-    })
+    getPortalHeaders(user.email)
+      .then((headers) => apiRequest<AdvertiserDashboardResponse>("/advertiser/dashboard", undefined, headers))
       .then((response) => {
         if (!cancelled) {
           setData(response);

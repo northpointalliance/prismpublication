@@ -1,4 +1,5 @@
 import "dotenv/config";
+import crypto from "node:crypto";
 import cors from "cors";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
@@ -9,8 +10,18 @@ const prisma = new PrismaClient();
 
 const port = Number(process.env.PORT || 8787);
 const corsOrigin = process.env.API_CORS_ORIGIN || "http://localhost:8080";
-const sdkApiKey = process.env.BOTGRID_API_KEY || "local-demo-key";
-const adminApiKey = process.env.ADMIN_API_KEY || "local-admin-key";
+const isProduction = process.env.NODE_ENV === "production";
+const allowInsecureDevAuth = process.env.ALLOW_INSECURE_DEV_AUTH === "true" || !isProduction;
+const supabaseUrl =
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || "";
+const supabasePublishableKey =
+  process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+const sdkApiKey = process.env.BOTGRID_API_KEY || (isProduction ? "" : "local-demo-key");
+const adminApiKey = process.env.ADMIN_API_KEY || (isProduction ? "" : "local-admin-key");
+
+if (isProduction && (!sdkApiKey || !adminApiKey)) {
+  throw new Error("BOTGRID_API_KEY and ADMIN_API_KEY are required in production.");
+}
 
 const allowedOrigins = corsOrigin
   .split(",")
@@ -28,7 +39,56 @@ app.use(
     },
   }),
 );
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(express.json({ limit: "64kb" }));
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
+
+const makeIpRateLimiter = ({ windowMs, maxRequests }) => {
+  const bucket = new Map();
+
+  return (req, res, next) => {
+    const now = Date.now();
+    const ip = String(req.ip || req.headers["x-forwarded-for"] || "unknown");
+    const existing = bucket.get(ip);
+
+    if (!existing || now > existing.resetAt) {
+      bucket.set(ip, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    existing.count += 1;
+    if (existing.count > maxRequests) {
+      return res.status(429).json({ error: "Too many requests" });
+    }
+    return next();
+  };
+};
+
+const authRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 180 });
+const adminRateLimiter = makeIpRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 240 });
+
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(500)
+  .refine((value) => {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch (_err) {
+      return false;
+    }
+  }, "URL must use http or https protocol.");
+
+const metadataScalarSchema = z.union([z.string().max(280), z.number(), z.boolean(), z.null()]);
+const metadataValueSchema = z.union([metadataScalarSchema, z.array(metadataScalarSchema).max(30)]);
 
 const leadSchema = z.object({
   role: z.enum(["publisher", "advertiser", "demo", "general"]).default("general"),
@@ -60,16 +120,16 @@ const trackEventSchema = z.object({
   timestamp: z.number().int().optional(),
   amount: z.number().int().nonnegative().optional(),
   topic: z.string().trim().max(120).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string().max(120), metadataValueSchema).optional(),
 });
 
 const adminCreateAdSchema = z.object({
   title: z.string().trim().min(4).max(140),
   description: z.string().trim().min(8).max(400),
   ctaText: z.string().trim().min(2).max(60),
-  clickUrl: z.string().trim().url().max(500),
+  clickUrl: httpUrlSchema,
   advertiser: z.string().trim().min(2).max(120),
-  imageUrl: z.string().trim().url().max(500).optional(),
+  imageUrl: httpUrlSchema.optional(),
   topics: z.array(z.string().trim().min(1).max(60)).default([]),
   format: z.enum(["text", "card", "banner"]).default("card"),
   weight: z.number().int().min(1).max(100).default(1),
@@ -98,9 +158,16 @@ const createWorkspaceSchema = z.object({
 const getBearerToken = (authorizationHeader = "") =>
   authorizationHeader.startsWith("Bearer ") ? authorizationHeader.slice(7).trim() : "";
 
+const secureEqual = (left = "", right = "") => {
+  const a = Buffer.from(String(left));
+  const b = Buffer.from(String(right));
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+};
+
 const requireSdkKey = (req, res, next) => {
   const token = getBearerToken(req.headers.authorization);
-  if (!token || token !== sdkApiKey) {
+  if (!token || !secureEqual(token, sdkApiKey)) {
     return res.status(401).json({ error: "Unauthorized SDK key" });
   }
   return next();
@@ -108,7 +175,7 @@ const requireSdkKey = (req, res, next) => {
 
 const requireAdminKey = (req, res, next) => {
   const suppliedKey = String(req.headers["x-admin-key"] || "");
-  if (!suppliedKey || suppliedKey !== adminApiKey) {
+  if (!suppliedKey || !secureEqual(suppliedKey, adminApiKey)) {
     return res.status(401).json({ error: "Unauthorized admin key" });
   }
   return next();
@@ -159,8 +226,75 @@ const mapMembershipRoleToPortalRole = (role) => {
   return "admin";
 };
 
-const readUserEmail = (req) =>
-  String(req.headers["x-user-email"] || req.query.email || "").trim().toLowerCase();
+const readUserEmail = (req) => String(req.headers["x-user-email"] || "").trim().toLowerCase();
+
+let insecureAuthWarningShown = false;
+let missingSupabaseVerificationWarningShown = false;
+const verifySupabaseToken = async (token) => {
+  if (!supabaseUrl || !supabasePublishableKey || !token) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: "GET",
+      headers: {
+        apikey: supabasePublishableKey,
+        Authorization: `Bearer ${token}`,
+      },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) return null;
+    const payload = await response.json();
+    return {
+      id: String(payload.id || ""),
+      email: String(payload.email || "").trim().toLowerCase(),
+    };
+  } catch (_err) {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const validatePortalSession = async (req, expectedEmail = "") => {
+  const token = getBearerToken(req.headers.authorization);
+  if (!token) {
+    if (!allowInsecureDevAuth) {
+      return { ok: false, status: 401, error: "Missing bearer token" };
+    }
+    if (!insecureAuthWarningShown) {
+      insecureAuthWarningShown = true;
+      console.warn("Security warning: insecure dev auth is enabled. Set ALLOW_INSECURE_DEV_AUTH=false.");
+    }
+    return { ok: true, sessionEmail: null };
+  }
+
+  const canVerifyToken = Boolean(supabaseUrl && supabasePublishableKey);
+  if (!canVerifyToken) {
+    if (!allowInsecureDevAuth) {
+      return { ok: false, status: 500, error: "Supabase token verification is not configured" };
+    }
+    if (!missingSupabaseVerificationWarningShown) {
+      missingSupabaseVerificationWarningShown = true;
+      console.warn(
+        "Security warning: token verification skipped because SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY are not set.",
+      );
+    }
+    return { ok: true, sessionEmail: null };
+  }
+
+  const verifiedUser = await verifySupabaseToken(token);
+  if (!verifiedUser?.email) {
+    return { ok: false, status: 401, error: "Invalid bearer token" };
+  }
+  if (expectedEmail && verifiedUser.email !== expectedEmail) {
+    return { ok: false, status: 403, error: "Token user mismatch" };
+  }
+
+  return { ok: true, sessionEmail: verifiedUser.email };
+};
 
 const buildEntryContextByUserId = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -208,6 +342,11 @@ const requirePortalUser = async (req, res, next) => {
     return res.status(401).json({ error: "Missing x-user-email header" });
   }
 
+  const validation = await validatePortalSession(req, email);
+  if (!validation.ok) {
+    return res.status(validation.status).json({ error: validation.error });
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     return res.status(401).json({ error: "User not provisioned. Call /api/auth/sync-user first." });
@@ -216,6 +355,10 @@ const requirePortalUser = async (req, res, next) => {
   req.portalUser = user;
   return next();
 };
+
+app.use("/api/auth", authRateLimiter);
+app.use("/api/me", authRateLimiter);
+app.use("/api/admin", adminRateLimiter);
 
 const resolvePortalWorkspace = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -455,6 +598,11 @@ app.post("/api/auth/sync-user", async (req, res) => {
   }
 
   const email = parsed.data.email.toLowerCase();
+  const validation = await validatePortalSession(req, email);
+  if (!validation.ok) {
+    return res.status(validation.status).json({ error: validation.error });
+  }
+
   const fallbackName = email.split("@")[0] || "Portal User";
   const name = parsed.data.name?.trim() || fallbackName;
 

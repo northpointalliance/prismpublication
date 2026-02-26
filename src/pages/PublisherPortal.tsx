@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
+import { getPortalHeaders } from "@/lib/portal-api";
 
 interface PublisherDashboardResponse {
   summary: {
@@ -41,9 +42,8 @@ const PublisherPortal = () => {
     setLoading(true);
     setError("");
 
-    apiRequest<PublisherDashboardResponse>("/publisher/dashboard", undefined, {
-      "x-user-email": user.email.toLowerCase(),
-    })
+    getPortalHeaders(user.email)
+      .then((headers) => apiRequest<PublisherDashboardResponse>("/publisher/dashboard", undefined, headers))
       .then((response) => {
         if (!cancelled) {
           setData(response);

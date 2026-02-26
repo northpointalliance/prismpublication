@@ -334,3 +334,6 @@ This architecture gives three clear experiences with strict permission boundarie
 - Dashboards load data through real backend endpoints and database rows:
   - Advertiser -> `GET /api/advertiser/dashboard`
   - Bot Developer -> `GET /api/publisher/dashboard`
+- Protected portal API requests should include:
+  - `x-user-email`
+  - `Authorization: Bearer <supabase-access-token>`

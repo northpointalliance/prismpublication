@@ -46,14 +46,14 @@ npm run dev
 API default:
 
 - `GET /health`
-- `POST /api/auth/sync-user`
-- `GET /api/me/entry-context` (requires `x-user-email`)
-- `GET /api/me/organizations` (requires `x-user-email`)
-- `POST /api/me/create-workspace` (requires `x-user-email`)
-- `POST /api/me/default-workspace` (requires `x-user-email`)
-- `POST /api/me/switch-organization` (requires `x-user-email`)
-- `GET /api/advertiser/dashboard` (requires `x-user-email`)
-- `GET /api/publisher/dashboard` (requires `x-user-email`)
+- `POST /api/auth/sync-user` (requires `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/me/entry-context` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/me/organizations` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/me/create-workspace` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/me/default-workspace` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `POST /api/me/switch-organization` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/advertiser/dashboard` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `GET /api/publisher/dashboard` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `POST /api/ads` (SDK ad serving)
 - `POST /api/track/:eventType` (SDK events: impression/click/revenue)
 - `POST /api/leads`
@@ -68,11 +68,12 @@ Required keys (from `server/.env`):
 
 - `BOTGRID_API_KEY` for SDK requests (`Authorization: Bearer ...`)
 - `ADMIN_API_KEY` for admin endpoints (`x-admin-key`)
+- `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for backend token verification
 
 Frontend optional env (root `.env`):
 
 - `VITE_API_BASE_URL` (defaults to `/api`)
-- `VITE_BOTGRID_API_KEY` (defaults to `local-demo-key`)
+- `VITE_BOTGRID_API_KEY` (set explicitly; do not rely on defaults for shared environments)
 - `VITE_ADMIN_KEY` (optional prefill for `/admin`)
 
 ## Added multi-portal identity model
@@ -110,3 +111,9 @@ When ready, point `DATABASE_URL` to managed Postgres (Supabase Postgres, RDS, Ne
 
 Frontend Supabase config remains in place so existing flows do not break.
 You can migrate incrementally by moving write paths to the local API first.
+
+## Security notes
+
+- Keep `.env` and `server/.env` local only; use `.env.example` files as templates.
+- Rotate `BOTGRID_API_KEY` and `ADMIN_API_KEY` before any public deployment.
+- Set `ALLOW_INSECURE_DEV_AUTH="false"` in production (default behavior is strict in production).

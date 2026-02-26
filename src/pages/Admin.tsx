@@ -58,8 +58,6 @@ interface AdDraft {
   weight: string;
 }
 
-const ADMIN_KEY_STORAGE = "botgrid_admin_key";
-
 const emptyDraft: AdDraft = {
   title: "",
   description: "",
@@ -96,15 +94,9 @@ const Admin = () => {
   );
 
   useEffect(() => {
-    const stored = localStorage.getItem(ADMIN_KEY_STORAGE);
-    if (stored) {
-      setAdminKey(stored);
-      setAdminKeyInput(stored);
-      return;
-    }
     if (runtimeConfig.adminKey) {
       setAdminKey(runtimeConfig.adminKey);
-      localStorage.setItem(ADMIN_KEY_STORAGE, runtimeConfig.adminKey);
+      setAdminKeyInput(runtimeConfig.adminKey);
     }
   }, []);
 
@@ -128,7 +120,6 @@ const Admin = () => {
       setError(message);
       if (message.toLowerCase().includes("unauthorized")) {
         setAdminKey("");
-        localStorage.removeItem(ADMIN_KEY_STORAGE);
       }
     } finally {
       setLoading(false);
@@ -146,7 +137,6 @@ const Admin = () => {
       return;
     }
     setAdminKey(adminKeyInput.trim());
-    localStorage.setItem(ADMIN_KEY_STORAGE, adminKeyInput.trim());
   };
 
   const createAd = async (event: FormEvent) => {
@@ -238,7 +228,7 @@ const Admin = () => {
                   </Button>
                 </form>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Default local key: <code>local-admin-key</code>. Change it in <code>server/.env</code>.
+                  Use the `ADMIN_API_KEY` value from your local <code>server/.env</code>.
                 </p>
               </CardContent>
             </Card>
@@ -256,7 +246,6 @@ const Admin = () => {
                   onClick={() => {
                     setAdminKey("");
                     setAdminKeyInput("");
-                    localStorage.removeItem(ADMIN_KEY_STORAGE);
                   }}
                 >
                   Lock Panel

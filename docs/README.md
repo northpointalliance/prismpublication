@@ -95,6 +95,12 @@ Use `/app/login` and:
 - The selected role creates the first workspace automatically.
 - Dashboard pages load mock records through real API endpoints backed by database rows.
 
+## Security Baseline
+
+- Local credential files (`.env`, `server/.env`) are intentionally not tracked.
+- Use `.env.example` and `server/.env.example` as templates.
+- Portal API calls are expected to include Supabase bearer session tokens for authenticated workspace routes.
+
 ## Documentation Map
 
 - [CHANGELOG.md](/home/tokyo/Desktop/AIADS/docs/CHANGELOG.md): Evolution log and verification checklist

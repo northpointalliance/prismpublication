@@ -2,6 +2,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api";
+import { getPortalHeaders } from "@/lib/portal-api";
 import {
   EntryContextResponse,
   PortalRole,
@@ -25,8 +26,6 @@ interface PortalAuthContextValue {
 }
 
 const PortalAuthContext = createContext<PortalAuthContextValue | null>(null);
-
-const getUserHeader = (email: string) => ({ "x-user-email": email.toLowerCase() });
 
 const getSessionEmail = (session: Session | null) => session?.user.email?.trim().toLowerCase() || "";
 
@@ -77,10 +76,14 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
           method: "POST",
           body: JSON.stringify({ email, name }),
         },
-        getUserHeader(email),
+        await getPortalHeaders(email),
       );
 
-      const entry = await apiRequest<EntryContextResponse>("/me/entry-context", undefined, getUserHeader(email));
+      const entry = await apiRequest<EntryContextResponse>(
+        "/me/entry-context",
+        undefined,
+        await getPortalHeaders(email),
+      );
       applyEntryContext(entry);
     },
     [applyEntryContext, clearState],
@@ -210,7 +213,7 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
         method: "POST",
         body: JSON.stringify({ workspaceId }),
       },
-      getUserHeader(email),
+      await getPortalHeaders(email),
     );
     applyEntryContext(entry);
   };
@@ -226,7 +229,7 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
           ...(name?.trim() ? { name: name.trim() } : {}),
         }),
       },
-      getUserHeader(email),
+      await getPortalHeaders(email),
     );
     applyEntryContext(entry);
   };

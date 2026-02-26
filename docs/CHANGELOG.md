@@ -2,6 +2,27 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Security hardening pass)
+
+- Hardened backend request handling:
+  - added secure response headers
+  - limited JSON body size (`64kb`)
+  - added route-level rate limiting for `/api/auth`, `/api/me`, and `/api/admin`
+- Hardened auth flow for portal routes:
+  - support bearer token verification against Supabase user endpoint
+  - enforce token/email match when bearer is present
+  - secured `POST /api/auth/sync-user` with session validation
+  - production requires secure key envs (`BOTGRID_API_KEY`, `ADMIN_API_KEY`)
+- Reduced injection risk:
+  - restricted ad URLs to `http/https` only
+  - constrained tracking metadata schema to bounded scalar/list values
+  - switched key comparison to timing-safe checks
+- Frontend portal requests now send Supabase bearer session token alongside workspace headers.
+- Credential hygiene:
+  - stopped tracking root `.env` in git
+  - added root `.env.example`
+  - updated env examples and docs to use placeholder keys
+
 ## 2026-02-26 (Portal onboarding cleanup + UX pass)
 
 - Removed hardcoded local test credentials from portal auth flow.

@@ -18,7 +18,7 @@ if (ad) {
 }`;
 
 const apiSnippet = `curl -X POST http://localhost:8787/api/ads \\
-  -H "Authorization: Bearer local-demo-key" \\
+  -H "Authorization: Bearer <BOTGRID_API_KEY>" \\
   -H "Content-Type: application/json" \\
   -d '{
     "botId": "demo-bot",
