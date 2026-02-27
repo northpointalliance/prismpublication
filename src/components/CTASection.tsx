@@ -6,10 +6,18 @@ const CTASection = () => {
   return (
     <section className="relative py-32" aria-labelledby="cta-heading">
       <div className="container mx-auto px-6">
-        <div className="relative rounded-3xl glow-border overflow-hidden bg-card">
+        <div
+          className="relative overflow-hidden rounded-3xl border border-border/80 bg-card shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, rgba(238,244,255,0.96), rgba(249,251,255,0.92)), url('/login-assets/pattern.svg')",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
+        >
           {/* Background effects */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-glow-secondary/5" aria-hidden="true" />
-          <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-[100px]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-primary/10" aria-hidden="true" />
+          <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-primary/10 blur-[100px]" aria-hidden="true" />
 
           <div className="relative p-12 md:p-20 text-center">
             <h2 id="cta-heading" className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
@@ -23,13 +31,13 @@ const CTASection = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/demo">
-                <Button variant="hero" size="lg" className="text-base px-10 py-6">
+                <Button variant="primary" size="lg" className="text-base px-10 py-6">
                   Run Interactive Demo
                   <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
                 </Button>
               </Link>
               <Link to="/publishers">
-                <Button variant="hero-outline" size="lg" className="text-base px-10 py-6">
+                <Button variant="secondary" size="lg" className="px-10 py-6 text-base">
                   Start as Publisher
                 </Button>
               </Link>

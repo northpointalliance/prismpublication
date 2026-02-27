@@ -532,7 +532,7 @@ const AdvertiserPortal = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle className="text-xl font-bold">Campaign Performance</CardTitle>
-            <Button variant="hero" onClick={openWizard}>
+            <Button variant="primary" onClick={openWizard}>
               Create New Ad
             </Button>
           </CardHeader>
@@ -592,13 +592,13 @@ const AdvertiserPortal = () => {
                         <div className="flex flex-wrap gap-2">
                           <Button
                             size="sm"
-                            variant={campaign.status === "Live" ? "outline" : "hero-outline"}
+                            variant={campaign.status === "Live" ? "secondary" : "primary"}
                             disabled={saving}
                             onClick={() => void toggleCampaign(campaign.id, campaign.status !== "Live")}
                           >
                             {campaign.status === "Live" ? "Move to Review" : "Go Live"}
                           </Button>
-                          <Button size="sm" variant="outline" disabled={saving || !details} onClick={() => openEditCampaign(campaign.id)}>
+                          <Button size="sm" variant="secondary" disabled={saving || !details} onClick={() => openEditCampaign(campaign.id)}>
                             <Pencil className="mr-1 h-3.5 w-3.5" />
                             Edit
                           </Button>
@@ -635,7 +635,7 @@ const AdvertiserPortal = () => {
           <Card className="relative z-10 max-h-[90vh] w-full max-w-3xl overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <CardTitle className="text-xl font-bold">Create Ad - Step {wizardStep} of 3</CardTitle>
-              <Button variant="outline" onClick={closeWizard}>
+              <Button variant="secondary" onClick={closeWizard}>
                 <X className="mr-1 h-4 w-4" />
                 Close
               </Button>
@@ -805,7 +805,7 @@ const AdvertiserPortal = () => {
                     value={topUpAmountUsd}
                     onChange={(event) => setTopUpAmountUsd(event.target.value)}
                   />
-                  <Button variant="hero-outline" onClick={topUpWallet} disabled={saving}>
+                  <Button variant="secondary" onClick={topUpWallet} disabled={saving}>
                     Pay & Add Funds
                   </Button>
                 </div>
@@ -813,15 +813,15 @@ const AdvertiserPortal = () => {
             )}
 
               <div className="flex items-center justify-between gap-2 pt-2">
-                <Button variant="outline" onClick={() => moveStep("back")} disabled={wizardStep === 1 || saving}>
+                <Button variant="secondary" onClick={() => moveStep("back")} disabled={wizardStep === 1 || saving}>
                   Back
                 </Button>
                 {wizardStep < 3 ? (
-                  <Button variant="hero" onClick={() => moveStep("next")} disabled={saving}>
+                  <Button variant="primary" onClick={() => moveStep("next")} disabled={saving}>
                     Next
                   </Button>
                 ) : (
-                  <Button variant="hero" onClick={() => void submitCampaignForReview()} disabled={saving}>
+                  <Button variant="primary" onClick={() => void submitCampaignForReview()} disabled={saving}>
                     {saving ? "Submitting..." : "Submit for Review"}
                   </Button>
                 )}
@@ -837,7 +837,7 @@ const AdvertiserPortal = () => {
           <Card className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <CardTitle className="text-xl font-bold">Edit Campaign</CardTitle>
-              <Button variant="outline" onClick={closeEditCampaign}>
+              <Button variant="secondary" onClick={closeEditCampaign}>
                 <X className="mr-1 h-4 w-4" />
                 Close
               </Button>
@@ -903,10 +903,10 @@ const AdvertiserPortal = () => {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={closeEditCampaign} disabled={saving}>
+                <Button variant="secondary" onClick={closeEditCampaign} disabled={saving}>
                   Cancel
                 </Button>
-                <Button variant="hero" onClick={() => void saveCampaignEdits()} disabled={saving}>
+                <Button variant="primary" onClick={() => void saveCampaignEdits()} disabled={saving}>
                   {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>

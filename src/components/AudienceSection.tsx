@@ -42,7 +42,7 @@ const AudienceSection = () => {
               </ul>
             </div>
             <Link to="/publishers">
-              <Button variant="hero" className="w-fit">
+              <Button variant="primary" className="w-fit">
                 Start Publishing <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
               </Button>
             </Link>
@@ -70,7 +70,7 @@ const AudienceSection = () => {
               </ul>
             </div>
             <Link to="/advertisers">
-              <Button variant="hero-outline" className="w-fit">
+              <Button variant="secondary" className="w-fit">
                 Launch a Campaign <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
               </Button>
             </Link>

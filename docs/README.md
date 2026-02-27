@@ -28,6 +28,13 @@ Demo page notes:
 - Demo playback uses a scripted sponsored sequence with local creative assets in `public/demo-ads/`.
 - Demo CTA buttons ("Shop Nike Air Force 1", "Reserve a Table", "Order Flowers") route to `/contact` with source metadata.
 
+Homepage / shell notes:
+- The homepage CTA section now uses a local SVG background asset at `public/login-assets/pattern.svg`.
+- Navbar CTAs are standardized to two app-facing button styles:
+  - `primary`: blue gradient main action
+  - `secondary`: black background with white text
+- Footer is now a full-width section instead of a card, with a centered `BOTGRID` watermark in the background.
+
 ## Tech Stack
 
 - Frontend: React 18 + TypeScript + Vite

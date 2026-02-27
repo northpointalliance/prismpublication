@@ -23,9 +23,9 @@ const PortalShell = ({ title, subtitle, children }: PortalShellProps) => {
           </div>
           <div className="flex items-center gap-2">
             <Link to="/app/choose-workspace">
-              <Button variant="hero-outline" size="sm">Switch Workspace</Button>
+              <Button variant="secondary" size="sm">Switch Workspace</Button>
             </Link>
-            <Button variant="hero" size="sm" onClick={() => void logout()}>
+            <Button variant="primary" size="sm" onClick={() => void logout()}>
               Log Out
             </Button>
           </div>

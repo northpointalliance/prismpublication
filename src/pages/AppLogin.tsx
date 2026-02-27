@@ -140,7 +140,7 @@ const AppLogin = () => {
                     )}
                     <Button
                       type="submit"
-                      variant="hero"
+                      variant="primary"
                       className="w-full"
                       disabled={disabled || submitting || loading}
                     >

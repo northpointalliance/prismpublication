@@ -369,14 +369,14 @@ const PublisherPortal = () => {
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="secondary"
                               disabled={saving || latestToken?.botId !== bot.botId}
                               onClick={() => void copyBotLatestToken(bot)}
                             >
                               <Copy className="mr-1 h-3.5 w-3.5" />
                               Copy New Key
                             </Button>
-                            <Button size="sm" variant="outline" disabled={saving} onClick={() => void createKey(bot)}>
+                            <Button size="sm" variant="secondary" disabled={saving} onClick={() => void createKey(bot)}>
                               <KeyRound className="mr-1 h-3.5 w-3.5" />
                               Rotate (Invalidate Old)
                             </Button>
@@ -401,7 +401,7 @@ const PublisherPortal = () => {
                       </div>
 
                       <div className="mt-3 flex flex-wrap justify-end gap-2">
-                        <Button size="sm" variant="destructive" disabled={saving} onClick={() => void deleteBot(bot)}>
+                        <Button size="sm" variant="secondary" disabled={saving} onClick={() => void deleteBot(bot)}>
                           <Trash2 className="mr-1 h-3.5 w-3.5" />
                           Delete Bot
                         </Button>
@@ -435,7 +435,7 @@ const PublisherPortal = () => {
               </select>
               <Button
                 className="w-full"
-                variant="hero"
+                variant="primary"
                 disabled={saving || !botName.trim()}
                 onClick={() => void createBot()}
               >
@@ -460,7 +460,7 @@ const PublisherPortal = () => {
                   <p className="break-all rounded-lg border border-emerald-200 bg-white/80 px-2 py-2 font-mono">
                     {latestToken.token}
                   </p>
-                  <Button size="sm" variant="outline" onClick={() => void copyLatestToken()}>
+                  <Button size="sm" variant="secondary" onClick={() => void copyLatestToken()}>
                     <Copy className="mr-1 h-3.5 w-3.5" />
                     Copy Token
                   </Button>

@@ -106,7 +106,7 @@ const AdminPortal = () => {
             <p className="text-sm text-muted-foreground">
               Review campaigns and bots, then enforce trust and policy decisions.
             </p>
-            <Button className="mt-4" variant="hero">
+            <Button className="mt-4" variant="primary">
               Open Review Queue
             </Button>
           </CardContent>
@@ -121,7 +121,7 @@ const AdminPortal = () => {
               Existing campaign control panel remains available for ad inventory operations.
             </p>
             <Link to="/notadmin">
-              <Button className="mt-4" variant="hero-outline">
+              <Button className="mt-4" variant="secondary">
                 Open Existing Panel
               </Button>
             </Link>

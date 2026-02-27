@@ -2,6 +2,24 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-27 (Homepage shell polish + button system cleanup)
+
+- Homepage CTA:
+  - applied a local SVG background asset to the `Validate your chatbot ad strategy in minutes.` section.
+  - standardized CTA pairing to blue primary + black secondary.
+- Navbar:
+  - reduced top-level CTA set to two buttons: `Demo` and `Login` / `Open App`.
+  - remapped navbar CTA usage to the simplified button system.
+- Footer:
+  - removed card-style container in favor of a full-width footer section.
+  - added centered `BOTGRID` watermark in the footer background.
+  - improved footer section-heading contrast and typography.
+- Button system:
+  - simplified app-facing naming to two variants:
+    - `primary` = blue gradient main action
+    - `secondary` = black background, white text
+  - removed temporary naming churn from app usage so buttons now follow the same two-style convention across the site shell and portal surfaces.
+
 ## 2026-02-26 (Supabase production alignment + portal UX refresh)
 
 - Routing/security:

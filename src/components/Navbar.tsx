@@ -37,9 +37,12 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center gap-2">
+          <Link to="/demo">
+            <Button variant="secondary" size="sm">Demo</Button>
+          </Link>
           <Link to={user ? "/app/choose-workspace" : "/app/login"}>
-            <Button variant="hero" size="sm">{user ? "Open App" : "Login"}</Button>
+            <Button variant="primary" size="sm">{user ? "Open App" : "Login"}</Button>
           </Link>
         </div>
 
@@ -72,9 +75,14 @@ const Navbar = () => {
               </li>
             ))}
           </ul>
-          <Link to={user ? "/app/choose-workspace" : "/app/login"} onClick={closeMobileMenu}>
-            <Button variant="hero" size="sm" className="w-full mt-4">{user ? "Open App" : "Login"}</Button>
-          </Link>
+          <div className="mt-4 grid gap-2">
+            <Link to="/demo" onClick={closeMobileMenu}>
+              <Button variant="secondary" size="sm" className="w-full">Demo</Button>
+            </Link>
+            <Link to={user ? "/app/choose-workspace" : "/app/login"} onClick={closeMobileMenu}>
+              <Button variant="primary" size="sm" className="w-full">{user ? "Open App" : "Login"}</Button>
+            </Link>
+          </div>
         </div>
       )}
     </nav>

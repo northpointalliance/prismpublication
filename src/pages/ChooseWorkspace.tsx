@@ -133,7 +133,7 @@ const ChooseWorkspace = () => {
                   <CardContent>
                     <p className="mb-4 text-sm text-muted-foreground">{workspace.description}</p>
                     <Button
-                      variant="hero"
+                      variant="primary"
                       className="w-full"
                       disabled={submitting !== null}
                       onClick={() => void onSelect(workspace)}

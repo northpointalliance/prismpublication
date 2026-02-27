@@ -43,7 +43,7 @@ const HeroSection = () => {
         {/* CTAs */}
         <div className="animate-fade-up-delay-3 flex flex-col items-center gap-4">
           <Link to="/demo">
-            <Button variant="hero" size="lg" className="text-base px-8 py-6">
+            <Button variant="primary" size="lg" className="text-base px-8 py-6">
               Run Interactive Demo
               <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
             </Button>

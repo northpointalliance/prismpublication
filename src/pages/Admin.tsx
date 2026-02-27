@@ -216,7 +216,7 @@ const Admin = () => {
                     placeholder="Enter ADMIN_API_KEY"
                     className="h-11"
                   />
-                  <Button type="submit" variant="hero" className="h-11 px-6">
+                  <Button type="submit" variant="primary" className="h-11 px-6">
                     Unlock
                   </Button>
                 </form>
@@ -230,12 +230,12 @@ const Admin = () => {
           {adminKey && (
             <>
               <div className="flex flex-wrap items-center gap-3">
-                <Button type="button" variant="hero" onClick={() => void loadData()} disabled={loading}>
+                <Button type="button" variant="primary" onClick={() => void loadData()} disabled={loading}>
                   {loading ? "Refreshing..." : "Refresh Data"}
                 </Button>
                 <Button
                   type="button"
-                  variant="hero-outline"
+                  variant="secondary"
                   onClick={() => {
                     setAdminKey("");
                     setAdminKeyInput("");
@@ -329,7 +329,7 @@ const Admin = () => {
                           onChange={(event) => setDraft((prev) => ({ ...prev, weight: event.target.value }))}
                         />
                       </div>
-                      <Button type="submit" variant="hero" className="w-full">
+                      <Button type="submit" variant="primary" className="w-full">
                         Save Ad
                       </Button>
                     </form>
@@ -350,7 +350,7 @@ const Admin = () => {
                           </div>
                           <Button
                             type="button"
-                            variant={ad.isActive ? "hero-outline" : "hero"}
+                            variant={ad.isActive ? "secondary" : "primary"}
                             size="sm"
                             onClick={() => void toggleAd(ad)}
                           >
