@@ -60,6 +60,7 @@ API default:
 - `GET /api/publisher/bots` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `POST /api/publisher/bots` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `PATCH /api/publisher/bots/:id` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
+- `DELETE /api/publisher/bots/:id` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `POST /api/publisher/bots/:id/keys` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `GET /api/publisher/bots/:id/metrics` (requires `x-user-email` + `Authorization: Bearer <supabase-access-token>`)
 - `POST /api/demo/ads` (public demo ad fetch route with rate limiting)
@@ -79,6 +80,7 @@ Required keys (from `server/.env`):
 
 - `BOTGRID_API_KEY` for SDK requests (`Authorization: Bearer ...`)
 - Bot-specific SDK keys can be created from `/app/publisher` and used instead of the master key.
+  - Rotating a bot key invalidates prior active keys for that bot.
 - `ADMIN_API_KEY` for admin endpoints (`x-admin-key`)
 - `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for backend token verification
 - Optional distributed rate limiting:
@@ -124,6 +126,10 @@ For local role-flow testing:
 - Portal dashboards are populated from DB via:
   - `GET /api/advertiser/dashboard`
   - `GET /api/publisher/dashboard`
+
+Admin note:
+- The first-run workspace picker only exposes Advertiser and Bot Developer.
+- Admin workspace bootstrap remains API-supported with `type=admin` + `x-admin-key`.
 
 ## Production migration path
 

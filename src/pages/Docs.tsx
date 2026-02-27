@@ -149,7 +149,11 @@ const Docs = () => {
                   </li>
                   <li>
                     <CheckCircle2 className="mr-2 inline h-4 w-4 text-primary" />
-                    The app creates your workspace and loads mock dashboard data for validation.
+                    The app creates your workspace and loads dashboard data from API-backed workspace routes.
+                  </li>
+                  <li>
+                    <CheckCircle2 className="mr-2 inline h-4 w-4 text-primary" />
+                    Advertisers can launch the 3-step ad wizard; bot developers can rotate keys (old key invalidates).
                   </li>
                 </ul>
               </div>

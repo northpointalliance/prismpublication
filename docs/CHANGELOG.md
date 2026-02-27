@@ -2,6 +2,31 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-26 (Supabase production alignment + portal UX refresh)
+
+- Routing/security:
+  - moved legacy admin panel route from `/admin` to `/notadmin`.
+  - updated internal links that pointed to the legacy route.
+- Login and workspace UX:
+  - login page now renders inside site shell (navbar + footer).
+  - workspace picker simplified to two centered options (Advertiser/Bot Developer) with clearer hover states.
+  - added back navigation controls in workspace selection view.
+- Advertiser portal redesign:
+  - rebuilt dashboard around campaign KPI cards + campaign list actions.
+  - replaced one-shot campaign form with a 3-step modal flow:
+    - step 1: ad details + budgets + image drag/drop upload
+    - step 2: creative preview
+    - step 3: payment details + wallet top-up + submit for review
+  - added campaign edit modal and per-campaign budget persistence in local storage.
+- Bot developer portal redesign:
+  - improved bot cards, metrics readability, and bot ID copy actions.
+  - added bot delete flow (`DELETE /api/publisher/bots/:id`).
+  - key rotation now invalidates old active key(s) and issues exactly one new active key.
+  - added per-bot `Copy New Key` action; old/revoked keys are hidden in the main list.
+- Supabase + production ops docs:
+  - documented frontend/backend Supabase env expectations and `API_CORS_ORIGIN` multi-origin setup.
+  - clarified first-run flow and current admin-workspace behavior.
+
 ## 2026-02-26 (Unified demo/docs/contact refresh)
 
 - Routing and IA:

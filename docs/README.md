@@ -15,7 +15,7 @@ The website is now a multi-page marketing/product experience with:
 - Company (`/company`)
 - Contact (`/contact`)
 - Website Docs (`/docs`)
-- Admin (`/admin`, key-protected)
+- Admin (`/notadmin`, key-protected)
 - App Login (`/app/login`)
 - Workspace Selector (`/app/choose-workspace`)
 - Advertiser App (`/app/advertiser`)
@@ -104,11 +104,11 @@ There are no hardcoded portal test credentials now.
 
 Use `/app/login` and:
 - Create a new account.
-- On first login, choose Advertiser, Bot Developer, or Admin.
+- On first login, choose Advertiser or Bot Developer.
 - The selected role creates the first workspace automatically.
-- Admin workspace creation requires `ADMIN_API_KEY` and is intended for platform operators.
+- Admin workspaces are platform-operator only and are not exposed in the first-run UI.
 - Advertiser portal can create campaigns and move them between Review/Live states.
-- Bot Developer portal can register bots and generate/rotate SDK keys (token shown once at creation).
+- Bot Developer portal can register bots, rotate SDK keys, and delete bots.
 - Dashboard pages load DB-backed records through real API endpoints.
 
 ## Persona Quick Start
@@ -116,20 +116,39 @@ Use `/app/login` and:
 ### Advertiser
 
 1. Go to `/app/advertiser`.
-2. Use **Create Campaign** to add title/description/CTA/click URL/format/topics/weight.
-3. Campaigns are created in **Review** by default.
-4. Use **Go Live / Move to Review** actions in campaign cards to control active state.
+2. Use **Create New Ad** to open the 3-step modal flow.
+3. Step 1 captures ad details, weight, budget, and optional image upload/drag-drop preview media.
+4. Step 2 shows a live creative preview.
+5. Step 3 collects payment details, lets you top up wallet funds, and submits for review.
+6. Use **Go Live / Move to Review** and **Edit** on campaign cards to manage delivery.
 
 ### Bot Developer
 
 1. Go to `/app/publisher`.
 2. Use **Add Bot** to register a bot/environment.
 3. An initial SDK key is created immediately (full token shown once).
-4. Use **New SDK Key** per bot for rotation.
-5. Integrate with:
+4. Use **Rotate (Invalidate Old)** per bot to rotate keys. Rotation revokes the previous active key.
+5. Use **Copy New Key** right after rotation/creation. Old full tokens are never re-shown.
+6. Integrate with:
    - `Authorization: Bearer <sdk-key>`
    - `botId` value shown in portal bot list
    - `POST /api/ads` + `POST /api/track/:eventType`
+
+## Supabase + Production Env Checklist
+
+Frontend (`.env` in web app):
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Backend (`server/.env`):
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `API_CORS_ORIGIN` with all allowed origins, for example:
+  - `https://prismpublication.com,https://www.prismpublication.com,http://localhost:8080`
+
+Supabase Auth dashboard:
+- Set **Site URL** to production domain.
+- Add **Redirect URLs** for production (`www` + apex) and localhost development.
 
 ## Security Baseline
 

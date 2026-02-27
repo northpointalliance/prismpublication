@@ -42,7 +42,7 @@ Application routes:
 
 Legacy admin panel:
 
-- `/admin` (admin key gated)
+- `/notadmin` (admin key gated)
 
 ## 3) Backend Security Model
 
@@ -120,8 +120,10 @@ Publisher:
 - `GET /api/publisher/bots`
 - `POST /api/publisher/bots`
 - `PATCH /api/publisher/bots/:id`
+- `DELETE /api/publisher/bots/:id`
 - `POST /api/publisher/bots/:id/keys`
 - `GET /api/publisher/bots/:id/metrics`
+  - key rotation revokes previous active bot keys before issuing the new token.
 
 Admin:
 
@@ -161,6 +163,8 @@ Data layer:
 - `apiRequest` helper (`src/lib/api.ts`) handles base URL + error parsing.
 - Portal header helper (`src/lib/portal-api.ts`) attaches user email + bearer token.
 - Portal auth state (`PortalAuthProvider`) manages entry context, workspace selection, and onboarding.
+- Advertiser portal uses a 3-step ad creation modal: creative/budget -> preview -> payment + submit.
+- Publisher portal surfaces only the current active SDK key in list views; full tokens are shown once at issue time.
 
 Routing protection:
 
