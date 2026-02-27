@@ -1,17 +1,15 @@
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { routeForRole, WorkspaceKind, WorkspaceOption } from "@/lib/portal-auth";
-import { Building2, Bot, ArrowRight, ShieldCheck } from "lucide-react";
+import { Building2, Bot, ArrowRight } from "lucide-react";
 import { useState } from "react";
 
 const ChooseWorkspace = () => {
   const navigate = useNavigate();
   const { user, loading, workspaces, selectWorkspace, createWorkspace, currentWorkspaceId } = usePortalAuth();
   const [submitting, setSubmitting] = useState<WorkspaceKind | "select" | null>(null);
-  const [adminKey, setAdminKey] = useState("");
   const [error, setError] = useState("");
 
   if (!loading && !user) {
@@ -36,10 +34,7 @@ const ChooseWorkspace = () => {
     setSubmitting(type);
     setError("");
     try {
-      if (type === "admin" && !adminKey.trim()) {
-        throw new Error("Admin key is required to create an admin workspace.");
-      }
-      await createWorkspace(type, undefined, type === "admin" ? adminKey : undefined);
+      await createWorkspace(type);
       navigate(routeForRole(type), { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to create workspace";
@@ -49,6 +44,42 @@ const ChooseWorkspace = () => {
     }
   };
 
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/app/login");
+  };
+
+  const creationOptions: Array<{
+    type: WorkspaceKind;
+    title: string;
+    subtitle: string;
+    description: string;
+    icon: typeof Building2;
+    hoverClass: string;
+  }> = [
+    {
+      type: "advertiser",
+      title: "Advertiser Workspace",
+      subtitle: "Demand Side",
+      description: "Launch campaigns, upload creatives, manage budgets, and review results.",
+      icon: Building2,
+      hoverClass:
+        "border-red-200 bg-red-50/40 hover:border-red-400 hover:bg-red-100 text-red-700",
+    },
+    {
+      type: "publisher",
+      title: "Bot Developer Workspace",
+      subtitle: "Supply Side",
+      description: "Register bots, configure SDK settings, and monitor monetization health.",
+      icon: Bot,
+      hoverClass:
+        "border-blue-200 bg-blue-50/40 hover:border-blue-400 hover:bg-blue-100 text-blue-700",
+    },
+  ];
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background px-4 py-20">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -56,6 +87,19 @@ const ChooseWorkspace = () => {
         <div className="absolute left-1/2 top-[10%] h-96 w-96 -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
       </div>
       <div className="relative mx-auto max-w-4xl">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-border/70 bg-card/80 px-4 py-3 backdrop-blur">
+          <Link to="/" className="text-sm font-semibold text-primary hover:underline">
+            Back to Website
+          </Link>
+          <button
+            type="button"
+            onClick={goBack}
+            className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
+          >
+            Go Back
+          </button>
+        </div>
+
         <header className="mb-6 text-center">
           <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Workspace</p>
           <h1 className="mt-2 text-4xl font-bold tracking-tight">
@@ -74,7 +118,7 @@ const ChooseWorkspace = () => {
 
         {workspaces.length > 0 ? (
           <div className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="mx-auto grid w-full max-w-3xl gap-4 md:grid-cols-2">
               {workspaces.map((workspace) => (
                 <Card
                   key={workspace.id}
@@ -100,127 +144,32 @@ const ChooseWorkspace = () => {
                 </Card>
               ))}
             </div>
-
-            <Card className="border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Expand Access</p>
-                <CardTitle className="text-2xl font-bold">Create Another Workspace</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Add advertiser, bot developer, or admin access under this account.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="hero-outline"
-                    disabled={submitting !== null}
-                    onClick={() => void createNewWorkspace("advertiser")}
-                  >
-                    Create Advertiser
-                  </Button>
-                  <Button
-                    variant="hero-outline"
-                    disabled={submitting !== null}
-                    onClick={() => void createNewWorkspace("publisher")}
-                  >
-                    Create Bot Developer
-                  </Button>
-                  <Button
-                    variant="hero"
-                    disabled={submitting !== null}
-                    onClick={() => void createNewWorkspace("admin")}
-                  >
-                    Create Admin
-                  </Button>
-                </div>
-                <Input
-                  type="password"
-                  placeholder="Admin key (required for admin workspace)"
-                  value={adminKey}
-                  onChange={(event) => setAdminKey(event.target.value)}
-                />
-              </CardContent>
-            </Card>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
-                  <Building2 className="h-5 w-5 text-primary" />
-                </div>
-                <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Demand Side</p>
-                <CardTitle className="text-2xl font-bold">Advertiser Workspace</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Launch campaigns, upload creatives, manage budgets, and review results.
-                </p>
-                <Button
-                  variant="hero"
-                  className="w-full"
+          <div className="mx-auto grid w-full max-w-3xl gap-4 md:grid-cols-2">
+            {creationOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.type}
+                  type="button"
                   disabled={submitting !== null}
-                  onClick={() => void createNewWorkspace("advertiser")}
+                  onClick={() => void createNewWorkspace(option.type)}
+                  className={`group rounded-2xl border p-5 text-left transition-all duration-200 ${option.hoverClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
-                  {submitting === "advertiser" ? "Creating..." : "Continue as Advertiser"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
-                  <Bot className="h-5 w-5 text-primary" />
-                </div>
-                <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Supply Side</p>
-                <CardTitle className="text-2xl font-bold">Bot Developer Workspace</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Register bots, configure SDK settings, and monitor monetization health.
-                </p>
-                <Button
-                  variant="hero"
-                  className="w-full"
-                  disabled={submitting !== null}
-                  onClick={() => void createNewWorkspace("publisher")}
-                >
-                  {submitting === "publisher" ? "Creating..." : "Continue as Bot Developer"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                </div>
-                <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Platform Side</p>
-                <CardTitle className="text-2xl font-bold">Admin Workspace</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Operate moderation, risk, finance, and platform controls.
-                </p>
-                <Input
-                  type="password"
-                  placeholder="Admin key required"
-                  value={adminKey}
-                  onChange={(event) => setAdminKey(event.target.value)}
-                />
-                <Button
-                  variant="hero"
-                  className="w-full"
-                  disabled={submitting !== null}
-                  onClick={() => void createNewWorkspace("admin")}
-                >
-                  {submitting === "admin" ? "Creating..." : "Continue as Admin"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/80">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em]">{option.subtitle}</p>
+                  <h3 className="mt-1 text-2xl font-bold text-foreground">{option.title}</h3>
+                  <p className="mt-2 text-sm text-foreground/80">{option.description}</p>
+                  <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                    {submitting === option.type ? "Creating..." : "Continue"}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
