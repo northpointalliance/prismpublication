@@ -58,7 +58,7 @@ const AppLogin = () => {
             <CardContent className="p-0">
               <div className="grid md:grid-cols-[1.05fr_0.95fr]">
                 <section className="border-b border-border/70 p-6 md:border-b-0 md:border-r md:p-8">
-                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">BotGrid App</p>
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Prism App</p>
                   <h1 className="mt-2 text-4xl font-bold tracking-tight">One Login. Two Workspaces.</h1>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Sign in once, then choose Advertiser or Bot Developer workspace.

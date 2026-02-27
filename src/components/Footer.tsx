@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Bot } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const exploreLinks = [
@@ -33,17 +33,15 @@ const Footer = () => {
             className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[4.5rem] font-black uppercase leading-none tracking-[0.22em] text-slate-950/[0.035] md:text-[8rem] lg:text-[11rem]"
             aria-hidden="true"
           >
-            BOTGRID
+            PRISM
           </div>
           <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
           <div className="relative grid gap-10 py-10 lg:grid-cols-[1.25fr_0.8fr_0.8fr_1fr]">
             <section>
-              <Link to="/" className="inline-flex items-center gap-3" aria-label="BotGrid home">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm" aria-hidden="true">
-                  <Bot className="h-5 w-5" />
-                </div>
-                <span className="text-xl font-bold tracking-tight">BotGrid</span>
+              <Link to="/" className="inline-flex items-center gap-0" aria-label="Prism home">
+                <img src="/prismlogo.png" alt="" className="h-10 w-10 object-contain" aria-hidden="true" />
+                <span className="text-xl font-bold tracking-tight">Prism</span>
               </Link>
 
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -85,7 +83,7 @@ const Footer = () => {
 
             <section className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-white/40 p-5">
               <p className="font-[Poppins] text-xs font-bold uppercase tracking-[0.16em] text-black">Start Here</p>
-              <h2 className="mt-3 text-xl font-bold tracking-tight">See BotGrid in action</h2>
+              <h2 className="mt-3 text-xl font-bold tracking-tight">See Prism in action</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Run the interactive conversation demo and review the integration flow in minutes.
               </p>
@@ -99,7 +97,7 @@ const Footer = () => {
           </div>
 
           <div className="flex flex-col gap-3 border-t border-border/70 py-5 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
-            <p>© {year} BotGrid. All rights reserved.</p>
+            <p>© {year} Prism. All rights reserved.</p>
             <div className="flex items-center gap-5">
               <Link to="/company" className="transition-colors hover:text-foreground">About</Link>
               <Link to="/docs" className="transition-colors hover:text-foreground">Docs</Link>

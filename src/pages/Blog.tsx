@@ -13,7 +13,7 @@ const Blog = () => {
         <div className="container relative z-10 mx-auto px-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-xs font-mono uppercase tracking-[0.16em] text-primary">
             <Newspaper className="h-3.5 w-3.5" />
-            BotGrid Journal
+            Prism Journal
           </div>
           <h1 className="mt-4 max-w-4xl text-4xl font-bold tracking-tight md:text-6xl">
             Blog and articles for teams building conversational ad systems.

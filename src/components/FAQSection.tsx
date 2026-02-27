@@ -8,7 +8,7 @@ import {
 const faqs = [
   {
     q: "Will ads hurt my chatbot user experience?",
-    a: "Not if they are paced correctly. BotGrid is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely.",
+    a: "Not if they are paced correctly. Prism is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely.",
   },
   {
     q: "How long does integration take?",
@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Which chatbot stacks are supported?",
-    a: "BotGrid can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic.",
+    a: "Prism can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic.",
   },
   {
     q: "How do advertisers target campaigns?",
@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "What about privacy and compliance requirements?",
-    a: "BotGrid is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment.",
+    a: "Prism is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment.",
   },
 ];
 

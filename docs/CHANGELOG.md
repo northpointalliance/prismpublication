@@ -2,6 +2,18 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-27 (Prism brand assets + favicon refresh)
+
+- Branding:
+  - finalized product naming around `Prism` across docs, SDK references, metadata, and site copy.
+  - replaced the shared robot logo in the navbar and footer with the local Prism brand mark.
+- Assets:
+  - added `public/prismlogo.png` as the shared visible logo asset.
+  - added `public/prismlogo.svg` as a local SVG wrapper for favicon/browser support.
+  - regenerated `public/favicon.ico` from the Prism logo and wired the document head to use it first.
+- Documentation:
+  - updated docs titles and examples to remove leftover legacy naming such as `AI Flow Network` and `botGrid`.
+
 ## 2026-02-27 (Homepage shell polish + button system cleanup)
 
 - Homepage CTA:
@@ -12,7 +24,7 @@ This file tracks the website evolution from the first major redesign pass to the
   - remapped navbar CTA usage to the simplified button system.
 - Footer:
   - removed card-style container in favor of a full-width footer section.
-  - added centered `BOTGRID` watermark in the footer background.
+  - added centered `PRISM` watermark in the footer background.
   - improved footer section-heading contrast and typography.
 - Button system:
   - simplified app-facing naming to two variants:
@@ -99,7 +111,7 @@ This file tracks the website evolution from the first major redesign pass to the
   - added strict role-to-organization compatibility checks.
   - added per-organization membership role prioritization to avoid duplicate workspace ambiguity.
 - Credential safety:
-  - removed non-production default fallbacks for `BOTGRID_API_KEY` and `ADMIN_API_KEY`.
+  - removed non-production default fallbacks for `PRISM_API_KEY` and `ADMIN_API_KEY`.
   - API now fails startup when either key is missing.
 - Rate limiting:
   - extracted limiter into `server/src/rate-limit.js`.
@@ -118,7 +130,7 @@ This file tracks the website evolution from the first major redesign pass to the
   - changed `ALLOW_INSECURE_DEV_AUTH` behavior to strict-by-default.
   - production now rejects startup when insecure auth bypass is explicitly enabled.
 - Frontend secret hygiene:
-  - removed `VITE_BOTGRID_API_KEY` and `VITE_ADMIN_KEY` usage from frontend runtime/env templates.
+  - removed `VITE_PRISM_API_KEY` and `VITE_ADMIN_KEY` usage from frontend runtime/env templates.
   - admin key prefill was removed from `/admin` and `/app/choose-workspace`.
 - Demo isolation:
   - added `POST /api/demo/ads` and `POST /api/demo/track/:eventType` for public scripted playback.
@@ -166,7 +178,7 @@ This file tracks the website evolution from the first major redesign pass to the
   - support bearer token verification against Supabase user endpoint
   - enforce token/email match when bearer is present
   - secured `POST /api/auth/sync-user` with session validation
-  - production requires secure key envs (`BOTGRID_API_KEY`, `ADMIN_API_KEY`)
+  - production requires secure key envs (`PRISM_API_KEY`, `ADMIN_API_KEY`)
 - Reduced injection risk:
   - restricted ad URLs to `http/https` only
   - constrained tracking metadata schema to bounded scalar/list values
@@ -259,7 +271,7 @@ This file tracks the website evolution from the first major redesign pass to the
 
 ## 2026-02-26 (SDK + Admin runtime completion)
 
-- Replaced demo page mock ad provider with real SDK runtime calls (`@botgrid/sdk`) against local API routes.
+- Replaced demo page mock ad provider with real SDK runtime calls (`@prism/sdk`) against local API routes.
 - Added local ad-serving endpoints to backend:
   - `POST /api/ads`
   - `POST /api/track/:eventType`
@@ -274,7 +286,7 @@ This file tracks the website evolution from the first major redesign pass to the
   - recent SDK events + recent leads
 - Updated Vite config:
   - `/api` proxy to local API (`localhost:8787`)
-  - local alias mapping for `@botgrid/sdk` and `@botgrid/sdk/react`
+  - local alias mapping for `@prism/sdk` and `@prism/sdk/react`
 - Updated stack script `scripts/prism_stack.sh`:
   - starts/stops API + Vite + tunnel together
   - includes API status and logs

@@ -6,7 +6,7 @@ const publisherPoints = [
   {
     icon: Bot,
     title: "Fits your chatbot stack",
-    description: "Use BotGrid with GPT wrappers, customer support bots, and custom AI assistants with minimal integration work.",
+    description: "Use Prism with GPT wrappers, customer support bots, and custom AI assistants with minimal integration work.",
   },
   {
     icon: Shield,

@@ -1,9 +1,9 @@
 /**
- * BotGrid Ad Network SDK
+ * Prism Ad Network SDK
  * 
  * A JavaScript SDK for integrating ads into AI chatbots
  * 
- * @package @botgrid/sdk
+ * @package @prism/sdk
  * @version 1.0.0
  */
 
@@ -13,8 +13,8 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 // Types
 // ============================================
 
-export interface BotGridConfig {
-  /** Your BotGrid API key */
+export interface PrismConfig {
+  /** Your Prism API key */
   apiKey: string;
   /** Your bot's unique identifier */
   botId: string;
@@ -78,7 +78,7 @@ export interface ApiResponse<T> {
 // Main SDK Class
 // ============================================
 
-export class BotGridAds {
+export class PrismAds {
   private apiKey: string;
   private botId: string;
   private position: 'inline' | 'sidebar' | 'floating';
@@ -87,15 +87,15 @@ export class BotGridAds {
   private messageCount: Map<string, number> = new Map();
 
   /**
-   * Create a new BotGridAds instance
+   * Create a new PrismAds instance
    * @param config - Configuration options
    */
-  constructor(config: BotGridConfig) {
+  constructor(config: PrismConfig) {
     if (!config.apiKey) {
-      throw new Error('BotGrid: API key is required');
+      throw new Error('Prism: API key is required');
     }
     if (!config.botId) {
-      throw new Error('BotGrid: Bot ID is required');
+      throw new Error('Prism: Bot ID is required');
     }
 
     this.apiKey = config.apiKey;
@@ -105,7 +105,7 @@ export class BotGridAds {
     
     // Initialize axios client
     this.client = axios.create({
-      baseURL: config.baseUrl || 'https://api.botgrid.io/v1',
+      baseURL: config.baseUrl || 'https://api.prism.io/v1',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
@@ -116,7 +116,7 @@ export class BotGridAds {
   }
 
   /**
-   * Fetch ads from the BotGrid network
+   * Fetch ads from the Prism network
    * @param context - Context for ad targeting
    * @returns Promise resolving to array of ads
    */
@@ -135,18 +135,18 @@ export class BotGridAds {
         return response.data.data;
       }
       
-      console.warn('BotGrid: No ads available');
+      console.warn('Prism: No ads available');
       return [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          throw new Error('BotGrid: Invalid API key');
+          throw new Error('Prism: Invalid API key');
         }
         if (error.response?.status === 429) {
-          throw new Error('BotGrid: Rate limit exceeded');
+          throw new Error('Prism: Rate limit exceeded');
         }
       }
-      console.error('BotGrid: Failed to fetch ads', error);
+      console.error('Prism: Failed to fetch ads', error);
       return [];
     }
   }
@@ -243,7 +243,7 @@ export class BotGridAds {
         ...metadata,
       });
     } catch (error) {
-      console.error(`BotGrid: Failed to track ${eventType}`, error);
+      console.error(`Prism: Failed to track ${eventType}`, error);
     }
   }
 
@@ -280,7 +280,7 @@ export class BotGridAds {
    * Update configuration
    * @param config - New configuration options
    */
-  updateConfig(config: Partial<BotGridConfig>): void {
+  updateConfig(config: Partial<PrismConfig>): void {
     if (config.position) this.position = config.position;
     if (config.adFormat) this.adFormat = config.adFormat;
     if (config.baseUrl) {
@@ -328,7 +328,7 @@ export type FormattedAd = FormattedAdText | FormattedAdCard | FormattedAdBanner;
 // React Hook (Optional)
 // ============================================
 
-export interface UseBotGridAdOptions {
+export interface UsePrismAdOptions {
   apiKey: string;
   botId: string;
   position?: 'inline' | 'sidebar' | 'floating';
@@ -339,4 +339,4 @@ export interface UseBotGridAdOptions {
 }
 
 // Re-export for convenience
-export default BotGridAds;
+export default PrismAds;

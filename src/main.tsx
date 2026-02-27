@@ -6,7 +6,7 @@ createRoot(document.getElementById("root")!).render(<App />);
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   const buildId = __APP_BUILD_ID__;
-  const buildStorageKey = "botgrid_sw_build_id";
+  const buildStorageKey = "prism_sw_build_id";
   const swUrl = `/service-worker.js?build=${encodeURIComponent(buildId)}`;
 
   // Persist current build ID so we can detect and refresh on newer SW activations.
@@ -20,7 +20,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
     .catch(() => undefined);
 
   navigator.serviceWorker.addEventListener("message", (event) => {
-    if (!event.data || event.data.type !== "BOTGRID_SW_REFRESH") return;
+    if (!event.data || event.data.type !== "PRISM_SW_REFRESH") return;
 
     const incomingBuild = String(event.data.buildId || "");
     if (!incomingBuild) return;
@@ -42,7 +42,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
   if ("caches" in window) {
     caches.keys().then((keys) => {
       keys
-        .filter((key) => key.startsWith("botgrid-runtime-"))
+        .filter((key) => key.startsWith("prism-runtime-"))
         .forEach((key) => {
           caches.delete(key).catch(() => undefined);
         });

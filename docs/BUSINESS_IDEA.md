@@ -1,8 +1,8 @@
-# BotGrid - AI Ad Network
+# Prism - AI Ad Network
 
 ## The Business Idea
 
-**BotGrid is an ad network specifically designed for AI chatbots and conversational AI.**
+**Prism is an ad network specifically designed for AI chatbots and conversational AI.**
 
 ---
 
@@ -21,17 +21,17 @@ Meanwhile, AI chatbots are exploding in popularity:
 
 ## Our Solution
 
-BotGrid creates a NEW advertising channel:
+Prism creates a NEW advertising channel:
 
 ```
 Traditional Ads:  Website → Display Ads → Users
-BotGrid Ads:      Chatbot → AI Ads → Users in conversations
+Prism Ads:      Chatbot → AI Ads → Users in conversations
 ```
 
 ### How It Works
 
 **For Publishers (Bot Owners):**
-1. Install BotGrid SDK in your chatbot
+1. Install Prism SDK in your chatbot
 2. Ads automatically appear in conversations
 3. Get paid for every impression and click
 
@@ -76,7 +76,7 @@ BotGrid Ads:      Chatbot → AI Ads → Users in conversations
 
 ## Competitive Advantage
 
-| Traditional Ads | BotGrid Ads |
+| Traditional Ads | Prism Ads |
 |----------------|-------------|
 | Website only | Chat |
 | Display/bbots + AI assistantsanner | Native conversation ads |
@@ -98,7 +98,7 @@ BotGrid Ads:      Chatbot → AI Ads → Users in conversations
 
 This project contains:
 
-- **Landing Page** (`/`) - Marketing website explaining BotGrid
+- **Landing Page** (`/`) - Marketing website explaining Prism
 - **Demo** (`/demo`) - Live demo showing ads in a chat interface
 - **SDK** (`/packages/sdk`) - Code for developers to integrate ads
 

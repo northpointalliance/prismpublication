@@ -1,16 +1,16 @@
 /**
- * BotGrid React Hook
+ * Prism React Hook
  * 
- * React hooks for integrating BotGrid ads into React applications
+ * React hooks for integrating Prism ads into React applications
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { BotGridAds, type BotGridConfig, type Ad, type FormattedAd } from './index';
+import { PrismAds, type PrismConfig, type Ad, type FormattedAd } from './index';
 
 // Re-export types
-export type { BotGridConfig, Ad, FormattedAd };
+export type { PrismConfig, Ad, FormattedAd };
 
-export interface UseBotGridAdOptions extends BotGridConfig {
+export interface UsePrismAdOptions extends PrismConfig {
   /** Topic for ad targeting */
   topic?: string;
   /** User ID for tracking */
@@ -26,7 +26,7 @@ export interface UseBotGridAdOptions extends BotGridConfig {
  * 
  * @example
  * ```tsx
- * const { ad, loading, error, refresh } = useBotGridAd({
+ * const { ad, loading, error, refresh } = usePrismAd({
  *   apiKey: 'your-api-key',
  *   botId: 'your-bot-id',
  *   topic: 'technology',
@@ -48,7 +48,7 @@ export interface UseBotGridAdOptions extends BotGridConfig {
  * );
  * ```
  */
-export function useBotGridAd(options: UseBotGridAdOptions) {
+export function usePrismAd(options: UsePrismAdOptions) {
   const {
     apiKey,
     botId,
@@ -65,7 +65,7 @@ export function useBotGridAd(options: UseBotGridAdOptions) {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const sdk = useMemo(() => {
-    return new BotGridAds({ apiKey, botId, position, adFormat, baseUrl });
+    return new PrismAds({ apiKey, botId, position, adFormat, baseUrl });
   }, [apiKey, botId, position, adFormat, baseUrl]);
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export function useBotGridAd(options: UseBotGridAdOptions) {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch ad';
       setError(message);
-      console.error('BotGrid: Error fetching ad:', err);
+      console.error('Prism: Error fetching ad:', err);
     } finally {
       setLoading(false);
     }
@@ -131,16 +131,16 @@ export function useBotGridAd(options: UseBotGridAdOptions) {
 }
 
 /**
- * React component for displaying BotGrid ads
+ * React component for displaying Prism ads
  * 
  * @example
  * ```tsx
- * import { BotGridAd } from '@botgrid/sdk';
+ * import { PrismAd } from '@prism/sdk';
  * 
  * function ChatApp() {
  *   return (
  *     <div>
- *       <BotGridAd
+ *       <PrismAd
  *         apiKey="your-api-key"
  *         botId="your-bot-id"
  *         topic="technology"
@@ -153,8 +153,8 @@ export function useBotGridAd(options: UseBotGridAdOptions) {
  * }
  * ```
  */
-export interface BotGridAdProps {
-  /** Your BotGrid API key */
+export interface PrismAdProps {
+  /** Your Prism API key */
   apiKey: string;
   /** Your bot's unique identifier */
   botId: string;
@@ -186,7 +186,7 @@ export interface BotGridAdProps {
   className?: string;
 }
 
-export function BotGridAdComponent({
+export function PrismAdComponent({
   apiKey,
   botId,
   position = 'inline',
@@ -202,8 +202,8 @@ export function BotGridAdComponent({
   loadingComponent,
   emptyComponent,
   className,
-}: BotGridAdProps) {
-  const { ad, formattedAd, loading, error } = useBotGridAd({
+}: PrismAdProps) {
+  const { ad, formattedAd, loading, error } = usePrismAd({
     apiKey,
     botId,
     position,
@@ -232,7 +232,7 @@ export function BotGridAdComponent({
     return loadingComponent ? (
       <>{loadingComponent}</>
     ) : (
-      <div className={`botgrid-ad-loading ${className || ''}`}>
+      <div className={`prism-ad-loading ${className || ''}`}>
         Loading advertisement...
       </div>
     );
@@ -256,7 +256,7 @@ export function BotGridAdComponent({
       case 'card':
         return (
           <div 
-            className={`botgrid-ad-card ${className || ''}`}
+            className={`prism-ad-card ${className || ''}`}
             onClick={handleClick}
             style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px', margin: '8px 0' }}
           >
@@ -298,7 +298,7 @@ export function BotGridAdComponent({
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleClick}
-            className={`botgrid-ad-banner ${className || ''}`}
+            className={`prism-ad-banner ${className || ''}`}
           >
             {formattedAd.image && (
               <img 
@@ -313,7 +313,7 @@ export function BotGridAdComponent({
       default: // text
         return (
           <div 
-            className={`botgrid-ad-text ${className || ''}`}
+            className={`prism-ad-text ${className || ''}`}
             onClick={handleClick}
             style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px', margin: '8px 0' }}
           >
@@ -335,5 +335,5 @@ export function BotGridAdComponent({
 }
 
 // Named exports
-export { BotGridAds };
-export default BotGridAds;
+export { PrismAds };
+export default PrismAds;

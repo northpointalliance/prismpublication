@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://botgrid.ai/sitemap.xml
+Sitemap: https://prismpublication.com/sitemap.xml

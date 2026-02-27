@@ -1,14 +1,14 @@
-# BotGrid Ad Integration Examples
+# Prism Ad Integration Examples
 
-This document provides code snippets for integrating BotGrid ads into your AI chatbot or conversational AI.
+This document provides code snippets for integrating Prism ads into your AI chatbot or conversational AI.
 
 ## Basic Integration
 
 ### JavaScript/TypeScript SDK
 
 ```javascript
-// BotGrid Ad SDK
-class BotGridAds {
+// Prism Ad SDK
+class PrismAds {
   constructor(options) {
     this.apiKey = options.apiKey;
     this.botId = options.botId;
@@ -16,9 +16,9 @@ class BotGridAds {
     this.adFormat = options.adFormat || 'text'; // 'text', 'card', 'banner'
   }
 
-  // Fetch ads from BotGrid network
+  // Fetch ads from Prism network
   async fetchAds(context = {}) {
-    const response = await fetch('https://api.botgrid.io/v1/ads', {
+    const response = await fetch('https://api.prism.io/v1/ads', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ class BotGridAds {
 
   // Track ad impression
   async trackImpression(adId) {
-    await fetch('https://api.botgrid.io/v1/track/impression', {
+    await fetch('https://api.prism.io/v1/track/impression', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ class BotGridAds {
 
   // Track ad click
   async trackClick(adId) {
-    await fetch('https://api.botgrid.io/v1/track/click', {
+    await fetch('https://api.prism.io/v1/track/click', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ class BotGridAds {
 }
 
 // Usage Example
-const botGrid = new BotGridAds({
+const prismAds = new PrismAds({
   apiKey: 'YOUR_API_KEY',
   botId: 'your-bot-id',
   position: 'inline',
@@ -112,7 +112,7 @@ async function handleUserMessage(userMessage) {
   
   // Display ad every N messages
   if (messageCount % 5 === 0) {
-    const ad = await botGrid.displayAd({ 
+    const ad = await prismAds.displayAd({ 
       topic: detectTopic(userMessage),
       userId: userId 
     });
@@ -138,15 +138,15 @@ import OpenAI from 'openai';
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'my-assistant-bot'
 });
 
 // Function to get ad
 const functions = [
   {
-    name: 'get_botgrid_ad',
+    name: 'get_prism_ad',
     description: 'Get a relevant advertisement to display in the chat',
     parameters: {
       type: 'object',
@@ -178,7 +178,7 @@ async function handleAssistantResponse(userMessage) {
   // If model wants to call ad function
   if (response.function_call) {
     const args = JSON.parse(response.function_call.arguments);
-    const ad = await botGrid.displayAd({
+    const ad = await prismAds.displayAd({
       topic: args.topic,
       context: args.user_preferences
     });
@@ -196,15 +196,15 @@ async function handleAssistantResponse(userMessage) {
 ### Discord Bot Integration
 
 ```javascript
-// Discord.js bot with BotGrid ads
+// Discord.js bot with Prism ads
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
 const client = new Client({ 
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent] 
 });
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'discord-bot-id',
   adFormat: 'card'
 });
@@ -219,7 +219,7 @@ client.on('messageCreate', async (message) => {
   const messageCount = await getUserMessageCount(message.author.id);
   
   if (messageCount % 10 === 0) {
-    const ad = await botGrid.displayAd({
+    const ad = await prismAds.displayAd({
       topic: detectTopic(message.content),
       user_id: message.author.id
     });
@@ -253,8 +253,8 @@ const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET
 });
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'slack-bot-id',
   adFormat: 'text'
 });
@@ -270,7 +270,7 @@ app.message(async ({ message, say }) => {
   const userMessages = await getChannelMessageCount(message.channel);
   
   if (userMessages % 5 === 0) {
-    const ad = await botGrid.displayAd({
+    const ad = await prismAds.displayAd({
       topic: detectTopic(message.text)
     });
     
@@ -308,8 +308,8 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'telegram-bot-id',
   adFormat: 'text'
 });
@@ -327,7 +327,7 @@ bot.on('message', async (msg) => {
   const messageCount = await getUserMessageCount(chatId);
   
   if (messageCount % 5 === 0) {
-    const ad = await botGrid.displayAd({
+    const ad = await prismAds.displayAd({
       topic: detectTopic(msg.text)
     });
     
@@ -354,8 +354,8 @@ bot.on('message', async (msg) => {
 const express = require('express');
 const app = express();
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'my-website-bot',
   adFormat: 'card'
 });
@@ -365,7 +365,7 @@ app.get('/api/ad', async (req, res) => {
   const { topic, user_id, placement } = req.query;
   
   try {
-    const ad = await botGrid.displayAd({
+    const ad = await prismAds.displayAd({
       topic: topic || 'general',
       user_id: user_id,
       position: placement
@@ -373,7 +373,7 @@ app.get('/api/ad', async (req, res) => {
     
     // Track impression
     if (ad) {
-      await botGrid.trackImpression(ad.id);
+      await prismAds.trackImpression(ad.id);
     }
     
     res.json({ ad });
@@ -386,10 +386,10 @@ app.get('/api/ad', async (req, res) => {
 app.post('/api/ad/click', async (req, res) => {
   const { ad_id, user_id } = req.body;
   
-  await botGrid.trackClick(ad_id);
+  await prismAds.trackClick(ad_id);
   
   // Redirect to ad URL
-  const ad = await botGrid.getAd(ad_id);
+  const ad = await prismAds.getAd(ad_id);
   res.redirect(ad.click_url);
 });
 
@@ -404,21 +404,21 @@ app.listen(3000);
 // React component for web integration
 import { useState, useEffect } from 'react';
 
-interface BotGridAdProps {
+interface PrismAdProps {
   apiKey: string;
   botId: string;
   position?: 'inline' | 'sidebar' | 'floating';
   topic?: string;
 }
 
-export function BotGridAd({ apiKey, botId, position = 'inline', topic }: BotGridAdProps) {
+export function PrismAd({ apiKey, botId, position = 'inline', topic }: PrismAdProps) {
   const [ad, setAd] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchAd() {
       try {
-        const response = await fetch('https://api.botgrid.io/v1/ads', {
+        const response = await fetch('https://api.prism.io/v1/ads', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -452,7 +452,7 @@ export function BotGridAd({ apiKey, botId, position = 'inline', topic }: BotGrid
   }
 
   return (
-    <div className="botgrid-ad" data-ad-id={ad.id}>
+    <div className="prism-ad" data-ad-id={ad.id}>
       <div className="ad-content">
         <h4 className="ad-title">{ad.title}</h4>
         <p className="ad-description">{ad.description}</p>
@@ -463,7 +463,7 @@ export function BotGridAd({ apiKey, botId, position = 'inline', topic }: BotGrid
           rel="noopener noreferrer"
           onClick={() => {
             // Track click
-            fetch('https://api.botgrid.io/v1/track/click', {
+            fetch('https://api.prism.io/v1/track/click', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ ad_id: ad.id })
@@ -487,18 +487,18 @@ export function BotGridAd({ apiKey, botId, position = 'inline', topic }: BotGrid
 
 ```php
 <?php
-// WordPress shortcode for BotGrid ads
-function botgrid_ad_shortcode($atts) {
+// WordPress shortcode for Prism ads
+function prism_ad_shortcode($atts) {
   $atts = shortcode_atts([
     'position' => 'inline',
     'topic' => '',
     'format' => 'text'
   ], $atts);
   
-  $api_key = get_option('botgrid_api_key');
-  $bot_id = get_option('botgrid_bot_id');
+  $api_key = get_option('prism_api_key');
+  $bot_id = get_option('prism_bot_id');
   
-  $response = wp_remote_post('https://api.botgrid.io/v1/ads', [
+  $response = wp_remote_post('https://api.prism.io/v1/ads', [
     'headers' => [
       'Authorization' => 'Bearer ' . $api_key,
       'Content-Type' => 'application/json'
@@ -522,7 +522,7 @@ function botgrid_ad_shortcode($atts) {
   }
   
   return sprintf(
-    '<div class="botgrid-ad">
+    '<div class="prism-ad">
       <strong>%s</strong>
       <p>%s</p>
       <a href="%s" target="_blank">%s</a>
@@ -534,7 +534,7 @@ function botgrid_ad_shortcode($atts) {
   );
 }
 
-add_shortcode('botgrid_ad', 'botgrid_ad_shortcode');
+add_shortcode('prism_ad', 'prism_ad_shortcode');
 ```
 
 ---
@@ -543,7 +543,7 @@ add_shortcode('botgrid_ad', 'botgrid_ad_shortcode');
 
 | Option | Type | Description | Default |
 |--------|------|-------------|---------|
-| `apiKey` | string | Your BotGrid API key | Required |
+| `apiKey` | string | Your Prism API key | Required |
 | `botId` | string | Your bot's unique ID | Required |
 | `position` | string | Ad placement: 'inline', 'sidebar', 'floating' | 'inline' |
 | `adFormat` | string | Format: 'text', 'card', 'banner' | 'text' |
@@ -563,4 +563,4 @@ add_shortcode('botgrid_ad', 'botgrid_ad_shortcode');
 
 ---
 
-*For more integration examples, visit the BotGrid developer docs or contact support.*
+*For more integration examples, visit the Prism developer docs or contact support.*

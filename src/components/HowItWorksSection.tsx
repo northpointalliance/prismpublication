@@ -4,13 +4,13 @@ const steps = [
   {
     icon: MessageSquare,
     title: "Integrate in minutes",
-    description: "Drop the BotGrid SDK into any chatbot — GPT wrappers, custom AI agents, customer support bots, e-commerce assistants. Three lines of code is all it takes to start serving contextual ads.",
+    description: "Drop the Prism SDK into any chatbot — GPT wrappers, custom AI agents, customer support bots, e-commerce assistants. Three lines of code is all it takes to start serving contextual ads.",
     accent: "from-primary to-primary/60",
   },
   {
     icon: Target,
     title: "Context-aware ad matching",
-    description: "BotGrid's AI reads the conversation context in real-time and serves ads that feel like natural recommendations, not interruptions. This intent-level targeting delivers higher engagement than traditional display.",
+    description: "Prism's AI reads the conversation context in real-time and serves ads that feel like natural recommendations, not interruptions. This intent-level targeting delivers higher engagement than traditional display.",
     accent: "from-glow-secondary to-glow-secondary/60",
   },
   {
@@ -37,7 +37,7 @@ const HowItWorksSection = () => {
             From integration to <span className="text-gradient-primary">income</span>
           </h2>
           <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            BotGrid makes it simple for chatbot developers and publishers to start earning ad revenue in under 10 minutes. Here's the step-by-step process.
+            Prism makes it simple for chatbot developers and publishers to start earning ad revenue in under 10 minutes. Here's the step-by-step process.
           </p>
         </header>
 

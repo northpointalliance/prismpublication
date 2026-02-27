@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Bot, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
@@ -22,11 +22,9 @@ const Navbar = () => {
       aria-label="Main navigation"
     >
       <div className="flex h-16 items-center justify-between rounded-full border border-white/20 bg-background/80 px-5 shadow-[0_18px_45px_-28px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-        <Link to="/" className="flex items-center gap-2" aria-label="BotGrid home" onClick={closeMobileMenu}>
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center" aria-hidden="true">
-            <Bot className="h-5 w-5 text-primary" />
-          </div>
-          <span className="text-lg font-bold tracking-tight">BotGrid</span>
+        <Link to="/" className="flex items-center gap-0" aria-label="Prism home" onClick={closeMobileMenu}>
+          <img src="/prismlogo.png" alt="" className="h-8 w-8 object-contain" aria-hidden="true" />
+          <span className="text-lg font-bold tracking-tight">Prism</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">

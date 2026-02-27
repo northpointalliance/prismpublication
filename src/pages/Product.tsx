@@ -31,7 +31,7 @@ const Product = () => {
             A practical ad layer for AI conversations.
           </h1>
           <p className="mt-5 max-w-2xl text-muted-foreground text-lg leading-relaxed">
-            BotGrid is designed to help chatbot teams monetize responsibly and help advertisers reach users in high-intent moments.
+            Prism is designed to help chatbot teams monetize responsibly and help advertisers reach users in high-intent moments.
             It focuses on relevance, pacing, and measurable outcomes.
           </p>
 

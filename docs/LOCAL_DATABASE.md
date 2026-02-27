@@ -78,7 +78,7 @@ API default:
 
 Required keys (from `server/.env`):
 
-- `BOTGRID_API_KEY` for SDK requests (`Authorization: Bearer ...`)
+- `PRISM_API_KEY` for SDK requests (`Authorization: Bearer ...`)
 - Bot-specific SDK keys can be created from `/app/publisher` and used instead of the master key.
   - Rotating a bot key invalidates prior active keys for that bot.
 - `ADMIN_API_KEY` for admin endpoints (`x-admin-key`)
@@ -89,7 +89,7 @@ Required keys (from `server/.env`):
 
 Startup behavior:
 
-- API startup fails if `BOTGRID_API_KEY` or `ADMIN_API_KEY` is missing.
+- API startup fails if `PRISM_API_KEY` or `ADMIN_API_KEY` is missing.
 
 Frontend optional env (root `.env`):
 
@@ -97,7 +97,7 @@ Frontend optional env (root `.env`):
 
 Important:
 
-- Do not put `BOTGRID_API_KEY` or `ADMIN_API_KEY` into `VITE_*` variables.
+- Do not put `PRISM_API_KEY` or `ADMIN_API_KEY` into `VITE_*` variables.
 - `VITE_*` values are bundled client-side and are public by design.
 
 ## Added multi-portal identity model
@@ -143,5 +143,5 @@ You can migrate incrementally by moving write paths to the local API first.
 ## Security notes
 
 - Keep `.env` and `server/.env` local only; use `.env.example` files as templates.
-- Rotate `BOTGRID_API_KEY` and `ADMIN_API_KEY` before any public deployment.
+- Rotate `PRISM_API_KEY` and `ADMIN_API_KEY` before any public deployment.
 - `ALLOW_INSECURE_DEV_AUTH` is strict by default; only set it to `"true"` for local debugging.

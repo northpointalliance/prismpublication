@@ -35,7 +35,7 @@ const Company = () => {
             Building the ad layer for conversational AI.
           </h1>
           <p className="mt-5 max-w-2xl text-muted-foreground text-lg leading-relaxed">
-            BotGrid exists to make chatbot monetization useful, measurable, and aligned with user experience.
+            Prism exists to make chatbot monetization useful, measurable, and aligned with user experience.
           </p>
         </div>
       </section>

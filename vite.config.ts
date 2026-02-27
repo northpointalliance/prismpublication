@@ -39,8 +39,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@botgrid/sdk/react": path.resolve(__dirname, "./packages/sdk/dist/react.mjs"),
-      "@botgrid/sdk": path.resolve(__dirname, "./packages/sdk/dist/index.mjs"),
+      "@prism/sdk/react": path.resolve(__dirname, "./packages/sdk/dist/react.mjs"),
+      "@prism/sdk": path.resolve(__dirname, "./packages/sdk/dist/index.mjs"),
     },
   },
 }));

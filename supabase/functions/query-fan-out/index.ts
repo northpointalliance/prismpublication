@@ -33,7 +33,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are BotGrid's Query Fan-Out engine — an AIO (AI Optimisation) layer that maximises ad discoverability.
+    const systemPrompt = `You are Prism's Query Fan-Out engine — an AIO (AI Optimisation) layer that maximises ad discoverability.
 
 TASK: Given a user's raw chatbot query, perform Query Fan-Out by decomposing it into 4-8 diverse sub-intents that together capture the full commercial surface area of the original query.
 

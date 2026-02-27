@@ -2,16 +2,16 @@ import SiteShell from "@/components/SiteShell";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
-const installSnippet = `npm install @botgrid/sdk`;
+const installSnippet = `npm install @prism/sdk`;
 
-const usageSnippet = `import { BotGridAds } from "@botgrid/sdk";
+const usageSnippet = `import { PrismAds } from "@prism/sdk";
 
 // Keep API keys on your server; never bundle them in frontend env vars.
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY!,
+const botGrid = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
-  baseUrl: process.env.BOTGRID_API_BASE_URL || "https://your-api.example.com/api",
+  baseUrl: process.env.PRISM_API_BASE_URL || "https://your-api.example.com/api",
 });
 
 export async function handleMessage(userId: string, topic: string) {

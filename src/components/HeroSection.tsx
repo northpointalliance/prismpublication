@@ -36,7 +36,7 @@ const HeroSection = () => {
 
         {/* Subheadline */}
         <p className="animate-fade-up-delay-2 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-          BotGrid helps publishers earn from chat sessions and helps advertisers reach users in high-intent moments.
+          Prism helps publishers earn from chat sessions and helps advertisers reach users in high-intent moments.
           Ads appear as relevant recommendations, not disruptive banners.
         </p>
 

@@ -1,4 +1,4 @@
-# AI Flow Network Docs
+# Prism Docs
 
 This folder is the source of truth for project context, architecture, and operational setup.
 
@@ -29,11 +29,13 @@ Demo page notes:
 - Demo CTA buttons ("Shop Nike Air Force 1", "Reserve a Table", "Order Flowers") route to `/contact` with source metadata.
 
 Homepage / shell notes:
+- Shared brand mark now uses `public/prismlogo.png` in the navbar and footer.
+- Browser favicon now resolves to `public/favicon.ico`, generated from the Prism logo, with `public/prismlogo.svg` kept as an SVG fallback.
 - The homepage CTA section now uses a local SVG background asset at `public/login-assets/pattern.svg`.
 - Navbar CTAs are standardized to two app-facing button styles:
   - `primary`: blue gradient main action
   - `secondary`: black background with white text
-- Footer is now a full-width section instead of a card, with a centered `BOTGRID` watermark in the background.
+- Footer is now a full-width section instead of a card, with a centered `PRISM` watermark in the background.
 
 ## Tech Stack
 
@@ -161,10 +163,10 @@ Supabase Auth dashboard:
 
 - Local credential files (`.env`, `server/.env`) are intentionally not tracked.
 - Use `.env.example` and `server/.env.example` as templates.
-- API startup requires both `BOTGRID_API_KEY` and `ADMIN_API_KEY`.
+- API startup requires both `PRISM_API_KEY` and `ADMIN_API_KEY`.
 - Portal API calls are expected to include Supabase bearer session tokens for authenticated workspace routes.
 - `GET /api/leads` is admin-key protected (same key family as other admin endpoints).
-- Browser-bundled `VITE_*` vars must not contain `BOTGRID_API_KEY` or `ADMIN_API_KEY`.
+- Browser-bundled `VITE_*` vars must not contain `PRISM_API_KEY` or `ADMIN_API_KEY`.
 - `/api/demo/*` endpoints are rate-limited and are intended only for scripted public demo playback.
 - Distributed rate limiting is supported via optional `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` in `server/.env`.
 - SDK keys created by bot developers are scoped to their bot `botId` for `/api/ads` and `/api/track/:eventType`.

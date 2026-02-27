@@ -66,27 +66,27 @@ interface DemoAd {
   tags?: string[];
 }
 
-const installSnippet = `npm install @botgrid/sdk`;
+const installSnippet = `npm install @prism/sdk`;
 
-const usageSnippet = `import { BotGridAds } from "@botgrid/sdk";
+const usageSnippet = `import { PrismAds } from "@prism/sdk";
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY!,
+const botGrid = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
-  baseUrl: process.env.BOTGRID_API_BASE_URL || "https://your-api.example.com/api",
+  baseUrl: process.env.PRISM_API_BASE_URL || "https://your-api.example.com/api",
 });`;
 
 const howItWorksSteps = [
   {
     title: "Integrate in minutes",
     description:
-      "Drop the BotGrid SDK into any chatbot — GPT wrappers, custom AI agents, customer support bots, e-commerce assistants. Three lines of code is all it takes to start serving contextual ads.",
+      "Drop the Prism SDK into any chatbot — GPT wrappers, custom AI agents, customer support bots, e-commerce assistants. Three lines of code is all it takes to start serving contextual ads.",
   },
   {
     title: "Context-aware ad matching",
     description:
-      "BotGrid reads conversation context in real-time and serves ads that feel like natural recommendations, not interruptions.",
+      "Prism reads conversation context in real-time and serves ads that feel like natural recommendations, not interruptions.",
   },
   {
     title: "Revenue flows automatically",
@@ -435,7 +435,7 @@ const Demo = () => {
                   Turn chatbot conversations into ad revenue without breaking UX.
                 </h1>
                 <p className="mt-3 text-sm text-muted-foreground md:text-base">
-                  BotGrid inserts context-aware sponsored cards directly inside assistant replies. Start playback to see a realistic monetized thread.
+                  Prism inserts context-aware sponsored cards directly inside assistant replies. Start playback to see a realistic monetized thread.
                 </p>
 
                 <div className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground">
@@ -516,7 +516,7 @@ const Demo = () => {
               <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary">SDK Quickstart</p>
                 <h2 className="mt-2 text-2xl font-bold text-foreground">Integrate in minutes</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Use the snippets below to connect BotGrid to your assistant and start injecting ad cards.</p>
+                <p className="mt-2 text-sm text-muted-foreground">Use the snippets below to connect Prism to your assistant and start injecting ad cards.</p>
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-4">

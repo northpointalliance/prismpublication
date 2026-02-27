@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowRight, BookOpen, CheckCircle2, Network, Wrench } from "lucide-react";
 
-const sdkSnippet = `import { BotGridAds } from "@botgrid/sdk";
+const sdkSnippet = `import { PrismAds } from "@prism/sdk";
 
-const sdk = new BotGridAds({
+const sdk = new PrismAds({
   // Inject from secure server/runtime config, not Vite public env vars.
-  apiKey: process.env.BOTGRID_API_KEY!,
+  apiKey: process.env.PRISM_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
-  baseUrl: process.env.BOTGRID_API_BASE_URL || "https://your-api.example.com/api",
+  baseUrl: process.env.PRISM_API_BASE_URL || "https://your-api.example.com/api",
 });
 
 const ad = await sdk.displayAd({ topic: "ai", userId: "u-123" });
@@ -19,7 +19,7 @@ if (ad) {
 }`;
 
 const apiSnippet = `curl -X POST http://localhost:8787/api/ads \\
-  -H "Authorization: Bearer <BOTGRID_API_KEY>" \\
+  -H "Authorization: Bearer <PRISM_API_KEY>" \\
   -H "Content-Type: application/json" \\
   -d '{
     "botId": "demo-bot",
@@ -43,7 +43,7 @@ const Docs = () => {
             Integration guides, common errors, and fixes in one place.
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            Use this page as the operational handbook for BotGrid setup, debugging, and day-to-day troubleshooting.
+            Use this page as the operational handbook for Prism setup, debugging, and day-to-day troubleshooting.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link to="/demo" className="btn-sweep inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
@@ -131,7 +131,7 @@ const Docs = () => {
                 <AccordionItem value="api-401">
                   <AccordionTrigger>API unauthorized errors</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    SDK calls require `Authorization: Bearer BOTGRID_API_KEY`. Admin endpoints require `x-admin-key`.
+                    SDK calls require `Authorization: Bearer PRISM_API_KEY`. Admin endpoints require `x-admin-key`.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

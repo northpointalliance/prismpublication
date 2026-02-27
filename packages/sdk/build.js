@@ -1,5 +1,5 @@
 /**
- * BotGrid SDK Build Script
+ * Prism SDK Build Script
  * Uses local esbuild CLI binary to avoid host/binary version mismatch errors.
  */
 
@@ -74,9 +74,9 @@ const builds = [
   },
 ];
 
-const typeContent = `// BotGrid SDK Type Declarations
-export class BotGridAds {
-  constructor(config: BotGridConfig);
+const typeContent = `// Prism SDK Type Declarations
+export class PrismAds {
+  constructor(config: PrismConfig);
   fetchAds(context?: AdContext): Promise<Ad[]>;
   displayAd(context?: AdContext): Promise<Ad | null>;
   formatAd(ad: Ad): FormattedAd;
@@ -86,11 +86,11 @@ export class BotGridAds {
   shouldShowAd(userId: string, frequency?: number): boolean;
   resetMessageCount(userId: string): void;
   getMessageCount(userId: string): number;
-  updateConfig(config: Partial<BotGridConfig>): void;
+  updateConfig(config: Partial<PrismConfig>): void;
   getVersion(): string;
 }
 
-export interface BotGridConfig {
+export interface PrismConfig {
   apiKey: string;
   botId: string;
   position?: 'inline' | 'sidebar' | 'floating';
@@ -139,16 +139,16 @@ export interface FormattedAdBanner {
 
 export type FormattedAd = FormattedAdText | FormattedAdCard | FormattedAdBanner;
 
-export function useBotGridAd(options: UseBotGridAdOptions): UseBotGridAdResult;
+export function usePrismAd(options: UsePrismAdOptions): UsePrismAdResult;
 
-export interface UseBotGridAdOptions extends BotGridConfig {
+export interface UsePrismAdOptions extends PrismConfig {
   topic?: string;
   userId?: string;
   frequency?: number;
   autoFetch?: boolean;
 }
 
-export interface UseBotGridAdResult {
+export interface UsePrismAdResult {
   ad: Ad | null;
   formattedAd: FormattedAd | null;
   loading: boolean;
@@ -158,9 +158,9 @@ export interface UseBotGridAdResult {
   resetCount?: () => void;
 }
 
-export function BotGridAdComponent(props: BotGridAdProps): JSX.Element;
+export function PrismAdComponent(props: PrismAdProps): JSX.Element;
 
-export interface BotGridAdProps {
+export interface PrismAdProps {
   apiKey: string;
   botId: string;
   position?: 'inline' | 'sidebar' | 'floating';
@@ -178,7 +178,7 @@ export interface BotGridAdProps {
   className?: string;
 }
 
-export default BotGridAds;
+export default PrismAds;
 `;
 
 writeFileSync(join(distDir, "index.d.ts"), typeContent);

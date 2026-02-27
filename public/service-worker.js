@@ -1,7 +1,7 @@
 (() => {
   const url = new URL(self.location.href);
   const buildId = url.searchParams.get("build") || "dev";
-  const runtimeCacheName = `botgrid-runtime-${buildId}`;
+  const runtimeCacheName = `prism-runtime-${buildId}`;
 
   self.addEventListener("install", () => {
     self.skipWaiting();
@@ -26,7 +26,7 @@
 
         clients.forEach((client) => {
           client.postMessage({
-            type: "BOTGRID_SW_REFRESH",
+            type: "PRISM_SW_REFRESH",
             buildId,
           });
         });

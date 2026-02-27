@@ -17,7 +17,7 @@ const PortalShell = ({ title, subtitle, children }: PortalShellProps) => {
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
           <div>
-            <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">BotGrid App</p>
+            <p className="text-xs font-mono uppercase tracking-[0.14em] text-primary">Prism App</p>
             <h1 className="text-xl font-bold tracking-tight">{title}</h1>
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           </div>

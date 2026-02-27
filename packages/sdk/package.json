@@ -1,7 +1,7 @@
 {
-  "name": "@botgrid/sdk",
+  "name": "@prism/sdk",
   "version": "1.0.0",
-  "description": "BotGrid Ad Network SDK for AI Chatbots",
+  "description": "Prism Ad Network SDK for AI Chatbots",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -32,9 +32,9 @@
     "chatbot",
     "ai",
     "monetization",
-    "botgrid"
+    "prism"
   ],
-  "author": "BotGrid",
+  "author": "Prism",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.7.0"

@@ -23,7 +23,7 @@ const StatsSection = () => {
           </h2>
           <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
             Conversion performance matters, but long-term retention matters more.
-            BotGrid is designed to help teams grow revenue without damaging the chat experience.
+            Prism is designed to help teams grow revenue without damaging the chat experience.
           </p>
         </header>
 

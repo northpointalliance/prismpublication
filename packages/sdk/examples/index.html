@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BotGrid SDK Demo</title>
+  <title>Prism SDK Demo</title>
   <style>
     * {
       box-sizing: border-box;
@@ -155,16 +155,16 @@
   </style>
 </head>
 <body>
-  <h1>🤖 BotGrid SDK Demo</h1>
+  <h1>🤖 Prism SDK Demo</h1>
   
   <div class="info-box">
     <h3>ℹ️ Demo Mode</h3>
-    <p>This demo uses mock data since there's no actual BotGrid API. In production, replace <code>MOCK_API_KEY</code> with your real API key.</p>
+    <p>This demo uses mock data since there's no actual Prism API. In production, replace <code>MOCK_API_KEY</code> with your real API key.</p>
   </div>
   
   <div class="chat-container">
     <div class="chat-header">
-      AI Chat with BotGrid Ads
+      AI Chat with Prism Ads
     </div>
     <div class="chat-messages" id="messages">
       <div class="message bot">
@@ -178,8 +178,8 @@
   </div>
 
   <script type="module">
-    // Mock BotGrid SDK for demo (in production, import from @botgrid/sdk)
-    class MockBotGridAds {
+    // Mock Prism SDK for demo (in production, import from @prism/sdk)
+    class MockPrismAds {
       constructor(config) {
         this.apiKey = config.apiKey;
         this.botId = config.botId;
@@ -233,7 +233,7 @@
     }
 
     // Initialize SDK
-    const botGrid = new MockBotGridAds({
+    const botGrid = new MockPrismAds({
       apiKey: 'MOCK_API_KEY',
       botId: 'demo-bot',
       adFormat: 'text'

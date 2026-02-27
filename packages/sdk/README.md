@@ -1,11 +1,11 @@
-# @botgrid/sdk
+# @prism/sdk
 
-BotGrid Ad Network SDK for AI Chatbots - Integrate ads into your AI and start monetizing!
+Prism Ad Network SDK for AI Chatbots - Integrate ads into your AI and start monetizing!
 
 ## Installation
 
 ```bash
-npm install @botgrid/sdk
+npm install @prism/sdk
 ```
 
 ## Getting Credentials
@@ -23,10 +23,10 @@ From the Bot Developer portal (`/app/publisher`):
 ## Quick Start
 
 ```javascript
-import { BotGridAds } from '@botgrid/sdk';
+import { PrismAds } from '@prism/sdk';
 
 // Initialize the SDK
-const botGrid = new BotGridAds({
+const prismAds = new PrismAds({
   apiKey: 'YOUR_API_KEY',
   botId: 'your-bot-id',
   position: 'inline',
@@ -38,15 +38,15 @@ async function handleUserMessage(userMessage) {
   const response = await generateAIResponse(userMessage);
   
   // Show ad every 5 messages
-  if (botGrid.shouldShowAd(userId, 5)) {
-    const ad = await botGrid.displayAd({
+  if (prismAds.shouldShowAd(userId, 5)) {
+    const ad = await prismAds.displayAd({
       topic: detectTopic(userMessage),
       userId: userId
     });
     
     if (ad) {
       // Track impression
-      botGrid.trackImpression(ad.id, userId);
+      prismAds.trackImpression(ad.id, userId);
       return [response, ad];
     }
   }
@@ -58,11 +58,11 @@ async function handleUserMessage(userMessage) {
 ## React Integration
 
 ```tsx
-import { BotGridAdComponent, useBotGridAd } from '@botgrid/sdk/react';
+import { PrismAdComponent, usePrismAd } from '@prism/sdk/react';
 
 // Using the hook
 function ChatMessage() {
-  const { ad, loading, refresh } = useBotGridAd({
+  const { ad, loading, refresh } = usePrismAd({
     apiKey: 'YOUR_API_KEY',
     botId: 'your-bot-id',
     baseUrl: 'http://localhost:8787/api',
@@ -86,7 +86,7 @@ function ChatMessage() {
 // Using the component
 function App() {
   return (
-    <BotGridAdComponent
+    <PrismAdComponent
       apiKey="YOUR_API_KEY"
       botId="your-bot-id"
       baseUrl="http://localhost:8787/api"
@@ -100,17 +100,17 @@ function App() {
 
 ## API Reference
 
-### BotGridAds Class
+### PrismAds Class
 
 ```typescript
-new BotGridAds(config: BotGridConfig)
+new PrismAds(config: PrismConfig)
 ```
 
 #### Configuration Options
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `apiKey` | string | Yes | Your BotGrid API key |
+| `apiKey` | string | Yes | Your Prism API key |
 | `botId` | string | Yes | Your bot's unique ID |
 | `position` | string | No | Ad placement: 'inline', 'sidebar', 'floating' |
 | `adFormat` | string | No | Format: 'text', 'card', 'banner' |
@@ -175,8 +175,8 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
 const client = new Client({ intents: [GatewayIntentBits.MessageContent] });
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'discord-bot',
   adFormat: 'card'
 });
@@ -186,8 +186,8 @@ client.on('messageCreate', async (message) => {
   
   const response = await generateAIResponse(message.content);
   
-  if (botGrid.shouldShowAd(message.author.id, 10)) {
-    const ad = await botGrid.displayAd({ topic: 'general' });
+  if (prismAds.shouldShowAd(message.author.id, 10)) {
+    const ad = await prismAds.displayAd({ topic: 'general' });
     
     if (ad) {
       const embed = new EmbedBuilder()
@@ -196,7 +196,7 @@ client.on('messageCreate', async (message) => {
         .addFields({ name: ad.ctaText, value: ad.clickUrl });
       
       await message.reply({ embeds: [embed] });
-      await botGrid.trackImpression(ad.id, message.author.id);
+      await prismAds.trackImpression(ad.id, message.author.id);
     }
   }
 });
@@ -209,8 +209,8 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
-const botGrid = new BotGridAds({
-  apiKey: process.env.BOTGRID_API_KEY,
+const prismAds = new PrismAds({
+  apiKey: process.env.PRISM_API_KEY,
   botId: 'telegram-bot'
 });
 
@@ -219,13 +219,13 @@ bot.on('message', async (msg) => {
   
   const response = await generateAIResponse(msg.text);
   
-  if (botGrid.shouldShowAd(msg.from.id, 5)) {
-    const ad = await botGrid.displayAd();
+  if (prismAds.shouldShowAd(msg.from.id, 5)) {
+    const ad = await prismAds.displayAd();
     
     if (ad) {
       const adText = `\n\n━━━ Sponsored ━━━\n${ad.title}\n${ad.description}\n${ad.ctaText}: ${ad.clickUrl}`;
       bot.sendMessage(msg.chat.id, response + adText);
-      await botGrid.trackImpression(ad.id, msg.from.id);
+      await prismAds.trackImpression(ad.id, msg.from.id);
     }
   }
 });

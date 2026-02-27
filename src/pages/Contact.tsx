@@ -87,7 +87,7 @@ const Contact = () => {
               <div className="rounded-2xl border border-border bg-background p-4">
                 <Mail className="h-5 w-5 text-primary" />
                 <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">Email</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">sales@botgrid.ai</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">sales@prismpublication.com</p>
               </div>
               <div className="rounded-2xl border border-border bg-background p-4">
                 <Phone className="h-5 w-5 text-primary" />

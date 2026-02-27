@@ -1,4 +1,4 @@
-# AI Flow Network - Deep Dive
+# Prism - Deep Dive
 
 ## 1) Architecture Overview
 
@@ -63,7 +63,7 @@ Auth modes:
 - Admin key routes require `x-admin-key`.
 - Admin workspace bootstrap (`POST /api/me/create-workspace` with `type=admin`) requires `x-admin-key`.
 - Insecure session bypass is disabled by default and only enabled with `ALLOW_INSECURE_DEV_AUTH="true"`.
-- API startup now requires both `BOTGRID_API_KEY` and `ADMIN_API_KEY` in all environments.
+- API startup now requires both `PRISM_API_KEY` and `ADMIN_API_KEY` in all environments.
 
 Lead security:
 
@@ -176,8 +176,8 @@ Routing protection:
 
 Location: `packages/sdk`
 
-- Core class: `BotGridAds` (`packages/sdk/src/index.ts`)
-- React helpers: `useBotGridAd`, `BotGridAdComponent` (`packages/sdk/src/react.tsx`)
+- Core class: `PrismAds` (`packages/sdk/src/index.ts`)
+- React helpers: `usePrismAd`, `PrismAdComponent` (`packages/sdk/src/react.tsx`)
 - Build output: `packages/sdk/dist`
 
 Notable behavior:

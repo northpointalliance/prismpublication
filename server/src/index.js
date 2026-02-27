@@ -24,11 +24,11 @@ const supabaseUrl =
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || "";
 const supabasePublishableKey =
   process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
-const sdkApiKey = process.env.BOTGRID_API_KEY || "";
+const sdkApiKey = process.env.PRISM_API_KEY || process.env.BOTGRID_API_KEY || "";
 const adminApiKey = process.env.ADMIN_API_KEY || "";
 
 if (!sdkApiKey || !adminApiKey) {
-  throw new Error("BOTGRID_API_KEY and ADMIN_API_KEY are required.");
+  throw new Error("PRISM_API_KEY (or legacy BOTGRID_API_KEY) and ADMIN_API_KEY are required.");
 }
 if (isProduction && allowInsecureDevAuth) {
   throw new Error("ALLOW_INSECURE_DEV_AUTH must be false in production.");
