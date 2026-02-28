@@ -44,18 +44,9 @@ const ChooseWorkspace = () => {
     }
   };
 
-  const goBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate("/app/login");
-  };
-
   const creationOptions: Array<{
     type: WorkspaceKind;
     title: string;
-    subtitle: string;
     description: string;
     icon: typeof Building2;
     hoverClass: string;
@@ -63,7 +54,6 @@ const ChooseWorkspace = () => {
     {
       type: "advertiser",
       title: "Advertiser Workspace",
-      subtitle: "Demand Side",
       description: "Launch campaigns, upload creatives, manage budgets, and review results.",
       icon: Building2,
       hoverClass:
@@ -72,7 +62,6 @@ const ChooseWorkspace = () => {
     {
       type: "publisher",
       title: "Bot Developer Workspace",
-      subtitle: "Supply Side",
       description: "Register bots, configure SDK settings, and monitor monetization health.",
       icon: Bot,
       hoverClass:
@@ -87,17 +76,10 @@ const ChooseWorkspace = () => {
         <div className="absolute left-1/2 top-[10%] h-96 w-96 -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
       </div>
       <div className="relative mx-auto max-w-4xl">
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-border/70 bg-card/80 px-4 py-3 backdrop-blur">
+        <div className="mb-4 flex items-center rounded-2xl border border-border/70 bg-card/80 px-4 py-3 backdrop-blur">
           <Link to="/" className="text-sm font-semibold text-primary hover:underline">
-            Back to Website
+            ← Back to Website
           </Link>
-          <button
-            type="button"
-            onClick={goBack}
-            className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
-          >
-            Go Back
-          </button>
         </div>
 
         <header className="mb-6 text-center">
@@ -116,10 +98,10 @@ const ChooseWorkspace = () => {
           </Card>
         )}
 
-        {workspaces.length > 0 ? (
+        {workspaces.filter((w) => w.role !== "admin").length > 0 ? (
           <div className="space-y-5">
             <div className="mx-auto grid w-full max-w-3xl gap-4 md:grid-cols-2">
-              {workspaces.map((workspace) => (
+              {workspaces.filter((w) => w.role !== "admin").map((workspace) => (
                 <Card
                   key={workspace.id}
                   className={`border-border/80 bg-card/90 shadow-sm ${
@@ -160,8 +142,7 @@ const ChooseWorkspace = () => {
                   <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/80">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em]">{option.subtitle}</p>
-                  <h3 className="mt-1 text-2xl font-bold text-foreground">{option.title}</h3>
+                  <h3 className="mt-3 text-2xl font-bold text-foreground">{option.title}</h3>
                   <p className="mt-2 text-sm text-foreground/80">{option.description}</p>
                   <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                     {submitting === option.type ? "Creating..." : "Continue"}

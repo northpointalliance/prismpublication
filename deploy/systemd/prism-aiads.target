@@ -1,0 +1,7 @@
+[Unit]
+Description=Prism AIADS stack
+Wants=prism-aiads-api.service prism-aiads-web.service prism-aiads-tunnel.service
+After=network-online.target docker.service
+
+[Install]
+WantedBy=multi-user.target

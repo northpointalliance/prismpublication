@@ -6,122 +6,127 @@ This document provides code snippets for integrating Prism ads into your AI chat
 
 ### JavaScript/TypeScript SDK
 
+API endpoints (relative to your Prism server):
+- `POST /api/ads` — fetch a targeted ad
+- `POST /api/track/impression` — record an impression
+- `POST /api/track/click` — record a click
+- `POST /api/track/revenue` — record revenue (SDK keys only)
+
 ```javascript
-// Prism Ad SDK
+import crypto from "node:crypto"; // Node.js built-in; omit in browser environments
+
+// ── Prism Ads client ─────────────────────────────────────────────────────────
 class PrismAds {
+  /**
+   * @param {object} options
+   * @param {string} options.apiKey   - SDK key from the publisher portal (bgsk_…)
+   * @param {string} options.botId    - publicId shown on the portal bot list
+   * @param {string} [options.baseUrl] - Base URL of your Prism API server (no trailing slash)
+   * @param {string} [options.position] - 'inline' | 'sidebar' | 'floating'
+   * @param {string} [options.adFormat] - 'text' | 'card' | 'banner'
+   * @param {boolean} [options.signRequests] - Send HMAC signature headers. Default true — required by Prism servers (REQUIRE_SDK_HMAC defaults to on). Set false only during a migration window.
+   */
   constructor(options) {
-    this.apiKey = options.apiKey;
-    this.botId = options.botId;
-    this.position = options.position || 'inline'; // 'inline', 'sidebar', 'floating'
-    this.adFormat = options.adFormat || 'text'; // 'text', 'card', 'banner'
+    this.apiKey      = options.apiKey;
+    this.botId       = options.botId;
+    this.baseUrl     = (options.baseUrl || "").replace(/\/$/, "");
+    this.position    = options.position  || "inline";
+    this.adFormat    = options.adFormat  || "card";
+    this.signRequests = options.signRequests ?? true;
   }
 
-  // Fetch ads from Prism network
-  async fetchAds(context = {}) {
-    const response = await fetch('https://api.prism.io/v1/ads', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        botId: this.botId,
-        context,
-        position: this.position,
-        format: this.adFormat
-      })
-    });
-    
-    return response.json();
-  }
-
-  // Display ad in chat
-  async displayAd(context = {}) {
-    const ad = await this.fetchAds(context);
-    
-    if (!ad || ad.length === 0) {
-      return null; // No ads available
+  // Build signed headers for a request body string
+  _headers(bodyStr) {
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${this.apiKey}`,
+    };
+    if (this.signRequests) {
+      const timestamp = String(Math.floor(Date.now() / 1000));
+      const sig = crypto
+        .createHmac("sha256", this.apiKey)
+        .update(`${timestamp}\n${bodyStr}`)
+        .digest("hex");
+      headers["X-Prism-Timestamp"] = timestamp;
+      headers["X-Prism-Signature"] = `sha256=${sig}`;
     }
-    
-    return this.formatAd(ad[0]);
+    return headers;
   }
 
-  // Format ad based on type
+  async _post(path, payload) {
+    const body = JSON.stringify(payload);
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers: this._headers(body),
+      body,
+    });
+    if (!res.ok) throw new Error(`Prism API error ${res.status} on ${path}`);
+    return res.json();
+  }
+
+  // Fetch a targeted ad
+  async fetchAd(context = {}) {
+    const data = await this._post("/api/ads", {
+      botId: this.botId,
+      context,
+      position: this.position,
+      format: this.adFormat,
+    });
+    return data?.data?.[0] ?? null;
+  }
+
+  // Format ad for display
   formatAd(ad) {
+    if (!ad) return null;
     switch (this.adFormat) {
-      case 'card':
-        return {
-          type: 'card',
-          title: ad.title,
-          description: ad.description,
-          cta: ad.ctaText,
-          url: ad.clickUrl,
-          image: ad.imageUrl
-        };
-      case 'banner':
-        return {
-          type: 'banner',
-          image: ad.imageUrl,
-          url: ad.clickUrl,
-          alt: ad.title
-        };
+      case "card":
+        return { type: "card", title: ad.title, description: ad.description,
+                 cta: ad.ctaText, url: ad.clickUrl, image: ad.imageUrl };
+      case "banner":
+        return { type: "banner", image: ad.imageUrl, url: ad.clickUrl, alt: ad.title };
       default: // text
-        return {
-          type: 'text',
-          content: `${ad.title}\n\n${ad.description}\n\n${ad.ctaText}: ${ad.clickUrl}`
-        };
+        return { type: "text",
+                 content: `${ad.title}\n\n${ad.description}\n\n${ad.ctaText}: ${ad.clickUrl}` };
     }
   }
 
-  // Track ad impression
-  async trackImpression(adId) {
-    await fetch('https://api.prism.io/v1/track/impression', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({ adId, botId: this.botId })
-    });
+  // Fetch + format in one call
+  async displayAd(context = {}) {
+    return this.formatAd(await this.fetchAd(context));
   }
 
-  // Track ad click
-  async trackClick(adId) {
-    await fetch('https://api.prism.io/v1/track/click', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({ adId, botId: this.botId })
-    });
+  async trackImpression(adId, extra = {}) {
+    await this._post("/api/track/impression", { adId, botId: this.botId, ...extra });
+  }
+
+  async trackClick(adId, extra = {}) {
+    await this._post("/api/track/click", { adId, botId: this.botId, ...extra });
   }
 }
 
-// Usage Example
+// ── Usage ────────────────────────────────────────────────────────────────────
 const prismAds = new PrismAds({
-  apiKey: 'YOUR_API_KEY',
-  botId: 'your-bot-id',
-  position: 'inline',
-  adFormat: 'text'
+  apiKey: process.env.PRISM_API_KEY, // never expose in browser bundles
+  botId:  "orgbot_abc123_my-bot_a1b2c3",
+  baseUrl: "https://your-prism-server.example.com",
+  position: "inline",
+  adFormat: "card",
+  signRequests: true, // default true — Prism servers require HMAC signing by default
 });
 
 // In your chat response handler
-async function handleUserMessage(userMessage) {
+async function handleUserMessage(userMessage, userId, messageCount) {
   const response = await generateAIResponse(userMessage);
-  
-  // Display ad every N messages
+
+  // Show an ad every 5 messages
   if (messageCount % 5 === 0) {
-    const ad = await prismAds.displayAd({ 
+    const ad = await prismAds.displayAd({
       topic: detectTopic(userMessage),
-      userId: userId 
+      userId,
     });
-    
-    if (ad) {
-      return [response, ad];
-    }
+    if (ad) return [response, ad];
   }
-  
+
   return [response];
 }
 ```
@@ -140,7 +145,9 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const prismAds = new PrismAds({
   apiKey: process.env.PRISM_API_KEY,
-  botId: 'my-assistant-bot'
+  botId: 'orgbot_abc123_my-assistant_a1b2c3',
+  baseUrl: 'https://your-prism-server.example.com',
+  signRequests: true,
 });
 
 // Function to get ad
@@ -205,8 +212,10 @@ const client = new Client({
 
 const prismAds = new PrismAds({
   apiKey: process.env.PRISM_API_KEY,
-  botId: 'discord-bot-id',
-  adFormat: 'card'
+  botId: 'orgbot_abc123_discord-bot_a1b2c3',
+  baseUrl: 'https://your-prism-server.example.com',
+  adFormat: 'card',
+  signRequests: true,
 });
 
 client.on('messageCreate', async (message) => {
@@ -255,8 +264,10 @@ const app = new App({
 
 const prismAds = new PrismAds({
   apiKey: process.env.PRISM_API_KEY,
-  botId: 'slack-bot-id',
-  adFormat: 'text'
+  botId: 'orgbot_abc123_slack-bot_a1b2c3',
+  baseUrl: 'https://your-prism-server.example.com',
+  adFormat: 'text',
+  signRequests: true,
 });
 
 app.message(async ({ message, say }) => {
@@ -310,8 +321,10 @@ const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
 const prismAds = new PrismAds({
   apiKey: process.env.PRISM_API_KEY,
-  botId: 'telegram-bot-id',
-  adFormat: 'text'
+  botId: 'orgbot_abc123_telegram-bot_a1b2c3',
+  baseUrl: 'https://your-prism-server.example.com',
+  adFormat: 'text',
+  signRequests: true,
 });
 
 bot.on('message', async (msg) => {
@@ -349,48 +362,39 @@ bot.on('message', async (msg) => {
 
 ### Node.js API Middleware
 
+The SDK key must only be used server-side. Never expose it in a browser bundle.
+
 ```javascript
-// Express middleware for websites
+// Express middleware — proxies ad fetching so the SDK key stays on your server
 const express = require('express');
 const app = express();
 
+// PrismAds class defined above
 const prismAds = new PrismAds({
-  apiKey: process.env.PRISM_API_KEY,
-  botId: 'my-website-bot',
-  adFormat: 'card'
+  apiKey: process.env.PRISM_API_KEY,   // server-side only
+  botId:  process.env.PRISM_BOT_ID,
+  baseUrl: 'https://your-prism-server.example.com',
+  adFormat: 'card',
+  signRequests: true,
 });
 
-// API endpoint for fetching ads
-app.get('/api/ad', async (req, res) => {
-  const { topic, user_id, placement } = req.query;
-  
+// Your app fetches an ad through this server-side proxy
+app.get('/internal/ad', async (req, res) => {
+  const { topic, userId } = req.query;
   try {
-    const ad = await prismAds.displayAd({
-      topic: topic || 'general',
-      user_id: user_id,
-      position: placement
-    });
-    
-    // Track impression
-    if (ad) {
-      await prismAds.trackImpression(ad.id);
-    }
-    
+    const ad = await prismAds.fetchAd({ topic: topic || 'general', userId });
+    if (ad) await prismAds.trackImpression(ad.id, { userId });
     res.json({ ad });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to fetch ad' });
   }
 });
 
-// Click tracking endpoint
-app.post('/api/ad/click', async (req, res) => {
-  const { ad_id, user_id } = req.body;
-  
-  await prismAds.trackClick(ad_id);
-  
-  // Redirect to ad URL
-  const ad = await prismAds.getAd(ad_id);
-  res.redirect(ad.click_url);
+// Proxy click tracking (keeps the SDK key off the client)
+app.post('/internal/ad/click', express.json(), async (req, res) => {
+  const { adId, userId } = req.body;
+  await prismAds.trackClick(adId, { userId });
+  res.json({ ok: true });
 });
 
 app.listen(3000);
@@ -400,82 +404,53 @@ app.listen(3000);
 
 ## React/Web Component
 
+Fetch ads through your own server-side proxy (see Node.js middleware above) so the SDK key is never in the browser bundle.
+
 ```tsx
-// React component for web integration
 import { useState, useEffect } from 'react';
 
-interface PrismAdProps {
-  apiKey: string;
-  botId: string;
-  position?: 'inline' | 'sidebar' | 'floating';
-  topic?: string;
+interface AdData {
+  id: string; title: string; description: string;
+  ctaText: string; clickUrl: string; imageUrl?: string;
 }
 
-export function PrismAd({ apiKey, botId, position = 'inline', topic }: PrismAdProps) {
-  const [ad, setAd] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+interface PrismAdProps {
+  topic?: string;
+  userId?: string;
+}
+
+// Calls your server-side proxy, not the Prism API directly
+export function PrismAd({ topic, userId }: PrismAdProps) {
+  const [ad, setAd] = useState<AdData | null>(null);
 
   useEffect(() => {
-    async function fetchAd() {
-      try {
-        const response = await fetch('https://api.prism.io/v1/ads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            bot_id: botId,
-            position,
-            topic
-          })
-        });
-        
-        const data = await response.json();
-        setAd(data[0]);
-      } catch (error) {
-        console.error('Failed to fetch ad:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    const params = new URLSearchParams();
+    if (topic)  params.set('topic', topic);
+    if (userId) params.set('userId', userId);
+    fetch(`/internal/ad?${params}`)
+      .then((r) => r.json())
+      .then((data) => setAd(data.ad ?? null))
+      .catch(() => {});
+  }, [topic, userId]);
 
-    fetchAd();
-  }, [apiKey, botId, position, topic]);
+  if (!ad) return null;
 
-  if (loading) {
-    return <div className="ad-loading">Loading ad...</div>;
-  }
-
-  if (!ad) {
-    return null;
-  }
+  const trackClick = () =>
+    fetch('/internal/ad/click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adId: ad.id, userId }),
+    });
 
   return (
     <div className="prism-ad" data-ad-id={ad.id}>
-      <div className="ad-content">
-        <h4 className="ad-title">{ad.title}</h4>
-        <p className="ad-description">{ad.description}</p>
-        <a 
-          href={ad.click_url} 
-          className="ad-cta"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => {
-            // Track click
-            fetch('https://api.prism.io/v1/track/click', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ad_id: ad.id })
-            });
-          }}
-        >
-          {ad.cta_text}
-        </a>
-      </div>
-      {ad.image_url && (
-        <img src={ad.image_url} alt={ad.title} className="ad-image" />
-      )}
+      <h4 className="ad-title">{ad.title}</h4>
+      <p className="ad-description">{ad.description}</p>
+      <a href={ad.clickUrl} className="ad-cta" target="_blank"
+         rel="noopener noreferrer" onClick={trackClick}>
+        {ad.ctaText}
+      </a>
+      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title} className="ad-image" />}
     </div>
   );
 }
@@ -495,10 +470,11 @@ function prism_ad_shortcode($atts) {
     'format' => 'text'
   ], $atts);
   
-  $api_key = get_option('prism_api_key');
-  $bot_id = get_option('prism_bot_id');
-  
-  $response = wp_remote_post('https://api.prism.io/v1/ads', [
+  $api_key   = get_option('prism_api_key');
+  $bot_id    = get_option('prism_bot_id');
+  $base_url  = get_option('prism_base_url'); // e.g. https://your-prism-server.example.com
+
+  $response = wp_remote_post(trailingslashit($base_url) . 'api/ads', [
     'headers' => [
       'Authorization' => 'Bearer ' . $api_key,
       'Content-Type' => 'application/json'
@@ -543,12 +519,12 @@ add_shortcode('prism_ad', 'prism_ad_shortcode');
 
 | Option | Type | Description | Default |
 |--------|------|-------------|---------|
-| `apiKey` | string | Your Prism API key | Required |
-| `botId` | string | Your bot's unique ID | Required |
-| `position` | string | Ad placement: 'inline', 'sidebar', 'floating' | 'inline' |
-| `adFormat` | string | Format: 'text', 'card', 'banner' | 'text' |
-| `topic` | string | Context topic for targeted ads | 'general' |
-| `userId` | string | User ID for tracking | null |
+| `apiKey` | string | SDK key from publisher portal (`bgsk_…`) — **never expose in browser** | Required |
+| `botId` | string | Bot `publicId` shown on the portal bot list | Required |
+| `baseUrl` | string | Base URL of your Prism API server (no trailing slash) | `""` |
+| `position` | string | Ad placement: `inline` / `sidebar` / `floating` | `inline` |
+| `adFormat` | string | Format: `text` / `card` / `banner` | `card` |
+| `signRequests` | boolean | Send `X-Prism-Timestamp` + `X-Prism-Signature` headers. HMAC is **on by default** on Prism servers — always leave this `true` in production. | `true` |
 
 ---
 

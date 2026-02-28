@@ -108,15 +108,24 @@ export const createIpRateLimiter = ({ windowMs, maxRequests, prefix = "rl", stor
   const memoryStore = createMemoryRateLimitStore({ maxTrackedKeys: maxTrackedIps });
   const config = getUpstashConfig();
   const externalStore = store || (config ? createUpstashRateLimitStore(config) : null);
-  let externalStoreHealthy = Boolean(externalStore);
-  let warningShown = false;
+  // Circuit breaker: track failure state and retry external store after a cooldown
+  let externalStoreFailing = false;
+  let nextExternalRetryAt = 0;
+  const EXTERNAL_RETRY_COOLDOWN_MS = 30_000; // retry every 30s after failure
 
   return async (req, res, next) => {
     const ip = extractClientIp(req);
     const key = `${prefix}:${ip}`;
 
+    // Attempt to recover external store after cooldown
+    if (externalStoreFailing && externalStore && Date.now() >= nextExternalRetryAt) {
+      externalStoreFailing = false;
+    }
+
+    const useExternal = externalStore && !externalStoreFailing;
+
     try {
-      const activeStore = externalStoreHealthy && externalStore ? externalStore : memoryStore;
+      const activeStore = useExternal ? externalStore : memoryStore;
       const result = await activeStore.hit(key, windowMs);
       if (result.count > maxRequests) {
         const retryAfterSec = Math.max(Math.ceil((result.resetAt - Date.now()) / 1000), 1);
@@ -125,10 +134,13 @@ export const createIpRateLimiter = ({ windowMs, maxRequests, prefix = "rl", stor
       }
       return next();
     } catch (err) {
-      externalStoreHealthy = false;
-      if (!warningShown && externalStore) {
-        warningShown = true;
-        console.warn("Rate limiter external store failed; using in-memory fallback.", err);
+      if (externalStore && !externalStoreFailing) {
+        externalStoreFailing = true;
+        nextExternalRetryAt = Date.now() + EXTERNAL_RETRY_COOLDOWN_MS;
+        // Lazy import to avoid circular dependency at module load time
+        import("./logger.js").then(({ logger }) => {
+          logger.warn("Rate limiter external store failed; falling back to in-memory for 30s.", { err: err?.message });
+        }).catch(() => {});
       }
 
       try {

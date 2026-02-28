@@ -63,6 +63,33 @@ enum BotHealth {
   degraded
 }
 
+enum WalletTransactionType {
+  topup
+  spend
+  refund
+}
+
+enum PayoutStatus {
+  pending
+  processing
+  paid
+  failed
+}
+
+enum AuditAction {
+  AD_APPROVE
+  AD_REJECT
+  AD_TAKEDOWN
+  WALLET_TOPUP
+  PAYOUT_REQUEST
+  PAYOUT_PROCESS
+  PAYOUT_STATUS_UPDATE
+  PLATFORM_FEE_UPDATE
+  PAYPAL_CONFIG_UPDATE
+  PAYPAL_WEBHOOK_CAPTURE_REVERSED
+  PAYPAL_WEBHOOK_PAYOUT_SETTLED
+}
+
 model Lead {
   id        String     @id @default(cuid())
   role      LeadRole   @default(general)
@@ -95,17 +122,61 @@ model User {
 }
 
 model Organization {
-  id               String               @id @default(cuid())
-  name             String
-  type             OrganizationType
-  members          OrganizationMember[]
-  usersWithDefault User[]               @relation("DefaultOrganization")
-  publisherBots    PublisherBot[]
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+  id                 String               @id @default(cuid())
+  name               String
+  type               OrganizationType
+  members            OrganizationMember[]
+  usersWithDefault   User[]               @relation("DefaultOrganization")
+  publisherBots      PublisherBot[]
+  walletBalanceCents Int                  @default(0)
+  paypalEmail        String?
+  walletTransactions WalletTransaction[]
+  payoutRequests     PayoutRequest[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
   @@index([type, createdAt])
   @@map("organizations")
+}
+
+model WalletTransaction {
+  id             String                @id @default(cuid())
+  organizationId String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           WalletTransactionType
+  amountCents    Int
+  paypalOrderId  String?
+  description    String?
+  createdAt      DateTime              @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("wallet_transactions")
+}
+
+model PlatformSettings {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  value            String
+  updatedAt        DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+model PayoutRequest {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  amountCents    Int
+  paypalEmail    String
+  paypalBatchId  String?
+  status         PayoutStatus @default(pending)
+  processedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@map("payout_requests")
 }
 
 model OrganizationMember {
@@ -125,23 +196,24 @@ model OrganizationMember {
 }
 
 model Ad {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String
   ctaText     String
   clickUrl    String
   imageUrl    String?
   advertiser  String
-  topics      String[] @default([])
-  format      AdFormat @default(card)
-  isActive    Boolean  @default(true)
-  weight      Int      @default(1)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  topics      String[]  @default([])
+  format      AdFormat  @default(card)
+  isActive    Boolean   @default(true)
+  weight      Int       @default(1)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   events      AdEvent[]
 
-  @@index([isActive, createdAt])
-  @@index([advertiser])
+  @@index([isActive, deletedAt, createdAt])
+  @@index([advertiser, deletedAt])
   @@map("ads")
 }
 
@@ -176,13 +248,32 @@ model PublisherBot {
   sdkErrorsHint   Int            @default(0)
   placementPolicy Json?
   isActive        Boolean        @default(true)
+  deletedAt       DateTime?
   sdkKeys         BotSdkKey[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  @@index([organizationId, createdAt])
-  @@index([organizationId, isActive])
+  @@index([organizationId, deletedAt, createdAt])
+  @@index([organizationId, isActive, deletedAt])
   @@map("publisher_bots")
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  action         AuditAction
+  actorUserId    String?
+  organizationId String?
+  resourceId     String?
+  resourceType   String?
+  before         Json?
+  after          Json?
+  ipAddress      String?
+  createdAt      DateTime    @default(now())
+
+  @@index([action, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([resourceId])
+  @@map("audit_logs")
 }
 
 model BotSdkKey {

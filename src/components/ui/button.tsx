@@ -9,18 +9,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-gradient-to-r from-primary to-[#178AF0] text-primary-foreground font-semibold glow-primary hover:brightness-105 transition-all duration-300",
+        primary:
+          "bg-gradient-to-r from-primary to-[#178AF0] text-primary-foreground font-semibold hover:brightness-105 hover:-translate-y-0.5 transition-all duration-300",
         secondary:
-          "border border-slate-950 bg-slate-950 font-semibold text-white shadow-[0_10px_25px_-16px_rgba(15,23,42,0.8)] hover:bg-slate-800",
-        default: "bg-gradient-to-r from-primary to-[#178AF0] text-primary-foreground font-semibold glow-primary hover:brightness-105 transition-all duration-300",
+          "border border-slate-950 bg-slate-950 font-semibold text-white hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-300",
+        default:
+          "bg-gradient-to-r from-primary to-[#178AF0] text-primary-foreground font-semibold hover:brightness-105 hover:-translate-y-0.5 transition-all duration-300",
         destructive:
-          "border border-slate-950 bg-slate-950 font-semibold text-white shadow-[0_10px_25px_-16px_rgba(15,23,42,0.8)] hover:bg-slate-800",
+          "border border-slate-950 bg-slate-950 font-semibold text-white hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-300",
         outline:
-          "border border-slate-950 bg-slate-950 font-semibold text-white shadow-[0_10px_25px_-16px_rgba(15,23,42,0.8)] hover:bg-slate-800",
+          "border border-slate-950 bg-slate-950 font-semibold text-white hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-300",
         ghost: "bg-transparent text-slate-900 hover:bg-slate-100 hover:text-slate-900",
         link: "text-slate-900 underline-offset-4 hover:underline",
         "hero-outline":
-          "border border-slate-950 bg-slate-950 font-semibold text-white shadow-[0_10px_25px_-16px_rgba(15,23,42,0.8)] hover:bg-slate-800",
+          "border border-slate-950 bg-slate-950 font-semibold text-white hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",

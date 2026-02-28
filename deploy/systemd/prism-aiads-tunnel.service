@@ -1,0 +1,16 @@
+[Unit]
+Description=Prism AIADS Cloudflare Tunnel
+After=network-online.target prism-aiads-web.service
+Wants=network-online.target prism-aiads-web.service
+
+[Service]
+Type=simple
+User=tokyo
+Group=tokyo
+WorkingDirectory=/home/tokyo/Desktop/AIADS
+ExecStart=/usr/local/bin/cloudflared --no-autoupdate --config /home/tokyo/Desktop/AIADS/cloudflared/prismpublication-config.yml tunnel run prism-aiads
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

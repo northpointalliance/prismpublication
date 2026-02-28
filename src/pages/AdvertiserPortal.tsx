@@ -1,13 +1,23 @@
-import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PortalShell from "@/components/portal/PortalShell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
 import { getPortalHeaders } from "@/lib/portal-api";
-import { CreditCard, ExternalLink, ImagePlus, Pencil, UploadCloud, X } from "lucide-react";
+import {
+  CreditCard,
+  MousePointerClick,
+  TrendingUp,
+  Wallet,
+  Zap,
+} from "lucide-react";
+import AdvertiserSummaryMetrics from "@/components/portal/advertiser/AdvertiserSummaryMetrics";
+import CampaignPerformanceChart from "@/components/portal/advertiser/CampaignPerformanceChart";
+import CampaignList from "@/components/portal/advertiser/CampaignList";
+import BillingPanel from "@/components/portal/advertiser/BillingPanel";
+import CreateCampaignWizard from "@/components/portal/advertiser/CreateCampaignWizard";
+import EditCampaignModal from "@/components/portal/advertiser/EditCampaignModal";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface AdvertiserDashboardResponse {
   summary: {
@@ -42,7 +52,7 @@ interface AdvertiserCampaignRecord {
   isActive: boolean;
 }
 
-interface AdvertiserCampaignDraft {
+interface CampaignInfoDraft {
   title: string;
   description: string;
   ctaText: string;
@@ -50,6 +60,9 @@ interface AdvertiserCampaignDraft {
   topics: string;
   format: "text" | "card" | "banner";
   weight: string;
+}
+
+interface CampaignBudgetDraft {
   dailyBudgetUsd: string;
   lifetimeBudgetUsd: string;
 }
@@ -57,21 +70,20 @@ interface AdvertiserCampaignDraft {
 interface CampaignBudget {
   dailyBudgetCents: number;
   lifetimeBudgetCents: number;
+  durationDays: number;
 }
 
-interface PaymentDraft {
-  cardholder: string;
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-}
-
-interface StoredBillingState {
-  walletBalanceCents: number;
-  campaignBudgets: Record<string, CampaignBudget>;
+interface WalletTransaction {
+  id: string;
+  type: "topup" | "spend" | "refund";
+  amountCents: number;
+  description?: string;
+  createdAt: string;
 }
 
 type WizardStep = 1 | 2 | 3;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const formatCurrency = (cents: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format((cents || 0) / 100);
@@ -84,24 +96,14 @@ const parseUsdToCents = (value: string) => {
 
 const isHttpUrl = (value: string) => /^https?:\/\//i.test(value.trim());
 
-const emptyDraft: AdvertiserCampaignDraft = {
-  title: "",
-  description: "",
-  ctaText: "",
-  clickUrl: "",
-  topics: "ai, performance",
-  format: "card",
-  weight: "1",
-  dailyBudgetUsd: "50",
-  lifetimeBudgetUsd: "500",
+const emptyInfo: CampaignInfoDraft = {
+  title: "", description: "", ctaText: "", clickUrl: "",
+  topics: "ai, performance", format: "card", weight: "1",
 };
 
-const emptyPaymentDraft: PaymentDraft = {
-  cardholder: "",
-  cardNumber: "",
-  expiry: "",
-  cvc: "",
-};
+const emptyBudget: CampaignBudgetDraft = { dailyBudgetUsd: "50", lifetimeBudgetUsd: "500" };
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 const AdvertiserPortal = () => {
   const { user } = usePortalAuth();
@@ -112,247 +114,118 @@ const AdvertiserPortal = () => {
   const [data, setData] = useState<AdvertiserDashboardResponse | null>(null);
   const [campaignRecords, setCampaignRecords] = useState<Record<string, AdvertiserCampaignRecord>>({});
   const [walletBalanceCents, setWalletBalanceCents] = useState(0);
+  const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
+  const [walletLoading, setWalletLoading] = useState(false);
   const [campaignBudgets, setCampaignBudgets] = useState<Record<string, CampaignBudget>>({});
 
+  // Wizard state
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
-  const [draft, setDraft] = useState<AdvertiserCampaignDraft>(emptyDraft);
-  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<AdvertiserCampaignDraft>(emptyDraft);
-  const [paymentDraft, setPaymentDraft] = useState<PaymentDraft>(emptyPaymentDraft);
-  const [topUpAmountUsd, setTopUpAmountUsd] = useState("250");
+  const [infoDraft, setInfoDraft] = useState<CampaignInfoDraft>(emptyInfo);
+  const [wizardDailyUsd, setWizardDailyUsd] = useState("50");
+  const [wizardDurationDays, setWizardDurationDays] = useState("30");
   const [dragActive, setDragActive] = useState(false);
   const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const billingStorageKey = user?.email ? `advertiser-billing:${user.email.toLowerCase()}` : "";
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editInfo, setEditInfo] = useState<CampaignInfoDraft>(emptyInfo);
+  const [editBudget, setEditBudget] = useState<CampaignBudgetDraft>(emptyBudget);
+
+  // Billing state
+  const [topUpAmountUsd, setTopUpAmountUsd] = useState("250");
+
+  // ── computed ───────────────────────────────────────────────────────────────
+
+  const wizardDailyBudgetCents = parseUsdToCents(wizardDailyUsd);
+  const wizardDays = Math.max(1, Math.min(365, parseInt(wizardDurationDays) || 30));
+  const wizardTotalBudgetCents = wizardDailyBudgetCents * wizardDays;
+
+  // ── data loading ───────────────────────────────────────────────────────────
 
   const loadDashboard = async (email: string, cancelledRef?: { current: boolean }) => {
-    setLoading(true);
-    setError("");
-
+    setLoading(true); setError("");
     try {
       const headers = await getPortalHeaders(email);
-      const [dashboardResponse, campaignsResponse] = await Promise.all([
+      const [dashRes, campRes] = await Promise.all([
         apiRequest<AdvertiserDashboardResponse>("/advertiser/dashboard", undefined, headers),
-        apiRequest<AdvertiserCampaignRecord[]>("/advertiser/campaigns", undefined, headers),
+        apiRequest<{ items: AdvertiserCampaignRecord[]; nextCursor: string | null; hasMore: boolean }>("/advertiser/campaigns", undefined, headers),
       ]);
       if (!cancelledRef?.current) {
-        setData(dashboardResponse);
-        setCampaignRecords(
-          Object.fromEntries(campaignsResponse.map((campaign) => [campaign.id, campaign])),
-        );
+        setData(dashRes);
+        setCampaignRecords(Object.fromEntries((campRes.items ?? []).map((c) => [c.id, c])));
       }
     } catch (err) {
-      if (!cancelledRef?.current) {
-        const message = err instanceof Error ? err.message : "Failed to load advertiser data";
-        setError(message);
-      }
+      if (!cancelledRef?.current) setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
-      if (!cancelledRef?.current) {
-        setLoading(false);
-      }
+      if (!cancelledRef?.current) setLoading(false);
     }
   };
 
   useEffect(() => {
     if (!user?.email) return;
-    const cancelledRef = { current: false };
-    void loadDashboard(user.email, cancelledRef);
-    return () => {
-      cancelledRef.current = true;
-    };
+    const ref = { current: false };
+    void loadDashboard(user.email, ref);
+    return () => { ref.current = true; };
   }, [user?.email]);
 
-  useEffect(() => {
-    if (!billingStorageKey) return;
-    const raw = localStorage.getItem(billingStorageKey);
-    if (!raw) {
-      setWalletBalanceCents(0);
-      setCampaignBudgets({});
-      return;
-    }
-
+  const loadWallet = useCallback(async (email: string) => {
+    setWalletLoading(true);
     try {
-      const parsed = JSON.parse(raw) as StoredBillingState;
-      setWalletBalanceCents(parsed.walletBalanceCents || 0);
-      setCampaignBudgets(parsed.campaignBudgets || {});
-    } catch (_err) {
-      setWalletBalanceCents(0);
-      setCampaignBudgets({});
+      const headers = await getPortalHeaders(email);
+      const res = await apiRequest<{ walletBalanceCents: number; transactions: WalletTransaction[] }>(
+        "/wallet/balance", undefined, headers,
+      );
+      setWalletBalanceCents(res.walletBalanceCents);
+      setWalletTransactions(res.transactions);
+    } catch {
+      // non-fatal
+    } finally {
+      setWalletLoading(false);
     }
-  }, [billingStorageKey]);
+  }, []);
 
   useEffect(() => {
-    if (!billingStorageKey) return;
-    const payload: StoredBillingState = { walletBalanceCents, campaignBudgets };
-    localStorage.setItem(billingStorageKey, JSON.stringify(payload));
-  }, [billingStorageKey, walletBalanceCents, campaignBudgets]);
+    if (user?.email) void loadWallet(user.email);
+  }, [user?.email, loadWallet]);
 
-  useEffect(
-    () => () => {
-      if (uploadedPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(uploadedPreviewUrl);
-    },
-    [uploadedPreviewUrl],
-  );
+  useEffect(() => () => {
+    if (uploadedPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(uploadedPreviewUrl);
+  }, [uploadedPreviewUrl]);
+
+  // ── wizard handlers ────────────────────────────────────────────────────────
 
   const resetWizard = () => {
-    setWizardStep(1);
-    setDraft(emptyDraft);
-    setPaymentDraft(emptyPaymentDraft);
-    setTopUpAmountUsd("250");
-    setUploadedPreviewUrl((previous) => {
-      if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
-      return null;
-    });
+    setWizardStep(1); setInfoDraft(emptyInfo);
+    setWizardDailyUsd("50"); setWizardDurationDays("30");
+    setUploadedPreviewUrl((prev) => { if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev); return null; });
   };
 
-  const openWizard = () => {
-    setError("");
-    setNotice("");
-    resetWizard();
-    setWizardOpen(true);
-  };
+  const openWizard = () => { setError(""); setNotice(""); resetWizard(); setWizardOpen(true); };
+  const closeWizard = () => { setWizardOpen(false); resetWizard(); };
 
-  const closeWizard = () => {
-    setWizardOpen(false);
-    resetWizard();
-  };
-
-  const openEditCampaign = (campaignId: string) => {
-    const campaign = campaignRecords[campaignId];
-    if (!campaign) return;
-    const budget = campaignBudgets[campaignId];
-    setEditDraft({
-      title: campaign.title,
-      description: campaign.description,
-      ctaText: campaign.ctaText,
-      clickUrl: campaign.clickUrl,
-      topics: campaign.topics.join(", "),
-      format: campaign.format,
-      weight: String(campaign.weight),
-      dailyBudgetUsd: budget ? String((budget.dailyBudgetCents / 100).toFixed(2)) : "50",
-      lifetimeBudgetUsd: budget ? String((budget.lifetimeBudgetCents / 100).toFixed(2)) : "500",
-    });
-    setEditingCampaignId(campaignId);
-    setError("");
-    setNotice("");
-  };
-
-  const closeEditCampaign = () => {
-    setEditingCampaignId(null);
-    setEditDraft(emptyDraft);
-  };
-
-  const applyImageFile = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setError("Please upload a valid image file.");
-      return;
-    }
-
-    setError("");
-    setNotice("Image loaded for preview.");
-    setUploadedPreviewUrl((previous) => {
-      if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
-      return URL.createObjectURL(file);
-    });
-  };
-
-  const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    applyImageFile(file);
-    event.target.value = "";
-  };
-
-  const onDropFile = (event: DragEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    setDragActive(false);
-    const file = event.dataTransfer.files?.[0];
-    if (!file) return;
-    applyImageFile(file);
-  };
-
-  const validateStepOne = () => {
-    if (!draft.title.trim() || !draft.description.trim() || !draft.ctaText.trim()) {
+  const validateStep1 = (): string => {
+    if (!infoDraft.title.trim() || !infoDraft.description.trim() || !infoDraft.ctaText.trim())
       return "Title, description, and CTA are required.";
-    }
-    if (!isHttpUrl(draft.clickUrl)) {
-      return "Click URL must start with http:// or https://.";
-    }
-    const weight = Number(draft.weight || "1");
-    if (!Number.isFinite(weight) || weight < 1 || weight > 100) {
-      return "Weight must be between 1 and 100.";
-    }
-    const dailyBudgetCents = parseUsdToCents(draft.dailyBudgetUsd);
-    const lifetimeBudgetCents = parseUsdToCents(draft.lifetimeBudgetUsd);
-    if (dailyBudgetCents <= 0 || lifetimeBudgetCents <= 0) {
-      return "Daily and lifetime budget must be greater than $0.";
-    }
-    if (dailyBudgetCents > lifetimeBudgetCents) {
-      return "Daily budget cannot be greater than lifetime budget.";
-    }
+    if (!isHttpUrl(infoDraft.clickUrl)) return "Destination URL must start with http:// or https://.";
+    const w = Number(infoDraft.weight || "1");
+    if (!Number.isFinite(w) || w < 1 || w > 100) return "Weight must be between 1 and 100.";
     return "";
   };
 
-  const moveStep = (direction: "next" | "back") => {
-    if (direction === "back") {
-      setWizardStep((prev) => (prev === 1 ? 1 : ((prev - 1) as WizardStep)));
-      return;
-    }
-
-    if (wizardStep === 1) {
-      const validationError = validateStepOne();
-      if (validationError) {
-        setError(validationError);
-        return;
-      }
-    }
-
+  const moveStep = (dir: "next" | "back") => {
+    if (dir === "back") { setError(""); setWizardStep((p) => (p === 1 ? 1 : ((p - 1) as WizardStep))); return; }
+    if (wizardStep === 1) { const e = validateStep1(); if (e) { setError(e); return; } }
     setError("");
-    setWizardStep((prev) => (prev === 3 ? 3 : ((prev + 1) as WizardStep)));
+    setWizardStep((p) => (p === 3 ? 3 : ((p + 1) as WizardStep)));
   };
 
-  const topUpWallet = () => {
-    const amountCents = parseUsdToCents(topUpAmountUsd);
-    if (amountCents <= 0) {
-      setError("Enter a valid top-up amount.");
-      return;
-    }
-
-    const normalizedNumber = paymentDraft.cardNumber.replace(/\s+/g, "");
-    if (!paymentDraft.cardholder.trim() || normalizedNumber.length < 12 || !paymentDraft.expiry.trim() || paymentDraft.cvc.trim().length < 3) {
-      setError("Enter valid payment details before adding funds.");
-      return;
-    }
-
-    setError("");
-    setWalletBalanceCents((prev) => prev + amountCents);
-    setNotice(`Payment successful. Wallet credited with ${formatCurrency(amountCents)}.`);
-    setTopUpAmountUsd("");
-  };
-
-  const submitCampaignForReview = async () => {
+  const submitCampaign = async () => {
     if (!user?.email) return;
-    setSaving(true);
-    setError("");
-    setNotice("");
-
-    const validationError = validateStepOne();
-    if (validationError) {
-      setSaving(false);
-      setError(validationError);
-      return;
-    }
-
-    const dailyBudgetCents = parseUsdToCents(draft.dailyBudgetUsd);
-    const lifetimeBudgetCents = parseUsdToCents(draft.lifetimeBudgetUsd);
-    if (walletBalanceCents < lifetimeBudgetCents) {
-      setSaving(false);
-      setError("Insufficient wallet funds. Add payment before submitting.");
-      return;
-    }
-
+    if (wizardDailyBudgetCents <= 0) { setError("Daily budget must be greater than $0."); return; }
+    if (walletBalanceCents < wizardTotalBudgetCents) { setError("Insufficient wallet funds."); return; }
+    setSaving(true); setError(""); setNotice("");
     try {
       const headers = await getPortalHeaders(user.email);
       const created = await apiRequest<{ id: string }>(
@@ -360,33 +233,31 @@ const AdvertiserPortal = () => {
         {
           method: "POST",
           body: JSON.stringify({
-            title: draft.title,
-            description: draft.description,
-            ctaText: draft.ctaText,
-            clickUrl: draft.clickUrl,
-            topics: draft.topics
-              .split(",")
-              .map((value) => value.trim())
-              .filter(Boolean),
-            format: draft.format,
-            weight: Number(draft.weight || "1"),
+            title: infoDraft.title, description: infoDraft.description,
+            ctaText: infoDraft.ctaText, clickUrl: infoDraft.clickUrl,
+            topics: infoDraft.topics.split(",").map((t) => t.trim()).filter(Boolean),
+            format: infoDraft.format, weight: Number(infoDraft.weight || "1"),
           }),
         },
         headers,
       );
-
       if (created?.id) {
         setCampaignBudgets((prev) => ({
           ...prev,
-          [created.id]: {
-            dailyBudgetCents,
-            lifetimeBudgetCents,
-          },
+          [created.id]: { dailyBudgetCents: wizardDailyBudgetCents, lifetimeBudgetCents: wizardTotalBudgetCents, durationDays: wizardDays },
         }));
+        try {
+          const spendRes = await apiRequest<{ newBalanceCents: number }>(
+            "/wallet/spend",
+            { method: "POST", body: JSON.stringify({ amountCents: wizardTotalBudgetCents, description: `Budget for campaign: ${infoDraft.title}` }) },
+            headers,
+          );
+          setWalletBalanceCents(spendRes.newBalanceCents);
+        } catch {
+          setWalletBalanceCents((prev) => Math.max(0, prev - wizardTotalBudgetCents));
+        }
       }
-
-      setWalletBalanceCents((prev) => Math.max(0, prev - lifetimeBudgetCents));
-      setNotice("Ad submitted for review. Budget reserved from wallet.");
+      setNotice("Campaign submitted for review. Budget reserved from wallet.");
       closeWizard();
       await loadDashboard(user.email);
     } catch (err) {
@@ -396,523 +267,192 @@ const AdvertiserPortal = () => {
     }
   };
 
-  const toggleCampaign = async (campaignId: string, nextLiveState: boolean) => {
+  // ── edit handlers ──────────────────────────────────────────────────────────
+
+  const openEdit = (id: string) => {
+    const rec = campaignRecords[id];
+    if (!rec) return;
+    const bud = campaignBudgets[id];
+    setEditInfo({ title: rec.title, description: rec.description, ctaText: rec.ctaText, clickUrl: rec.clickUrl, topics: rec.topics.join(", "), format: rec.format, weight: String(rec.weight) });
+    setEditBudget({ dailyBudgetUsd: bud ? String((bud.dailyBudgetCents / 100).toFixed(2)) : "50", lifetimeBudgetUsd: bud ? String((bud.lifetimeBudgetCents / 100).toFixed(2)) : "500" });
+    setEditingId(id); setError(""); setNotice("");
+  };
+
+  const closeEdit = () => { setEditingId(null); setEditInfo(emptyInfo); setEditBudget(emptyBudget); };
+
+  const saveEdit = async () => {
+    if (!user?.email || !editingId) return;
+    const w = Number(editInfo.weight || "1");
+    if (!Number.isFinite(w) || w < 1 || w > 100) { setError("Weight must be between 1 and 100."); return; }
+    if (!isHttpUrl(editInfo.clickUrl)) { setError("Destination URL must start with http:// or https://."); return; }
+    const daily = parseUsdToCents(editBudget.dailyBudgetUsd);
+    const lifetime = parseUsdToCents(editBudget.lifetimeBudgetUsd);
+    if (daily <= 0 || lifetime <= 0 || daily > lifetime) { setError("Set valid daily and lifetime budgets."); return; }
+    setSaving(true); setError(""); setNotice("");
+    try {
+      const headers = await getPortalHeaders(user.email);
+      await apiRequest(`/advertiser/campaigns/${editingId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title: editInfo.title, description: editInfo.description, ctaText: editInfo.ctaText, clickUrl: editInfo.clickUrl, topics: editInfo.topics.split(",").map((t) => t.trim()).filter(Boolean), format: editInfo.format, weight: w }),
+      }, headers);
+      setCampaignBudgets((prev) => ({ ...prev, [editingId]: { dailyBudgetCents: daily, lifetimeBudgetCents: lifetime, durationDays: Math.round(lifetime / daily) || 30 } }));
+      setNotice("Campaign updated."); closeEdit();
+      await loadDashboard(user.email);
+    } catch (err) { setError(err instanceof Error ? err.message : "Failed to update campaign"); }
+    finally { setSaving(false); }
+  };
+
+  const toggleCampaign = async (id: string, nextLive: boolean) => {
     if (!user?.email) return;
-    setSaving(true);
-    setError("");
-    setNotice("");
-
+    setSaving(true); setError(""); setNotice("");
     try {
       const headers = await getPortalHeaders(user.email);
-      await apiRequest(
-        `/advertiser/campaigns/${campaignId}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ isActive: nextLiveState }),
-        },
-        headers,
-      );
-      setNotice(nextLiveState ? "Campaign is now live." : "Campaign moved back to review.");
+      await apiRequest(`/advertiser/campaigns/${id}`, { method: "PATCH", body: JSON.stringify({ isActive: nextLive }) }, headers);
+      setNotice(nextLive ? "Campaign is now live." : "Campaign paused.");
       await loadDashboard(user.email);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update campaign");
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : "Failed to update campaign"); }
+    finally { setSaving(false); }
   };
 
-  const saveCampaignEdits = async () => {
-    if (!user?.email || !editingCampaignId) return;
-    setSaving(true);
-    setError("");
-    setNotice("");
+  // ── PayPal billing ─────────────────────────────────────────────────────────
 
-    const weight = Number(editDraft.weight || "1");
-    if (!Number.isFinite(weight) || weight < 1 || weight > 100) {
-      setSaving(false);
-      setError("Weight must be between 1 and 100.");
-      return;
-    }
-    if (!isHttpUrl(editDraft.clickUrl)) {
-      setSaving(false);
-      setError("Click URL must start with http:// or https://.");
-      return;
-    }
+  const createPayPalOrder = useCallback(async () => {
+    if (!user?.email) throw new Error("Not logged in");
+    const amountCents = parseUsdToCents(topUpAmountUsd);
+    if (amountCents < 100) throw new Error("Minimum top-up is $1.00");
+    const headers = await getPortalHeaders(user.email);
+    const res = await apiRequest<{ orderID: string }>(
+      "/wallet/paypal/create-order",
+      { method: "POST", body: JSON.stringify({ amountCents }) },
+      headers,
+    );
+    return res.orderID;
+  }, [user?.email, topUpAmountUsd]);
 
-    const dailyBudgetCents = parseUsdToCents(editDraft.dailyBudgetUsd);
-    const lifetimeBudgetCents = parseUsdToCents(editDraft.lifetimeBudgetUsd);
-    if (dailyBudgetCents <= 0 || lifetimeBudgetCents <= 0 || dailyBudgetCents > lifetimeBudgetCents) {
-      setSaving(false);
-      setError("Please set valid daily/lifetime budgets.");
-      return;
-    }
-
+  const onPayPalApprove = useCallback(async (data: { orderID: string }) => {
+    if (!user?.email) return;
     try {
       const headers = await getPortalHeaders(user.email);
-      await apiRequest(
-        `/advertiser/campaigns/${editingCampaignId}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            title: editDraft.title,
-            description: editDraft.description,
-            ctaText: editDraft.ctaText,
-            clickUrl: editDraft.clickUrl,
-            topics: editDraft.topics
-              .split(",")
-              .map((value) => value.trim())
-              .filter(Boolean),
-            format: editDraft.format,
-            weight,
-          }),
-        },
+      const res = await apiRequest<{ amountCents: number; newBalanceCents: number }>(
+        "/wallet/paypal/capture-order",
+        { method: "POST", body: JSON.stringify({ orderID: data.orderID }) },
         headers,
       );
-
-      setCampaignBudgets((prev) => ({
-        ...prev,
-        [editingCampaignId]: {
-          dailyBudgetCents,
-          lifetimeBudgetCents,
-        },
-      }));
-      setNotice("Campaign updated.");
-      closeEditCampaign();
-      await loadDashboard(user.email);
+      setWalletBalanceCents(res.newBalanceCents);
+      setNotice(`Wallet credited ${formatCurrency(res.amountCents)}. New balance: ${formatCurrency(res.newBalanceCents)}.`);
+      setTopUpAmountUsd("250");
+      void loadWallet(user.email);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update campaign");
-    } finally {
-      setSaving(false);
+      setError(err instanceof Error ? err.message : "Failed to capture payment");
     }
+  }, [user?.email, loadWallet]);
+
+  // ── image upload ───────────────────────────────────────────────────────────
+
+  const applyImage = (file: File) => {
+    if (!file.type.startsWith("image/")) { setError("Please upload a valid image file."); return; }
+    setUploadedPreviewUrl((prev) => { if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
   };
 
-  const previewImageUrl = uploadedPreviewUrl;
-  const pendingBudgetCents = parseUsdToCents(draft.lifetimeBudgetUsd);
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) { applyImage(f); e.target.value = ""; } };
+  const onDrop = (e: DragEvent<HTMLButtonElement>) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files?.[0]; if (f) applyImage(f); };
 
-  const summaryCards = useMemo(() => {
-    if (!data) {
-      return [
-        { label: "Spend Today", value: "--" },
-        { label: "Active Campaigns", value: "--" },
-        { label: "Pending Review", value: "--" },
-        { label: "CTR (7d)", value: "--" },
-        { label: "Wallet", value: formatCurrency(walletBalanceCents) },
-      ];
-    }
-    return [
-      { label: "Spend Today", value: formatCurrency(data.summary.spendTodayCents) },
-      { label: "Active Campaigns", value: String(data.summary.activeCampaigns) },
-      { label: "Pending Review", value: String(data.summary.pendingReview) },
-      { label: "CTR (7d)", value: `${data.summary.ctr7d.toFixed(2)}%` },
-      { label: "Wallet", value: formatCurrency(walletBalanceCents) },
-    ];
-  }, [data, walletBalanceCents]);
+  // ── derived ────────────────────────────────────────────────────────────────
+
+  const chartData = useMemo(
+    () => (data?.campaigns || []).map((c) => ({
+      name: c.title.length > 16 ? c.title.slice(0, 16) + "…" : c.title,
+      Impressions: c.impressions7d,
+      Clicks: c.clicks7d,
+      "Spend ($)": parseFloat((c.spend7dCents / 100).toFixed(2)),
+    })),
+    [data?.campaigns],
+  );
+
+  const summaryCards = useMemo(() => [
+    { label: "Spend Today", value: data ? formatCurrency(data.summary.spendTodayCents) : "--", icon: Wallet },
+    { label: "Active Campaigns", value: data ? String(data.summary.activeCampaigns) : "--", icon: Zap },
+    { label: "Pending Review", value: data ? String(data.summary.pendingReview) : "--", icon: TrendingUp },
+    { label: "CTR (7d)", value: data ? `${data.summary.ctr7d.toFixed(2)}%` : "--", icon: MousePointerClick },
+    { label: "Wallet Balance", value: formatCurrency(walletBalanceCents), icon: CreditCard },
+  ], [data, walletBalanceCents]);
+
+  // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <PortalShell title="Advertiser Portal" subtitle="Dashboard, campaign performance, and guided ad submission.">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {summaryCards.map((card) => (
-          <Card key={card.label}>
-            <CardContent className="p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{card.label}</p>
-              <p className="mt-2 text-3xl font-bold">{card.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <PortalShell title="Advertiser Portal" subtitle="Insights, campaigns, and billing in one place.">
+      <AdvertiserSummaryMetrics cards={summaryCards} />
+      <CampaignPerformanceChart data={chartData} />
 
-      {error && (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-      )}
-      {notice && (
-        <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>
-      )}
+      {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {notice && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>}
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-3">
-            <CardTitle className="text-xl font-bold">Campaign Performance</CardTitle>
-            <Button variant="primary" onClick={openWizard}>
-              Create New Ad
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loading && <p className="text-sm text-muted-foreground">Loading campaigns...</p>}
-            {!loading && !error && (
-              <div className="space-y-2">
-                {(data?.campaigns || []).map((campaign) => {
-                  const budget = campaignBudgets[campaign.id];
-                  const details = campaignRecords[campaign.id];
-                  const estimatedConversions = Math.round(campaign.clicks7d * 0.12);
-                  return (
-                    <div key={campaign.id} className="rounded-xl border border-border/70 bg-background/60 px-3 py-3 text-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-foreground">{campaign.title}</p>
-                        <Badge variant={campaign.status === "Live" ? "default" : "secondary"}>{campaign.status}</Badge>
-                      </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground md:grid-cols-5">
-                        <p>Impressions: {campaign.impressions7d}</p>
-                        <p>Clicks: {campaign.clicks7d}</p>
-                        <p>Spend: {formatCurrency(campaign.spend7dCents)}</p>
-                        <p>CTR: {campaign.ctr7d.toFixed(2)}%</p>
-                        <p>Conv (est.): {estimatedConversions}</p>
-                      </div>
-                      {details && (
-                        <div className="mt-2 rounded-lg border border-border bg-card px-2 py-2 text-xs text-muted-foreground">
-                          <p className="line-clamp-2">{details.description}</p>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {details.topics.map((topic) => (
-                              <span key={`${details.id}-${topic}`} className="rounded-full border border-border px-2 py-0.5">
-                                {topic}
-                              </span>
-                            ))}
-                          </div>
-                          <a
-                            href={details.clickUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-2 inline-flex items-center gap-1 font-semibold text-primary hover:underline"
-                          >
-                            View destination
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      )}
-                      <div className="mt-2 rounded-lg border border-border bg-background px-2 py-2 text-xs text-muted-foreground">
-                        {budget ? (
-                          <>
-                            Daily Budget: {formatCurrency(budget.dailyBudgetCents)} | Lifetime Budget:{" "}
-                            {formatCurrency(budget.lifetimeBudgetCents)}
-                          </>
-                        ) : (
-                          <>No budget allocation recorded for this campaign yet.</>
-                        )}
-                      </div>
-                      <div className="mt-3">
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant={campaign.status === "Live" ? "secondary" : "primary"}
-                            disabled={saving}
-                            onClick={() => void toggleCampaign(campaign.id, campaign.status !== "Live")}
-                          >
-                            {campaign.status === "Live" ? "Move to Review" : "Go Live"}
-                          </Button>
-                          <Button size="sm" variant="secondary" disabled={saving || !details} onClick={() => openEditCampaign(campaign.id)}>
-                            <Pencil className="mr-1 h-3.5 w-3.5" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {!data?.campaigns?.length && <p className="text-sm text-muted-foreground">No campaigns yet.</p>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Billing Snapshot</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-xl border border-border bg-background p-3">
-              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Wallet Balance</p>
-              <p className="mt-1 text-2xl font-bold">{formatCurrency(walletBalanceCents)}</p>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Campaign budgets are reserved from wallet at submission time.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+        <CampaignList
+          loading={loading}
+          campaigns={data?.campaigns || []}
+          campaignRecords={campaignRecords}
+          campaignBudgets={campaignBudgets}
+          saving={saving}
+          formatCurrency={formatCurrency}
+          onCreateAd={openWizard}
+          onToggle={(id, nextLive) => void toggleCampaign(id, nextLive)}
+          onEdit={openEdit}
+        />
+        <BillingPanel
+          walletLoading={walletLoading}
+          walletBalanceCents={walletBalanceCents}
+          topUpAmountUsd={topUpAmountUsd}
+          transactions={walletTransactions}
+          formatCurrency={formatCurrency}
+          onTopUpAmountChange={setTopUpAmountUsd}
+          createPayPalOrder={createPayPalOrder}
+          onPayPalApprove={onPayPalApprove}
+          onPayPalError={(err) => setError(String(err))}
+        />
       </div>
 
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button type="button" className="absolute inset-0 bg-black/45" onClick={closeWizard} aria-label="Close wizard backdrop" />
-          <Card className="relative z-10 max-h-[90vh] w-full max-w-3xl overflow-y-auto">
-            <CardHeader className="flex flex-row items-center justify-between gap-3">
-              <CardTitle className="text-xl font-bold">Create Ad - Step {wizardStep} of 3</CardTitle>
-              <Button variant="secondary" onClick={closeWizard}>
-                <X className="mr-1 h-4 w-4" />
-                Close
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-            {wizardStep === 1 && (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Step 1: Add ad information, media, and budget.</p>
-                <Input
-                  placeholder="Title"
-                  value={draft.title}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))}
-                />
-                <Input
-                  placeholder="Description"
-                  value={draft.description}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
-                />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input
-                    placeholder="CTA text"
-                    value={draft.ctaText}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, ctaText: event.target.value }))}
-                  />
-                  <Input
-                    placeholder="Click URL"
-                    value={draft.clickUrl}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, clickUrl: event.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-                  <Input
-                    placeholder="Topics (comma separated)"
-                    value={draft.topics}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, topics: event.target.value }))}
-                  />
-                  <select
-                    className="h-10 rounded-full border border-border bg-background px-4 text-sm"
-                    value={draft.format}
-                    onChange={(event) =>
-                      setDraft((prev) => ({ ...prev, format: event.target.value as AdvertiserCampaignDraft["format"] }))
-                    }
-                  >
-                    <option value="card">Card</option>
-                    <option value="text">Text</option>
-                    <option value="banner">Banner</option>
-                  </select>
-                  <Input
-                    className="w-24"
-                    placeholder="Weight"
-                    value={draft.weight}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, weight: event.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input
-                    placeholder="Daily budget ($)"
-                    value={draft.dailyBudgetUsd}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, dailyBudgetUsd: event.target.value }))}
-                  />
-                  <Input
-                    placeholder="Lifetime budget ($)"
-                    value={draft.lifetimeBudgetUsd}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, lifetimeBudgetUsd: event.target.value }))}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setDragActive(true);
-                  }}
-                  onDragLeave={(event) => {
-                    event.preventDefault();
-                    setDragActive(false);
-                  }}
-                  onDrop={onDropFile}
-                  className={`w-full rounded-xl border-2 border-dashed p-4 text-left transition ${
-                    dragActive ? "border-primary bg-primary/5" : "border-border bg-background"
-                  }`}
-                >
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
-                  <div className="flex items-center gap-3">
-                    <UploadCloud className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Drag image here or click to upload</p>
-                      <p className="text-xs text-muted-foreground">Uploaded image is used for preview in this flow.</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            )}
-
-            {wizardStep === 2 && (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Step 2: Review how your ad will appear.</p>
-                <div className="rounded-xl border border-border bg-background p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <ImagePlus className="h-4 w-4 text-primary" />
-                    Ad Preview
-                  </div>
-                  <div className="overflow-hidden rounded-xl border border-border bg-card">
-                    {previewImageUrl ? (
-                      <img src={previewImageUrl} alt="Ad preview" className="h-40 w-full object-cover" />
-                    ) : (
-                      <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">No image selected</div>
-                    )}
-                    <div className="p-3">
-                      <p className="text-sm font-semibold">{draft.title || "Campaign title preview"}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {draft.description || "Campaign description preview appears here."}
-                      </p>
-                      <button
-                        type="button"
-                        className="mt-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
-                      >
-                        {draft.ctaText || "Call to action"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {wizardStep === 3 && (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Step 3: Pay and submit for review.</p>
-                <div className="rounded-xl border border-border bg-background p-3">
-                  <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Required Reserved Budget</p>
-                  <p className="mt-1 text-xl font-bold">{formatCurrency(pendingBudgetCents)}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Current wallet: {formatCurrency(walletBalanceCents)}</p>
-                </div>
-                <div className="rounded-xl border border-border bg-background p-3">
-                  <p className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                    <CreditCard className="h-4 w-4 text-primary" />
-                    Payment Method
-                  </p>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Cardholder name"
-                      value={paymentDraft.cardholder}
-                      onChange={(event) => setPaymentDraft((prev) => ({ ...prev, cardholder: event.target.value }))}
-                    />
-                    <Input
-                      placeholder="Card number"
-                      value={paymentDraft.cardNumber}
-                      onChange={(event) => setPaymentDraft((prev) => ({ ...prev, cardNumber: event.target.value }))}
-                    />
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        placeholder="MM/YY"
-                        value={paymentDraft.expiry}
-                        onChange={(event) => setPaymentDraft((prev) => ({ ...prev, expiry: event.target.value }))}
-                      />
-                      <Input
-                        placeholder="CVC"
-                        value={paymentDraft.cvc}
-                        onChange={(event) => setPaymentDraft((prev) => ({ ...prev, cvc: event.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <Input
-                    placeholder="Top-up amount ($)"
-                    value={topUpAmountUsd}
-                    onChange={(event) => setTopUpAmountUsd(event.target.value)}
-                  />
-                  <Button variant="secondary" onClick={topUpWallet} disabled={saving}>
-                    Pay & Add Funds
-                  </Button>
-                </div>
-              </div>
-            )}
-
-              <div className="flex items-center justify-between gap-2 pt-2">
-                <Button variant="secondary" onClick={() => moveStep("back")} disabled={wizardStep === 1 || saving}>
-                  Back
-                </Button>
-                {wizardStep < 3 ? (
-                  <Button variant="primary" onClick={() => moveStep("next")} disabled={saving}>
-                    Next
-                  </Button>
-                ) : (
-                  <Button variant="primary" onClick={() => void submitCampaignForReview()} disabled={saving}>
-                    {saving ? "Submitting..." : "Submit for Review"}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <CreateCampaignWizard
+          wizardStep={wizardStep}
+          infoDraft={infoDraft}
+          wizardDailyUsd={wizardDailyUsd}
+          wizardDurationDays={wizardDurationDays}
+          wizardDailyBudgetCents={wizardDailyBudgetCents}
+          wizardDays={wizardDays}
+          wizardTotalBudgetCents={wizardTotalBudgetCents}
+          walletBalanceCents={walletBalanceCents}
+          dragActive={dragActive}
+          uploadedPreviewUrl={uploadedPreviewUrl}
+          saving={saving}
+          error={error}
+          fileInputRef={fileInputRef}
+          formatCurrency={formatCurrency}
+          onInfoChange={(p) => setInfoDraft((prev) => ({ ...prev, ...p }))}
+          onDailyUsdChange={setWizardDailyUsd}
+          onDurationDaysChange={setWizardDurationDays}
+          onClose={closeWizard}
+          onBack={() => moveStep("back")}
+          onNext={() => moveStep("next")}
+          onSubmit={() => void submitCampaign()}
+          onFileChange={onFileChange}
+          onDrop={onDrop}
+          onDragOver={() => setDragActive(true)}
+          onDragLeave={() => setDragActive(false)}
+        />
       )}
 
-      {editingCampaignId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button type="button" className="absolute inset-0 bg-black/45" onClick={closeEditCampaign} aria-label="Close edit backdrop" />
-          <Card className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto">
-            <CardHeader className="flex flex-row items-center justify-between gap-3">
-              <CardTitle className="text-xl font-bold">Edit Campaign</CardTitle>
-              <Button variant="secondary" onClick={closeEditCampaign}>
-                <X className="mr-1 h-4 w-4" />
-                Close
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                placeholder="Title"
-                value={editDraft.title}
-                onChange={(event) => setEditDraft((prev) => ({ ...prev, title: event.target.value }))}
-              />
-              <Input
-                placeholder="Description"
-                value={editDraft.description}
-                onChange={(event) => setEditDraft((prev) => ({ ...prev, description: event.target.value }))}
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  placeholder="CTA text"
-                  value={editDraft.ctaText}
-                  onChange={(event) => setEditDraft((prev) => ({ ...prev, ctaText: event.target.value }))}
-                />
-                <Input
-                  placeholder="Click URL"
-                  value={editDraft.clickUrl}
-                  onChange={(event) => setEditDraft((prev) => ({ ...prev, clickUrl: event.target.value }))}
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-                <Input
-                  placeholder="Topics (comma separated)"
-                  value={editDraft.topics}
-                  onChange={(event) => setEditDraft((prev) => ({ ...prev, topics: event.target.value }))}
-                />
-                <select
-                  className="h-10 rounded-full border border-border bg-background px-4 text-sm"
-                  value={editDraft.format}
-                  onChange={(event) =>
-                    setEditDraft((prev) => ({ ...prev, format: event.target.value as AdvertiserCampaignDraft["format"] }))
-                  }
-                >
-                  <option value="card">Card</option>
-                  <option value="text">Text</option>
-                  <option value="banner">Banner</option>
-                </select>
-                <Input
-                  className="w-24"
-                  placeholder="Weight"
-                  value={editDraft.weight}
-                  onChange={(event) => setEditDraft((prev) => ({ ...prev, weight: event.target.value }))}
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  placeholder="Daily budget ($)"
-                  value={editDraft.dailyBudgetUsd}
-                  onChange={(event) => setEditDraft((prev) => ({ ...prev, dailyBudgetUsd: event.target.value }))}
-                />
-                <Input
-                  placeholder="Lifetime budget ($)"
-                  value={editDraft.lifetimeBudgetUsd}
-                  onChange={(event) => setEditDraft((prev) => ({ ...prev, lifetimeBudgetUsd: event.target.value }))}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="secondary" onClick={closeEditCampaign} disabled={saving}>
-                  Cancel
-                </Button>
-                <Button variant="primary" onClick={() => void saveCampaignEdits()} disabled={saving}>
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {editingId && (
+        <EditCampaignModal
+          info={editInfo}
+          budget={editBudget}
+          saving={saving}
+          error={error}
+          onInfoChange={(p) => setEditInfo((prev) => ({ ...prev, ...p }))}
+          onBudgetChange={(p) => setEditBudget((prev) => ({ ...prev, ...p }))}
+          onClose={closeEdit}
+          onSave={() => void saveEdit()}
+        />
       )}
     </PortalShell>
   );

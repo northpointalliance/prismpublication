@@ -4,12 +4,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { PortalAuthProvider } from "@/components/portal/PortalAuthProvider";
 import {
   RequirePortalLogin,
   RequireWorkspaceRole,
   RequireWorkspaceSelection,
+  RequireAdminAccess,
 } from "@/components/portal/PortalRouteGuards";
+
+const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || "test";
 
 const Index = lazy(() => import("./pages/Index"));
 const Demo = lazy(() => import("./pages/Demo"));
@@ -20,7 +24,6 @@ const Advertisers = lazy(() => import("./pages/Advertisers"));
 const Company = lazy(() => import("./pages/Company"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogArticle = lazy(() => import("./pages/BlogArticle"));
-const Admin = lazy(() => import("./pages/Admin"));
 const Docs = lazy(() => import("./pages/Docs"));
 const Contact = lazy(() => import("./pages/Contact"));
 const AppLogin = lazy(() => import("./pages/AppLogin"));
@@ -33,6 +36,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App = () => (
+  <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD" }}>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -53,8 +57,6 @@ const App = () => (
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/demo" element={<Demo />} />
-              <Route path="/notadmin" element={<Admin />} />
-
               <Route path="/app/login" element={<AppLogin />} />
               <Route path="/app" element={<Navigate to="/app/login" replace />} />
 
@@ -68,9 +70,11 @@ const App = () => (
                   <Route element={<RequireWorkspaceRole role="publisher" />}>
                     <Route path="/app/publisher" element={<PublisherPortal />} />
                   </Route>
-                  <Route element={<RequireWorkspaceRole role="admin" />}>
-                    <Route path="/app/admin" element={<AdminPortal />} />
-                  </Route>
+                </Route>
+
+                <Route element={<RequireAdminAccess />}>
+                  <Route path="/notadmin" element={<AdminPortal />} />
+                  <Route path="/app/admin" element={<Navigate to="/notadmin" replace />} />
                 </Route>
               </Route>
 
@@ -82,6 +86,7 @@ const App = () => (
       </PortalAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
+  </PayPalScriptProvider>
 );
 
 export default App;

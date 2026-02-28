@@ -1,0 +1,16 @@
+[Unit]
+Description=Prism AIADS Web
+After=network-online.target prism-aiads-api.service
+Wants=network-online.target prism-aiads-api.service
+
+[Service]
+Type=simple
+User=tokyo
+Group=tokyo
+WorkingDirectory=/home/tokyo/Desktop/AIADS
+ExecStart=/bin/bash -lc 'source "$HOME/.nvm/nvm.sh" && npm run dev -- --host 0.0.0.0'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

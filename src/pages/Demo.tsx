@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Play, Pause, RotateCcw, Sparkles, MessageSquare, MousePointerClick, Radio } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { apiRequest } from "@/lib/api";
@@ -12,7 +11,6 @@ const createMessageId = () => {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
-// Pre-scripted conversation with naturally integrated ads
 const conversationScript = [
   { role: "user", content: "I need sneakers I can run in but still look good when I go out. Any ideas?" },
   {
@@ -25,10 +23,10 @@ const conversationScript = [
   {
     role: "bot",
     content:
-      "That’s easy then. Keep the outfit minimal and let the shoes stay clean. You’ll be comfortable for the run and still look put together at a restaurant.",
+      "That's easy then. Keep the outfit minimal and let the shoes stay clean. You'll be comfortable for the run and still look put together at a restaurant.",
   },
   { role: "ad", position: "inline", shouldShow: true },
-  { role: "user", content: "Also, I’m visiting someone after dinner and want to bring flowers. Any quick gift idea?" },
+  { role: "user", content: "Also, I'm visiting someone after dinner and want to bring flowers. Any quick gift idea?" },
   {
     role: "bot",
     content:
@@ -70,33 +68,35 @@ const installSnippet = `npm install @prism/sdk`;
 
 const usageSnippet = `import { PrismAds } from "@prism/sdk";
 
-const botGrid = new PrismAds({
+const prism = new PrismAds({
   apiKey: process.env.PRISM_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
-  baseUrl: process.env.PRISM_API_BASE_URL || "https://your-api.example.com/api",
-});`;
+});
+
+const ad = await prism.displayAd({ topic: "lifestyle", userId: "u-123" });
+if (ad) await prism.trackImpression(ad.id, "u-123");`;
 
 const howItWorksSteps = [
   {
     title: "Integrate in minutes",
     description:
-      "Drop the Prism SDK into any chatbot — GPT wrappers, custom AI agents, customer support bots, e-commerce assistants. Three lines of code is all it takes to start serving contextual ads.",
+      "Drop the SDK into any chatbot — GPT wrappers, agents, support bots. Three lines of code is all it takes.",
   },
   {
-    title: "Context-aware ad matching",
+    title: "Context-aware matching",
     description:
-      "Prism reads conversation context in real-time and serves ads that feel like natural recommendations, not interruptions.",
+      "Prism reads the conversation in real-time and serves ads that feel like natural recommendations.",
   },
   {
     title: "Revenue flows automatically",
     description:
-      "Chatbot publishers earn per impression and per click. Advertisers pay for genuine engagement with transparent reporting.",
+      "Publishers earn per impression and per click. Advertisers pay for genuine engagement.",
   },
   {
     title: "Measure everything",
     description:
-      "Track conversions, click-through rates, and revenue across your chatbot fleet with real-time dashboard metrics.",
+      "Track conversions, CTR, and revenue across your chatbot fleet with real-time dashboard metrics.",
   },
 ] as const;
 
@@ -134,7 +134,6 @@ const flowerDemoAd: DemoAd = {
 };
 
 const sponsoredSequence: DemoAd[] = [nikeDemoAd, sushiDemoAd, flowerDemoAd, nikeDemoAd];
-
 const isFallbackAd = (adId: string) => adId.startsWith("fallback-demo-ad-");
 
 const Demo = () => {
@@ -142,11 +141,9 @@ const Demo = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const playbackRef = useRef(false);
-  const fallbackNoticeShownRef = useRef(false);
   const fallbackAdIndexRef = useRef(0);
   const demoUserId = "demo-local-user";
 
@@ -157,30 +154,23 @@ const Demo = () => {
   };
 
   const requestDemoAd = async (_topic: string, _userId: string) => {
-    if (!fallbackNoticeShownRef.current) {
-      fallbackNoticeShownRef.current = true;
-      setNotice("Sponsored sequence active: Nike + Tokyo Sushi + Florista creatives.");
-    }
     return getFallbackDemoAd();
   };
 
   const trackDemoEvent = async (eventType: "impression" | "click", adId: string, userId: string) => {
     if (isFallbackAd(adId)) return;
-
     try {
       await apiRequest<{ success: boolean }>(`/demo/track/${eventType}`, {
         method: "POST",
         body: JSON.stringify({ adId, userId, topic: "running" }),
       });
     } catch (_err) {
-      // Tracking must not break demo playback or click behavior.
+      // Tracking must not break demo playback
     }
   };
 
   useEffect(() => {
-    return () => {
-      playbackRef.current = false;
-    };
+    return () => { playbackRef.current = false; };
   }, []);
 
   useEffect(() => {
@@ -206,9 +196,7 @@ const Demo = () => {
     const startIndex = currentIndex >= conversationScript.length ? 0 : currentIndex;
     if (startIndex === 0) {
       shouldAutoScrollRef.current = true;
-      fallbackNoticeShownRef.current = false;
       fallbackAdIndexRef.current = 0;
-      setNotice(null);
       setMessages([]);
       setCurrentIndex(0);
     }
@@ -227,34 +215,24 @@ const Demo = () => {
 
     const streamTypedMessage = async (role: "user" | "bot", content: string) => {
       const messageId = createMessageId();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: messageId,
-          role,
-          content,
-          displayedContent: "",
-          isTyping: true,
-        },
-      ]);
-
+      setMessages((prev) => [...prev, { id: messageId, role, content, displayedContent: "", isTyping: true }]);
       await sleep(role === "bot" ? 320 : 220);
 
       let streamed = "";
       for (const char of content) {
         if (!playbackRef.current) {
-          setMessages((prev) => prev.filter((message) => message.id !== messageId));
+          setMessages((prev) => prev.filter((m) => m.id !== messageId));
           return false;
         }
         streamed += char;
         setMessages((prev) =>
-          prev.map((existing) => (existing.id === messageId ? { ...existing, displayedContent: streamed } : existing)),
+          prev.map((m) => (m.id === messageId ? { ...m, displayedContent: streamed } : m)),
         );
         await sleep(getTypingDelay(char, role));
       }
 
       setMessages((prev) =>
-        prev.map((existing) => (existing.id === messageId ? { ...existing, isTyping: false, displayedContent: content } : existing)),
+        prev.map((m) => (m.id === messageId ? { ...m, isTyping: false, displayedContent: content } : m)),
       );
       await sleep(role === "bot" ? 700 : 520);
       return playbackRef.current;
@@ -263,25 +241,18 @@ const Demo = () => {
     try {
       for (let i = startIndex; i < conversationScript.length; i += 1) {
         if (!playbackRef.current) break;
-
         const item = conversationScript[i];
         if (item.role === "ad") {
           const ad = await requestDemoAd("lifestyle", demoUserId);
           if (ad && playbackRef.current) {
             void trackDemoEvent("impression", ad.id, demoUserId);
-            const adMessage: Message = {
-              id: createMessageId(),
-              role: "ad",
-              ad,
-            };
-            setMessages((prev) => [...prev, adMessage]);
+            setMessages((prev) => [...prev, { id: createMessageId(), role: "ad", ad }]);
           }
           await sleep(1100);
         } else {
           const finished = await streamTypedMessage(item.role, item.content);
           if (!finished) break;
         }
-
         setCurrentIndex(i + 1);
       }
     } finally {
@@ -294,9 +265,7 @@ const Demo = () => {
     playbackRef.current = false;
     setIsPlaying(false);
     shouldAutoScrollRef.current = true;
-    fallbackNoticeShownRef.current = false;
     fallbackAdIndexRef.current = 0;
-    setNotice(null);
     setMessages([]);
     setCurrentIndex(0);
   };
@@ -310,87 +279,181 @@ const Demo = () => {
     navigate(ad.clickUrl);
   };
 
-  const messageCount = messages.filter((message) => message.role !== "ad").length;
-  const adCount = messages.filter((message) => message.role === "ad").length;
+  const messageCount = messages.filter((m) => m.role !== "ad").length;
+  const adCount = messages.filter((m) => m.role === "ad").length;
 
   return (
     <SiteShell mainClassName="bg-background">
-      <div className="relative overflow-hidden bg-background px-4 pb-12 pt-24 md:pb-16 md:pt-28">
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden bg-background px-4 pb-16 pt-24 md:pb-20 md:pt-32">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-20 left-[22%] h-[24rem] w-[24rem] rounded-full bg-primary/10 blur-[120px]" />
-          <div className="absolute -top-16 right-[14%] h-[20rem] w-[20rem] rounded-full bg-cyan-300/20 blur-[115px]" />
-          <div className="absolute bottom-[-9rem] left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-emerald-300/15 blur-[135px]" />
           <div className="absolute inset-0 grid-pattern opacity-20" />
+          <div className="absolute -top-24 left-1/4 h-96 w-96 rounded-full bg-primary/10 blur-[140px]" />
+          <div className="absolute -top-16 right-1/4 h-80 w-80 rounded-full bg-cyan-300/15 blur-[130px]" />
         </div>
 
-        <div className="relative mx-auto max-w-6xl space-y-6">
-          <div className="grid items-start gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-            <Card className="order-1 overflow-hidden border-border bg-card shadow-xl lg:order-2 lg:sticky lg:top-24">
-              <CardHeader className="border-b border-border bg-muted/60 py-4">
-                <CardTitle className="flex items-center gap-3 text-base text-foreground md:text-lg">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <Bot className="h-5 w-5" />
-                  </span>
-                  AI Assistant Stream
-                  <span className="ml-auto inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-                    Live Simulation
-                  </span>
-                </CardTitle>
-              </CardHeader>
+        <div className="relative mx-auto max-w-6xl">
+          <div className="grid items-start gap-8 lg:grid-cols-[1fr_1.1fr]">
 
+            {/* ── Left: scenario + controls ─────────────────────────────── */}
+            <div className="order-2 space-y-5 lg:order-1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                Live Demo — Real Conversation Scenario
+              </div>
+
+              <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">
+                See how your chatbot turns conversations into ad revenue.
+              </h1>
+
+              {/* Scenario brief */}
+              <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">The scenario</p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground">
+                  Alex is planning his Saturday evening — he needs sneakers for a 5k run, a dinner spot to meet
+                  friends, and a gift for a visit afterward. His AI assistant helps him plan it all.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Watch how Prism inserts contextually matched sponsored cards inline — no banners, no popups,
+                  just natural placements at the right moment.
+                </p>
+              </div>
+
+              {/* Play / Reset */}
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={playConversation}
+                    className={`btn-sweep inline-flex flex-1 items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white transition-all ${
+                      isPlaying
+                        ? "bg-amber-500 hover:bg-amber-400 shadow-[0_8px_24px_-8px_rgba(245,158,11,0.6)]"
+                        : "bg-primary hover:bg-primary/90 shadow-[0_8px_24px_-8px_rgba(61,187,251,0.65)]"
+                    }`}
+                  >
+                    {isPlaying ? (
+                      <><Pause className="h-4 w-4" /> Pause</>
+                    ) : (
+                      <><Play className="h-4 w-4" />{messages.length > 0 && currentIndex < conversationScript.length ? "Continue" : "Start Demo"}</>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetDemo}
+                    title="Reset demo"
+                    className="btn-sweep inline-flex items-center justify-center rounded-full border border-border bg-background px-4 py-3 text-foreground transition hover:bg-muted"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                  Scripted playback — input disabled to keep the scenario consistent.
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                  <MessageSquare className="mx-auto h-4 w-4 text-primary" />
+                  <p className="mt-1 text-2xl font-bold">{messageCount}</p>
+                  <p className="text-[11px] text-muted-foreground">Messages</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                  <Radio className="mx-auto h-4 w-4 text-emerald-600" />
+                  <p className="mt-1 text-2xl font-bold">{adCount}</p>
+                  <p className="text-[11px] text-muted-foreground">Ads Served</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                  <MousePointerClick className="mx-auto h-4 w-4 text-sky-600" />
+                  <p className="mt-1 text-2xl font-bold">4.2%</p>
+                  <p className="text-[11px] text-muted-foreground">CTR est.*</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">* Illustrative benchmark only.</p>
+            </div>
+
+            {/* ── Right: chat window ────────────────────────────────────── */}
+            <div className="order-1 overflow-hidden rounded-2xl border border-border bg-card shadow-xl lg:order-2 lg:sticky lg:top-24">
+              {/* Chat header */}
+              <div className="flex items-center gap-3 border-b border-border bg-muted/50 px-4 py-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                  <Bot className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">AI Lifestyle Assistant</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    Scenario: Planning a city evening 🌆
+                  </p>
+                </div>
+                <span className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                  Live
+                </span>
+              </div>
+
+              {/* Message list */}
               <div
                 ref={messageListRef}
                 onScroll={handleMessageListScroll}
-                className="h-[440px] space-y-4 overflow-y-auto overscroll-contain bg-muted/30 p-4 md:h-[520px] md:p-6"
+                className="h-[420px] space-y-3 overflow-y-auto overscroll-contain bg-muted/20 p-4 md:h-[500px]"
               >
                 {messages.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-border bg-background px-6 py-12 text-center">
-                    <Bot className="mx-auto mb-3 h-12 w-12 text-primary/70" />
-                    <p className="text-sm text-muted-foreground">
-                      Press <span className="font-semibold text-foreground">Play Demo</span> to stream a scripted conversation with in-thread sponsored placements.
-                    </p>
+                  <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                      <Bot className="h-7 w-7 text-primary/60" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">Ready when you are.</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Press <span className="font-medium text-foreground">Start Demo</span> to watch Alex's
+                        conversation with sponsored placements appearing inline.
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {messages.map((message) => (
-                  <div key={message.id} className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
+                  <div key={message.id} className="animate-in fade-in-0 slide-in-from-bottom-1 duration-500">
                     {message.role === "ad" && message.ad ? (
-                      <div className="rounded-2xl border border-cyan-200/30 bg-gradient-to-r from-cyan-600/80 to-emerald-600/80 p-3 shadow-lg">
-                        <div className="mb-2 flex items-center gap-2">
-                          <span className="rounded-full bg-black/25 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-50">Sponsored</span>
-                          <span className="text-[11px] font-medium text-cyan-50/90">{message.ad.advertiser}</span>
+                      /* ── Sponsored ad card ── */
+                      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900 p-3.5 shadow-lg">
+                        <div className="mb-2.5 flex items-center gap-2">
+                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
+                            Sponsored
+                          </span>
+                          <span className="text-[11px] font-medium text-white/60">{message.ad.advertiser}</span>
                         </div>
                         {message.ad.imageUrl && (
                           <img
                             src={message.ad.imageUrl}
-                            alt={`${message.ad.advertiser} campaign`}
-                            className="mb-2 h-28 w-full rounded-xl object-cover"
+                            alt={message.ad.advertiser}
+                            className="mb-3 h-28 w-full rounded-xl object-cover"
                             loading="lazy"
                             referrerPolicy="no-referrer"
                           />
                         )}
                         <h4 className="text-sm font-semibold text-white">{message.ad.title}</h4>
-                        <p className="mt-1 text-xs leading-relaxed text-cyan-50/95">{message.ad.description}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-white/75">{message.ad.description}</p>
                         <button
                           type="button"
-                          onClick={() => handleAdClick(message.ad)}
-                          className="btn-sweep mt-3 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-50"
+                          onClick={() => handleAdClick(message.ad!)}
+                          className="mt-3 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
                         >
                           {message.ad.ctaText} →
                         </button>
                       </div>
                     ) : (
+                      /* ── Chat bubble ── */
                       <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                         <div
-                          className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
                             message.role === "user"
-                              ? "bg-primary text-primary-foreground shadow-primary/20"
+                              ? "bg-primary text-primary-foreground"
                               : "border border-border bg-background text-foreground"
                           }`}
                         >
-                          {message.isTyping && !(message.displayedContent && message.displayedContent.length > 0) ? (
-                            <div className="flex gap-1 py-1">
+                          {message.isTyping && !message.displayedContent?.length ? (
+                            <div className="flex gap-1 py-0.5">
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: "0ms" }} />
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: "150ms" }} />
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: "300ms" }} />
@@ -405,150 +468,78 @@ const Demo = () => {
                 ))}
               </div>
 
+              {/* Disabled input footer */}
               <div className="border-t border-border bg-card p-3">
-                <p className="mb-2 text-[11px] text-muted-foreground">Playback only: direct input is disabled in this demo.</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Type a message... (demo playback mode)"
-                    className="flex-1 cursor-not-allowed rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+                    placeholder="Direct input disabled in demo playback..."
+                    className="flex-1 cursor-not-allowed rounded-full border border-border bg-muted/50 px-4 py-2 text-sm text-muted-foreground"
                     disabled
                   />
                   <button
                     type="button"
-                    className="cursor-not-allowed rounded-full bg-cyan-500/70 px-4 py-2 text-sm font-semibold text-white opacity-60"
+                    className="cursor-not-allowed rounded-full bg-primary/30 px-4 py-2 text-sm font-semibold text-white opacity-60"
                     disabled
                   >
                     Send
                   </button>
                 </div>
               </div>
-            </Card>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="order-2 space-y-4 lg:order-1">
-              <div className="rounded-3xl border border-border/80 bg-card p-5 shadow-lg md:p-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Revenue Demo
-                </div>
-                <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground md:text-[2.1rem]">
-                  Turn chatbot conversations into ad revenue without breaking UX.
-                </h1>
-                <p className="mt-3 text-sm text-muted-foreground md:text-base">
-                  Prism inserts context-aware sponsored cards directly inside assistant replies. Start playback to see a realistic monetized thread.
-                </p>
-
-                <div className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground">
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">Natural placements that feel like recommendations, not pop-ups.</div>
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">Works with existing chat stacks through a lightweight SDK integration.</div>
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">Track impressions, clicks, and performance in one reporting flow.</div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-lg">
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={playConversation}
-                    className={`btn-sweep inline-flex flex-1 items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white transition-all duration-300 ${
-                      isPlaying
-                        ? "bg-amber-500 hover:bg-amber-400 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.7)]"
-                        : "bg-emerald-500 hover:bg-emerald-400 shadow-[0_10px_30px_-10px_rgba(16,185,129,0.75)]"
-                    }`}
-                  >
-                    {isPlaying ? (
-                      <>
-                        <Pause className="h-4 w-4" />
-                        Pause
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4" />
-                        {messages.length > 0 && currentIndex < conversationScript.length ? "Continue" : "Play Demo"}
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetDemo}
-                    className="btn-sweep inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground transition-all hover:bg-muted"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset
-                  </button>
-                </div>
-
-                <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-center text-[11px] text-muted-foreground">
-                  Simulation mode: scripted playback. Input is disabled to keep output consistent.
-                </div>
-                {notice && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs text-amber-700">{notice}</div>}
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-primary">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Messages</span>
+      {/* ── How It Works ──────────────────────────────────────────────────── */}
+      <div className="border-t border-border/60 bg-muted/30 px-4 py-16">
+        <div className="mx-auto max-w-6xl space-y-14">
+          <div>
+            <div className="mb-8 text-center">
+              <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">How It Works</p>
+              <h2 className="mt-2 text-2xl font-bold md:text-3xl">From chat context to revenue in 4 steps</h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {howItWorksSteps.map((step, index) => (
+                <div key={step.title} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    {index + 1}
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{messageCount}</p>
+                  <h3 className="font-semibold text-foreground">{step.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{step.description}</p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-emerald-600">
-                    <Radio className="h-4 w-4" />
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Ads Shown</span>
-                  </div>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{adCount}</p>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-sky-600">
-                    <MousePointerClick className="h-4 w-4" />
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">CTR Demo</span>
-                  </div>
-                  <p className="mt-2 text-2xl font-bold text-foreground">4.2%*</p>
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground">* Illustrative benchmark only.</p>
+              ))}
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">SDK Quickstart</p>
-                <h2 className="mt-2 text-2xl font-bold text-foreground">Integrate in minutes</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Use the snippets below to connect Prism to your assistant and start injecting ad cards.</p>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">1. Install</p>
-                <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-muted p-3 text-xs text-foreground">
+          {/* ── SDK Quickstart ─────────────────────────────────────────── */}
+          <div>
+            <div className="mb-8 text-center">
+              <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">SDK Quickstart</p>
+              <h2 className="mt-2 text-2xl font-bold md:text-3xl">Integrate in two steps</h2>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                    1
+                  </span>
+                  <p className="font-semibold text-foreground">Install the package</p>
+                </div>
+                <pre className="overflow-x-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">
                   <code>{installSnippet}</code>
                 </pre>
               </div>
-
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">2. Basic Usage</p>
-                <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-muted p-3 text-xs text-foreground">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                    2
+                  </span>
+                  <p className="font-semibold text-foreground">Initialize and serve</p>
+                </div>
+                <pre className="overflow-x-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">
                   <code>{usageSnippet}</code>
                 </pre>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">How It Works</p>
-                <h2 className="mt-2 text-2xl font-bold text-foreground">From chat context to monetization</h2>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {howItWorksSteps.map((step, index) => (
-                  <div key={step.title} className="rounded-2xl border border-border bg-card p-4">
-                    <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                      {index + 1}
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground">{step.title}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.description}</p>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

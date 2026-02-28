@@ -1,0 +1,18 @@
+[Unit]
+Description=Prism AIADS API
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=simple
+User=tokyo
+Group=tokyo
+WorkingDirectory=/home/tokyo/Desktop/AIADS/server
+Environment=NODE_ENV=production
+Environment=PORT=8787
+ExecStart=/bin/bash -lc 'source "$HOME/.nvm/nvm.sh" && npm run start'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

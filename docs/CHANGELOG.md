@@ -2,6 +2,200 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-28 (Platform hardening: tests, HMAC default-on, image validation, audit log, webhooks, component extraction)
+
+### Integration tests for money flows
+- **New test suites** — `server/test/money-flows-wallet.test.js` and `server/test/money-flows-payouts.test.js` added (48 tests total, all passing).
+  - Wallet suite covers: PayPal order creation, capture (first call + idempotent duplicate), spend (success + insufficient funds 402).
+  - Payouts suite covers: balance calculation with fee deduction, withdraw (success, below-$1 minimum, in-flight 409 guard), PayPal email save, admin process payout, admin manual status update.
+  - All stubs use `node:test`'s `mock.fn()` / `mock.module()` — no new test dependencies.
+- **New shared math module** — `server/src/money-utils.js` extracted from duplicate payout calculations; re-used in route handlers and test stubs.
+
+### HMAC default changed to opt-out
+- `server/src/config.js` — `requireSdkHmac` changed from `=== "true"` (opt-in) to `!== "false"` (opt-out). HMAC enforcement is now **on by default** in all environments.
+- `server/.env.example` — comment updated to reflect the new default; `REQUIRE_SDK_HMAC=false` is now the escape hatch for migration windows only.
+- `docs/README.md` Production Checklist and Security Baseline sections already reflect the opt-out default.
+
+### Server-side image validation
+- **New module** — `server/src/image-validation.js`: `validateImageUrl(url)` async helper.
+  - Rejects non-HTTPS URLs and private/loopback IPs (SSRF guard: 10.x, 192.168.x, 127.x, ::1, fd\*\* ranges).
+  - Issues a `HEAD` request with a 5-second timeout; verifies 2xx status, `Content-Type: image/*`, and `Content-Length ≤ 10 MB`.
+- Integrated in `server/src/routes/advertiser.js` (campaign create and update) and `server/src/routes/admin.js` (admin ad create). Invalid image URLs return `400 { error: "Image validation failed: <reason>" }`.
+
+### Audit log
+- **New Prisma model** — `AuditLog` with fields: `action` (enum), `actorUserId`, `organizationId`, `resourceId`, `resourceType`, `before` (JSON), `after` (JSON), `ipAddress`, `createdAt`. Indexed on `(action, createdAt)`, `(organizationId, createdAt)`, and `resourceId`.
+- **New enum** — `AuditAction`: `AD_APPROVE`, `AD_REJECT`, `AD_TAKEDOWN`, `WALLET_TOPUP`, `PAYOUT_REQUEST`, `PAYOUT_PROCESS`, `PAYOUT_STATUS_UPDATE`, `PLATFORM_FEE_UPDATE`, `PAYPAL_CONFIG_UPDATE`.
+- **New module** — `server/src/audit.js`: `logAudit(params)` helper. Fire-and-forget (never throws; audit failure logs to stderr but does not abort the main request).
+- Integrated in:
+  - `server/src/routes/admin.js` — AD_APPROVE, AD_REJECT, PAYOUT_PROCESS, PAYOUT_STATUS_UPDATE, PLATFORM_FEE_UPDATE, PAYPAL_CONFIG_UPDATE.
+  - `server/src/routes/wallet.js` — WALLET_TOPUP on successful capture.
+  - `server/src/routes/payouts.js` — PAYOUT_REQUEST on successful withdraw submission.
+- Schema applied via `prisma db push`.
+
+### PayPal webhook handler
+- **New route file** — `server/src/routes/webhooks.js` mounted at `/api/webhooks` (no auth middleware).
+- Webhook signature verification via PayPal's `/v1/notifications/verify-webhook-signature` REST API (full cert verification, not manual HMAC). Returns `400` if `verification_status !== "SUCCESS"`.
+- Handled events:
+  - `PAYMENT.CAPTURE.COMPLETED` — confirms a wallet top-up; logs audit.
+  - `PAYMENT.CAPTURE.DENIED` / `.REVERSED` — reverses wallet credit with a `refund` WalletTransaction; logs audit.
+  - `PAYOUT_ITEM.SUCCEEDED` — updates PayoutRequest status → `paid`, sets `processedAt`; logs audit.
+  - `PAYOUT_ITEM.FAILED` — updates PayoutRequest status → `failed`; logs audit.
+- `PAYPAL_WEBHOOK_ID` env var added to `server/.env.example` and `server/src/config.js`.
+
+### Portal component extraction
+- Extracted **17 new presentational components** from the three large portal pages; all state management and API calls remain in the parent page files.
+- New components:
+  - **Shared**: `src/components/portal/ChartTooltip.tsx`
+  - **Advertiser**: `AdvertiserSummaryMetrics`, `CampaignPerformanceChart`, `CampaignList`, `BillingPanel`, `CreateCampaignWizard`, `EditCampaignModal`
+  - **Publisher**: `PublisherSummaryMetrics`, `BotPerformanceChart`, `BotRegistry` (also exports `BotListItem` / `BotMetrics` interfaces), `RegisterBotPanel`, `PayoutsPanel`, `BotDeleteDialog`
+  - **Admin**: `ReviewQueueTab`, `FinancePanel`, `PayPalConfigForm`, `PlatformFeeForm`
+- Parent pages reduced: `AdvertiserPortal.tsx` 914 → 461 lines, `PublisherPortal.tsx` 627 → 271 lines, `AdminPortal.tsx` 699 → 317 lines.
+- TypeScript compiles clean (`tsc --noEmit`), all 48 backend tests pass, Vite builds without errors.
+
+### Bug fixes
+- **Advertiser pagination shape** — `/advertiser/campaigns` returns `{ items, nextCursor, hasMore }` (not a plain array). `AdvertiserPortal.tsx` was calling `.map()` on the response object, crashing with `campRes.map is not a function`. Fixed: typed correctly, using `campRes.items ?? []`.
+- **Publisher pagination shape** — same issue with `/publisher/bots`. `PublisherPortal.tsx` was storing the response object as the bot list. Fixed: using `botList.items ?? []`.
+- **PayPal buttons not rendering** — `VITE_PAYPAL_CLIENT_ID` in `.env` was set to the literal placeholder string. Changed to `"test"` (PayPal sandbox magic value) so PayPal buttons render in the local dev environment without real credentials.
+
+### Non-technical operator guide
+- **New file** — `SETUP_GUIDE.md` at project root: plain-English setup guide for non-technical operators covering environment file configuration, Supabase/PayPal/Postgres account setup, PayPal sandbox-to-live switchover, webhook registration, admin portal first-time checklist, user roles, day-to-day operations, and developer handoff checklist.
+
+## 2026-02-27 (Server hardening: observability, reliability, security, and monolith split)
+
+### Observability
+- **Structured JSON logger** — new `server/src/logger.js`. All server output is now newline-delimited JSON with level, timestamp, message, and serialized meta (Errors expand to `err` + `stack`). Respects `LOG_LEVEL` env var (default `info`). Writes info/debug to stdout, warn/error to stderr.
+- **Request ID middleware** — every request gets a `req.id` (from `X-Request-Id` header or random UUID, max 64 chars) echoed back as `X-Request-Id`. All structured log lines include the request ID for tracing across services.
+- **Request logging** — response finish hook logs `method`, `path`, `status`, and `ms` for every request.
+- **Security response headers** — added `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` to all responses.
+
+### Payment safety
+- **PayPal capture idempotency** — `capturePayPalOrder` now sends `PayPal-Request-Id: capture-${orderId}` on the PayPal API call so PayPal deduplicates retried captures server-side. A second server-side guard checks for an existing `WalletTransaction` with the same `paypalOrderId` before crediting the wallet, returning the current balance early if already captured.
+- **Payout double-submit guard** — `POST /api/payouts/withdraw` returns `409 Conflict` if the org already has a payout request in `pending` or `processing` status, preventing simultaneous withdrawal submissions.
+
+### Architecture
+- **Monolith split** — `server/src/index.js` was 2574 lines; it is now an 116-line thin orchestrator. All logic extracted into named modules:
+  - `server/src/db.js` — singleton Prisma client
+  - `server/src/config.js` — all env-var exports
+  - `server/src/schemas.js` — all Zod validation schemas
+  - `server/src/helpers.js` — crypto helpers, ad selection, `summarizeBotMetrics`
+  - `server/src/seed.js` — workspace mock-data seeding
+  - `server/src/paypal.js` — PayPal token, order, capture, and payout functions
+  - `server/src/portal.js` — Supabase token verification, workspace resolution, all Express middleware
+  - `server/src/security-utils.js` — `getBearerToken`, `secureEqual`, `verifyHmac`
+  - `server/src/portal-roles.js` — role priority, compatibility, and mapping helpers
+  - Route files: `health`, `auth`, `me`, `advertiser`, `wallet`, `publisher`, `payouts`, `admin`, `sdk`, `demo`, `leads`
+- **Rate limiter circuit breaker** — Redis fallback now uses a 30-second cooldown (`nextExternalRetryAt`) instead of permanently disabling external rate limiting after a single failure. Allows automatic recovery when Redis comes back.
+
+### Reliability
+- **Cursor-based pagination** — `GET /api/advertiser/campaigns` and `GET /api/publisher/bots` now return `{ items, nextCursor, hasMore }` with `limit` (max 100) and `cursor` query params.
+- **Soft-delete** — `Ad` and `PublisherBot` models gained `deletedAt DateTime?`. All list/fetch queries now filter `deletedAt: null`. Delete actions set `deletedAt + isActive: false` rather than hard-deleting rows. Admin ad reject and bot delete both use soft-delete. `DELETE /api/advertiser/campaigns/:id` endpoint added (was missing). Schema applied via `prisma db push`.
+
+### Security
+- **HMAC request signing for SDK calls** — `POST /api/ads` and `POST /api/track/:eventType` now support signed requests:
+  - Client sends `X-Prism-Timestamp: <unix-seconds>` and `X-Prism-Signature: sha256=<hmac-hex>`.
+  - Signed payload: `<timestamp>\n<raw-utf8-body>`.
+  - Server verifies HMAC-SHA256 using the bearer token as the shared secret and rejects timestamps outside a ±5-minute window (replay protection).
+  - Raw body is captured via `express.json({ verify })` before JSON parsing.
+  - Controlled by `REQUIRE_SDK_HMAC=true` env var. When `false` (default), signature mismatches log a warning but do not block — enabling a gradual rollout.
+
+### Environment variables added
+- `LOG_LEVEL` (debug | info | warn | error, default `info`)
+- `REQUIRE_SDK_HMAC` (`true` to enforce HMAC signing on SDK calls, default `false`)
+
+## 2026-02-27 (Admin portal routing, PayPal DB-config, workspace visibility)
+
+- **`/notadmin` is now the admin portal** — replaced the old legacy admin panel at that URL with the new `AdminPortal` component.
+- **Admin route guard** — new `RequireAdminAccess` guard (`src/components/portal/PortalRouteGuards.tsx`): checks that the logged-in user has an admin workspace membership; does not require it to be the "selected" workspace, so `/notadmin` works as a direct URL without going through the workspace chooser.
+- **Admin workspace hidden from workspace chooser** — `src/pages/ChooseWorkspace.tsx` filters out `role === "admin"` workspaces so regular users never see the admin option.
+- **`/app/admin` redirects to `/notadmin`** for backwards compatibility.
+- **PayPal credentials now configurable from admin console** — credentials are stored in the `platform_settings` DB table and read at runtime; no server restart required when updated:
+  - New `getPayPalConfig()` async function reads `paypal_client_id`, `paypal_client_secret`, `paypal_mode` from DB, falling back to env vars.
+  - New `PUT /api/admin/platform-settings/paypal` route saves credentials to DB (admin only).
+  - `GET /api/admin/platform-settings` now returns `paypalClientIdMasked` (first 6 + last 4 chars) and `paypalFromDb` flag.
+  - `AdminPortal` Settings tab — PayPal Gateway card replaced with a live editable form: Client ID, Client Secret (password input), Mode toggle (Sandbox / Live), connection status indicator.
+- **PayPal env placeholders added** to `server/.env` and `.env` / `.env.example` files.
+- **Admin bootstrap script** — `server/scripts/bootstrap-admin.js`: one-time script to grant a user admin access via the DB (`node scripts/bootstrap-admin.js your@email.com`).
+- **Build**: `✓ built in 11.48s` — no errors.
+
+## 2026-02-27 (PayPal payment gateway — advertiser top-up + publisher payouts + admin fee control)
+
+- **Payment model**: Prism now has a real money pipeline: advertisers pay Prism, Prism pays publishers, Prism keeps a configurable platform fee.
+- **Database schema** — new Prisma models pushed to DB:
+  - `WalletTransaction` — records each advertiser top-up, spend, or refund with PayPal order reference.
+  - `PayoutRequest` — records each publisher withdrawal request; tracks PayPal batch ID and status lifecycle (`pending → processing → paid / failed`).
+  - `PlatformSettings` — key-value store for live admin-controlled settings; currently stores `platform_fee_pct`.
+  - `Organization` — added `walletBalanceCents` (server-authoritative balance) and `paypalEmail` (publisher PayPal destination).
+- **Server routes added** (`server/src/index.js`):
+  - PayPal helpers: `getPayPalToken`, `createPayPalOrder`, `capturePayPalOrder`, `sendPayPalPayout` (all use native `fetch`, ESM).
+  - `GET  /api/wallet/balance` — returns advertiser org wallet balance + last 20 transactions.
+  - `POST /api/wallet/paypal/create-order` — creates a PayPal Orders v2 order, returns `orderID` to frontend.
+  - `POST /api/wallet/paypal/capture-order` — captures approved order, credits `walletBalanceCents` via DB transaction.
+  - `POST /api/wallet/spend` — deducts reserved campaign budget from wallet atomically.
+  - `GET  /api/payouts/balance` — returns publisher gross earnings, paid-out total, and net available (after platform fee).
+  - `PUT  /api/payouts/paypal-email` — saves publisher's PayPal email to their org record.
+  - `POST /api/payouts/withdraw` — triggers PayPal Payouts API call (if configured) or queues pending request; deducts platform fee before sending.
+  - `GET  /api/admin/platform-settings` — returns current fee rate and PayPal connection status.
+  - `PUT  /api/admin/platform-settings/fee` — live-updates platform fee percentage (admin only).
+  - `GET  /api/admin/wallet-transactions` — lists all advertiser top-ups (admin only).
+  - `GET  /api/admin/payout-requests` — lists all publisher withdrawal requests (admin only).
+  - `POST /api/admin/payout-requests/:id/process` — admin manually triggers PayPal payout for a pending request.
+  - `PUT  /api/admin/payout-requests/:id/status` — admin manually marks a payout as paid/failed.
+- **Environment variables** (add to `server/.env`):
+  - `PAYPAL_CLIENT_ID` — from PayPal Developer Dashboard.
+  - `PAYPAL_CLIENT_SECRET` — from PayPal Developer Dashboard.
+  - `PAYPAL_MODE` — `sandbox` (default) or `live`.
+  - `VITE_PAYPAL_CLIENT_ID` — same client ID, exposed to frontend (safe to expose).
+- **PayPal account requirements**:
+  - Receiving payments (Orders API v2): any PayPal Business account, no special approval.
+  - Sending payouts (Payouts API): requires PayPal Payouts feature enabled on your business account. Request in Developer Dashboard → Sandbox (instant), Live (requires PayPal approval).
+- **Frontend** — installed `@paypal/react-paypal-js ^9.0.0`:
+  - `src/App.tsx` — wrapped with `PayPalScriptProvider` (uses `VITE_PAYPAL_CLIENT_ID`).
+  - `src/pages/AdvertiserPortal.tsx`:
+    - Replaced fake card-number form with real `PayPalButtons` component.
+    - Wallet balance now loaded from server (`GET /api/wallet/balance`), not localStorage.
+    - Campaign submission calls `POST /api/wallet/spend` to deduct budget from server wallet atomically.
+    - Recent transaction history displayed in billing panel.
+  - `src/pages/PublisherPortal.tsx`:
+    - Added "Payouts" card in right sidebar showing: total earned, total paid, available (after fee).
+    - Publisher enters their PayPal email (saved via `PUT /api/payouts/paypal-email`).
+    - "Withdraw" button calls `POST /api/payouts/withdraw`; payout status updates shown in history.
+  - `src/pages/AdminPortal.tsx` — full Finance section added:
+    - PayPal gateway status card (Connected / Not configured, Sandbox / Live mode).
+    - Platform fee editor — live input, save with one click; shows Prism % vs publisher %.
+    - Platform revenue summary — total top-ups, total paid out, net platform revenue.
+    - Payout requests panel with tabbed view (Payouts / Top-Ups):
+      - Pending payouts show "Send via PayPal" and "Mark Paid" actions.
+      - Processing/paid/failed payouts show status badges and PayPal batch IDs.
+- **Build**: `✓ built in 11.31s` — no errors.
+- **DB**: `npx prisma db push` applied schema successfully in 539ms.
+
+## 2026-02-27 (Portal redesign: insights, 3-step wizard, publisher payout UX)
+
+- **AdvertiserPortal** complete rewrite:
+  - General insights BarChart (Impressions vs Clicks per campaign, 7d).
+  - `StepIndicator` for 3-step campaign wizard: Info → Creative Preview → Budget & Launch.
+  - Step 3: `dailyBudget × durationDays = total commitment` model replaces confusing lifetime input.
+  - Per-campaign: 6 labeled stat boxes (Impressions, Clicks, CTR, Spend, Conv., Weight).
+  - Billing panel always visible on dashboard.
+- **PublisherPortal** complete rewrite:
+  - General insights BarChart (Requests 7d + Revenue per bot).
+  - 4 primary + 4 secondary metric boxes per bot.
+  - `AlertDialog` replacing `window.confirm` for destructive delete.
+  - "Rotate Key" label (was "Rotate (Invalidate Old)").
+- **AppLogin**: standalone centered auth page, labels, forgot password flow (`supabase.auth.resetPasswordForEmail`).
+- **ChooseWorkspace**: removed duplicate back button and "Demand Side"/"Supply Side" jargon.
+- **Demo**: scenario context card (Alex's evening plan), dark slate ad cards, horizontal How It Works grid.
+- **Docs**: sticky section nav, numbered `SectionHeader`, `CodeBlock` component, visual Portal Guide, Troubleshooting accordion.
+- Build: `✓ built in 7.32s`.
+
+## 2026-02-27 (Boot-time startup runbook)
+
+- Operations:
+  - diagnosed reboot startup failure as missing `systemd` units for the Prism app stack.
+  - added `deploy/systemd/` unit templates for API, web, tunnel, and a grouping target.
+- Docs:
+  - documented the reboot/startup gap and linked install steps from `docs/README.md`.
+
 ## 2026-02-27 (Prism brand assets + favicon refresh)
 
 - Branding:

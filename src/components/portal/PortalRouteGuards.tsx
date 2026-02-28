@@ -28,3 +28,14 @@ export const RequireWorkspaceRole = ({ role }: { role: PortalRole }) => {
   }
   return <Outlet />;
 };
+
+// Admin-specific guard: only checks that the user has an admin workspace membership.
+// Does not require it to be the "selected" workspace, so /notadmin works as a direct URL.
+export const RequireAdminAccess = () => {
+  const { loading, workspaces } = usePortalAuth();
+  if (loading) return null;
+  if (!workspaces.some((w) => w.role === "admin")) {
+    return <Navigate to="/app/login" replace />;
+  }
+  return <Outlet />;
+};
