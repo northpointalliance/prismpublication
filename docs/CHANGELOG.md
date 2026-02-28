@@ -2,6 +2,62 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-02-28 (CPM pricing engine — budget enforcement, auto-revenue, admin rate table)
+
+### Business model — now fully wired
+
+Previously, advertiser spend and publisher earnings were completely disconnected ledgers: advertisers reserved a budget upfront (one wallet deduction at campaign launch), but there was no per-impression pricing logic and no automatic publisher credit. This release connects them.
+
+#### Ad model new fields
+- `dailyBudgetCents Int @default(0)` — maximum spend per calendar day
+- `lifetimeBudgetCents Int @default(0)` — maximum total spend for the campaign's lifetime
+- `endsAt DateTime?` — optional hard stop date (set automatically from `durationDays` at creation)
+
+#### CPM rate table (admin-configurable)
+- Rates stored in `PlatformSettings` under keys `cpm_text_cents`, `cpm_card_cents`, `cpm_banner_cents`.
+- Default rates: text = $10 CPM, card = $20 CPM, banner = $15 CPM.
+- Admin can edit all three rates live from **Admin → Settings → Base Rate Table**.
+- The rate table UI shows for each format: advertiser CPM, per-impression cost (¢), publisher earnings after fee, and platform net.
+
+#### Auto-revenue on impression
+- When `POST /api/track/impression` fires for a budget-managed ad (one with `dailyBudgetCents > 0` or `lifetimeBudgetCents > 0`), the server automatically creates a `revenue` AdEvent for the publisher bot at the configured CPM rate.
+- `chargeAmountCents = Math.max(1, Math.round(cpmCents / 1000))` — minimum 1¢ per impression.
+- The revenue event carries `metadata: { source: "auto_cpm", cpmCents }` for auditability.
+- Failure to generate the auto-revenue event is non-blocking (logs error, impression still recorded).
+- Ads **without** a budget (`dailyBudgetCents = 0`, `lifetimeBudgetCents = 0`) continue to work with manually submitted publisher SDK revenue events, unchanged.
+
+#### Budget enforcement in ad selection
+- `selectAdForRequest` now filters the active ad pool in two steps before weighted random selection:
+  1. **Expiry filter** — ads with `endsAt < now` are excluded.
+  2. **Budget filter** — for budget-managed ads, two `adEvent.groupBy` queries compute today's revenue spend and all-time revenue spend. Ads that have hit their daily or lifetime cap are excluded for the rest of that period.
+
+#### Publisher earnings automatically populated
+- Publisher Payouts panel now reflects earnings from auto-CPM events — no manual SDK calls needed for budget-managed campaigns.
+- The existing `calcPublisherAvailable` fee calculation is unchanged; auto-revenue events use the same `amount` (cents) field.
+
+#### Advertiser portal
+- Campaign creation now sends `dailyBudgetCents`, `lifetimeBudgetCents`, `durationDays` to the API so they're persisted in the DB.
+- Campaign edit PATCH also sends updated budget fields; lifetime budget is capped at the original reservation to prevent unintended free overruns.
+
+#### Budget edit behavior (important)
+- Wallet deduction happens **once at campaign launch** for the full lifetime budget.
+- Editing a campaign later updates the DB pacing caps but does NOT auto-adjust the wallet:
+  - **Decreasing daily budget** → ad paces slower (spends less per day), runs longer.
+  - **Decreasing lifetime budget** → ad stops sooner (this is a refund-free reduction).
+  - **Increasing lifetime budget** → capped at original reservation to prevent free overruns.
+  - **Increasing daily budget** → no extra charge; the rate at which the reserved budget is consumed increases, so the campaign ends sooner.
+
+#### New helper functions (`server/src/money-utils.js`)
+- `cpmiCents(cpmCents)` — returns per-impression cost in whole cents (min 1¢).
+- `getPlatformCpmRate(format, prisma)` — reads CPM from PlatformSettings with fallback to defaults.
+
+#### New admin route
+- `PUT /api/admin/platform-settings/rates` — updates CPM rates for text/card/banner; writes `RATE_TABLE_UPDATE` audit log entry.
+- `GET /api/admin/platform-settings` now includes `cpmTextCents`, `cpmCardCents`, `cpmBannerCents` in response.
+
+#### New frontend component
+- `src/components/portal/admin/RateTableForm.tsx` — rate table card with 3 format inputs, save button, and live breakdown table (advertiser pays / per impression / publisher receives / platform keeps).
+
 ## 2026-02-28 (Platform hardening: tests, HMAC default-on, image validation, audit log, webhooks, component extraction)
 
 ### Integration tests for money flows

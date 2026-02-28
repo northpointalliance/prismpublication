@@ -296,7 +296,17 @@ const AdvertiserPortal = () => {
       const headers = await getPortalHeaders(user.email);
       await apiRequest(`/advertiser/campaigns/${editingId}`, {
         method: "PATCH",
-        body: JSON.stringify({ title: editInfo.title, description: editInfo.description, ctaText: editInfo.ctaText, clickUrl: editInfo.clickUrl, topics: editInfo.topics.split(",").map((t) => t.trim()).filter(Boolean), format: editInfo.format, weight: w }),
+        body: JSON.stringify({
+          title: editInfo.title, description: editInfo.description,
+          ctaText: editInfo.ctaText, clickUrl: editInfo.clickUrl,
+          topics: editInfo.topics.split(",").map((t) => t.trim()).filter(Boolean),
+          format: editInfo.format, weight: w,
+          // Budget edits update pacing caps in DB. Note: wallet deduction is locked at
+          // launch time — only daily rate and duration can be changed freely here.
+          // Lifetime budget is capped at original reservation to prevent free overruns.
+          dailyBudgetCents: daily,
+          lifetimeBudgetCents: Math.min(lifetime, campaignBudgets[editingId!]?.lifetimeBudgetCents ?? lifetime),
+        }),
       }, headers);
       setCampaignBudgets((prev) => ({ ...prev, [editingId]: { dailyBudgetCents: daily, lifetimeBudgetCents: lifetime, durationDays: Math.round(lifetime / daily) || 30 } }));
       setNotice("Campaign updated."); closeEdit();
