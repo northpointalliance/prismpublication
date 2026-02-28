@@ -90,12 +90,50 @@ export const selectAdForRequest = async ({ format, topic = "" }) => {
 
   if (!activeAds.length) return null;
 
+  // Filter out expired campaigns
+  const now = new Date();
+  const notExpired = activeAds.filter((ad) => !ad.endsAt || ad.endsAt > now);
+
+  // For budget-managed ads, filter out ones that have exhausted their daily or lifetime budget
+  const budgeted = notExpired.filter((ad) => ad.dailyBudgetCents > 0 || ad.lifetimeBudgetCents > 0);
+  let eligible = notExpired;
+
+  if (budgeted.length) {
+    const ids = budgeted.map((ad) => ad.id);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [todaySpends, lifetimeSpends] = await Promise.all([
+      prisma.adEvent.groupBy({
+        by: ["adId"],
+        where: { adId: { in: ids }, eventType: "revenue", createdAt: { gte: todayStart } },
+        _sum: { amount: true },
+      }),
+      prisma.adEvent.groupBy({
+        by: ["adId"],
+        where: { adId: { in: ids }, eventType: "revenue" },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const todayMap = new Map(todaySpends.map((r) => [r.adId, r._sum.amount ?? 0]));
+    const lifetimeMap = new Map(lifetimeSpends.map((r) => [r.adId, r._sum.amount ?? 0]));
+
+    eligible = notExpired.filter((ad) => {
+      if (ad.dailyBudgetCents > 0 && (todayMap.get(ad.id) ?? 0) >= ad.dailyBudgetCents) return false;
+      if (ad.lifetimeBudgetCents > 0 && (lifetimeMap.get(ad.id) ?? 0) >= ad.lifetimeBudgetCents) return false;
+      return true;
+    });
+  }
+
+  if (!eligible.length) return null;
+
   const normalizedTopic = normalizeTopic(topic);
   const topicMatched = normalizedTopic
-    ? activeAds.filter((ad) => ad.topics.some((value) => normalizeTopic(value).includes(normalizedTopic)))
-    : activeAds;
+    ? eligible.filter((ad) => ad.topics.some((value) => normalizeTopic(value).includes(normalizedTopic)))
+    : eligible;
 
-  return weightedPick(topicMatched.length ? topicMatched : activeAds);
+  return weightedPick(topicMatched.length ? topicMatched : eligible);
 };
 
 // ─── Publisher bot metrics ────────────────────────────────────────────────────

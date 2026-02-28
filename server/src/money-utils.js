@@ -49,6 +49,36 @@ export function checkWalletSpend(currentBalanceCents, spendAmountCents) {
 }
 
 /**
+ * Returns the per-impression charge in whole cents for a given CPM rate in cents.
+ * Minimum 1 cent — prevents zero-cost impressions when CPM < $10.
+ *
+ * @param {number} cpmCents - CPM rate in cents (e.g. 2000 = $20.00 CPM)
+ * @returns {number} Cents to charge per impression
+ */
+export function cpmiCents(cpmCents) {
+  return Math.max(1, Math.round(cpmCents / 1000));
+}
+
+/**
+ * Fetch the configured CPM rate for a given ad format from PlatformSettings,
+ * falling back to the platform default.
+ *
+ * @param {string} format - "text" | "card" | "banner"
+ * @param {import("@prisma/client").PrismaClient} prisma
+ * @returns {Promise<number>} CPM rate in cents
+ */
+export async function getPlatformCpmRate(format, prisma) {
+  const { CPM_TEXT_KEY, CPM_CARD_KEY, CPM_BANNER_KEY, DEFAULT_CPM_TEXT, DEFAULT_CPM_CARD, DEFAULT_CPM_BANNER } =
+    await import("./config.js");
+  const key =
+    format === "text" ? CPM_TEXT_KEY : format === "banner" ? CPM_BANNER_KEY : CPM_CARD_KEY;
+  const defaultVal =
+    format === "text" ? DEFAULT_CPM_TEXT : format === "banner" ? DEFAULT_CPM_BANNER : DEFAULT_CPM_CARD;
+  const row = await prisma.platformSettings.findUnique({ where: { key } });
+  return row ? parseInt(row.value, 10) || defaultVal : defaultVal;
+}
+
+/**
  * Check whether a payout withdrawal request meets the minimum threshold.
  * The $1.00 minimum applies to the GROSS available amount before fee deduction,
  * matching the server-side check in payouts.js.

@@ -8,6 +8,7 @@ import ReviewQueueTab from "@/components/portal/admin/ReviewQueueTab";
 import FinancePanel from "@/components/portal/admin/FinancePanel";
 import PayPalConfigForm from "@/components/portal/admin/PayPalConfigForm";
 import PlatformFeeForm from "@/components/portal/admin/PlatformFeeForm";
+import RateTableForm from "@/components/portal/admin/RateTableForm";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,9 @@ interface PlatformSettings {
   paypalEnabled: boolean;
   paypalClientIdMasked?: string | null;
   paypalFromDb?: boolean;
+  cpmTextCents: number;
+  cpmCardCents: number;
+  cpmBannerCents: number;
 }
 
 interface WalletTx {
@@ -100,6 +104,10 @@ const AdminPortal = () => {
   const [ppMode, setPpMode] = useState<"sandbox" | "live">("sandbox");
   const [savingPaypal, setSavingPaypal] = useState(false);
 
+  // CPM rate table
+  const [ratesDraft, setRatesDraft] = useState({ text: "10.00", card: "20.00", banner: "15.00" });
+  const [savingRates, setSavingRates] = useState(false);
+
   // ── loaders ────────────────────────────────────────────────────────────────
 
   const loadReview = useCallback(async (email: string) => {
@@ -125,6 +133,11 @@ const AdminPortal = () => {
       ]);
       setPlatformSettings(settings);
       setFeeDraft(String(settings.platformFeePct));
+      setRatesDraft({
+        text:   ((settings.cpmTextCents   ?? 1000) / 100).toFixed(2),
+        card:   ((settings.cpmCardCents   ?? 2000) / 100).toFixed(2),
+        banner: ((settings.cpmBannerCents ?? 1500) / 100).toFixed(2),
+      });
       setWalletTxns(txns);
       setPayoutReqs(payouts);
     } catch {
@@ -188,6 +201,27 @@ const AdminPortal = () => {
       void loadFinance(user.email);
     } catch (err) { setError(err instanceof Error ? err.message : "Failed to update payout"); }
     finally { setProcessingId(null); }
+  };
+
+  const saveRates = async () => {
+    if (!user?.email) return;
+    const toInt = (v: string, fallback: number) => {
+      const n = Math.round(parseFloat(v) * 100);
+      return Number.isFinite(n) && n >= 100 ? n : fallback;
+    };
+    const payload = {
+      cpmTextCents:   toInt(ratesDraft.text,   1000),
+      cpmCardCents:   toInt(ratesDraft.card,   2000),
+      cpmBannerCents: toInt(ratesDraft.banner, 1500),
+    };
+    setSavingRates(true); setError(""); setNotice("");
+    try {
+      const headers = await getPortalHeaders(user.email);
+      await apiRequest("/admin/platform-settings/rates", { method: "PUT", body: JSON.stringify(payload) }, headers);
+      setNotice("CPM rates updated.");
+      void loadFinance(user.email);
+    } catch (err) { setError(err instanceof Error ? err.message : "Failed to update rates"); }
+    finally { setSavingRates(false); }
   };
 
   const saveFee = async () => {
@@ -289,24 +323,36 @@ const AdminPortal = () => {
       )}
 
       {activeTab === "settings" && (
-        <div className="grid gap-5 sm:grid-cols-2" style={{ alignItems: "start" }}>
-          <PayPalConfigForm
-            platformSettings={platformSettings}
-            ppClientId={ppClientId}
-            ppClientSecret={ppClientSecret}
-            ppMode={ppMode}
-            savingPaypal={savingPaypal}
-            onClientIdChange={setPpClientId}
-            onClientSecretChange={setPpClientSecret}
-            onModeChange={setPpMode}
-            onSave={() => void savePaypalConfig()}
-          />
-          <PlatformFeeForm
-            platformSettings={platformSettings}
-            feeDraft={feeDraft}
-            savingFee={savingFee}
-            onFeeDraftChange={setFeeDraft}
-            onSave={() => void saveFee()}
+        <div className="space-y-5">
+          <div className="grid gap-5 sm:grid-cols-2" style={{ alignItems: "start" }}>
+            <PayPalConfigForm
+              platformSettings={platformSettings}
+              ppClientId={ppClientId}
+              ppClientSecret={ppClientSecret}
+              ppMode={ppMode}
+              savingPaypal={savingPaypal}
+              onClientIdChange={setPpClientId}
+              onClientSecretChange={setPpClientSecret}
+              onModeChange={setPpMode}
+              onSave={() => void savePaypalConfig()}
+            />
+            <PlatformFeeForm
+              platformSettings={platformSettings}
+              feeDraft={feeDraft}
+              savingFee={savingFee}
+              onFeeDraftChange={setFeeDraft}
+              onSave={() => void saveFee()}
+            />
+          </div>
+          <RateTableForm
+            cpmTextCents={platformSettings?.cpmTextCents ?? 1000}
+            cpmCardCents={platformSettings?.cpmCardCents ?? 2000}
+            cpmBannerCents={platformSettings?.cpmBannerCents ?? 1500}
+            platformFeePct={platformSettings?.platformFeePct ?? 30}
+            draft={ratesDraft}
+            saving={savingRates}
+            onDraftChange={(patch) => setRatesDraft((prev) => ({ ...prev, ...patch }))}
+            onSave={() => void saveRates()}
           />
         </div>
       )}

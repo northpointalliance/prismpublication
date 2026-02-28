@@ -133,6 +133,10 @@ router.post("/campaigns", requirePortalUser, async (req, res) => {
     if (!workspace) return res.status(403).json({ error: "Advertiser workspace required" });
 
     const advertiserKey = `org:${workspace.organization.id}`;
+    const endsAt = parsed.data.durationDays
+      ? new Date(Date.now() + parsed.data.durationDays * 86_400_000)
+      : undefined;
+
     const campaign = await prisma.ad.create({
       data: {
         title: parsed.data.title,
@@ -145,6 +149,9 @@ router.post("/campaigns", requirePortalUser, async (req, res) => {
         format: parsed.data.format,
         weight: parsed.data.weight,
         isActive: parsed.data.isActive ?? false,
+        dailyBudgetCents: parsed.data.dailyBudgetCents,
+        lifetimeBudgetCents: parsed.data.lifetimeBudgetCents,
+        endsAt,
       },
     });
     return res.status(201).json(campaign);
@@ -180,7 +187,13 @@ router.patch("/campaigns/:id", requirePortalUser, async (req, res) => {
 
     if (!existing) return res.status(404).json({ error: "Campaign not found" });
 
-    const campaign = await prisma.ad.update({ where: { id: existing.id }, data: parsed.data });
+    const updateData = { ...parsed.data };
+    if (parsed.data.durationDays !== undefined) {
+      updateData.endsAt = new Date(Date.now() + parsed.data.durationDays * 86_400_000);
+    }
+    delete updateData.durationDays;
+
+    const campaign = await prisma.ad.update({ where: { id: existing.id }, data: updateData });
     return res.json(campaign);
   } catch (err) {
     logger.error("Advertiser campaign update failed", err);

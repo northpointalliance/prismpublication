@@ -15,6 +15,14 @@ import {
 import { logger } from "../logger.js";
 import { logAudit } from "../audit.js";
 import { validateImageUrl } from "../image-validation.js";
+import {
+  CPM_TEXT_KEY,
+  CPM_CARD_KEY,
+  CPM_BANNER_KEY,
+  DEFAULT_CPM_TEXT,
+  DEFAULT_CPM_CARD,
+  DEFAULT_CPM_BANNER,
+} from "../config.js";
 
 const router = express.Router();
 
@@ -108,7 +116,13 @@ router.post("/portal/ads/:id/reject", requirePortalUser, requireAdminPortalUser,
 
 router.get("/platform-settings", requirePortalUser, requireAdminPortalUser, async (_req, res) => {
   try {
-    const [feePct, cfg] = await Promise.all([getPlatformFeePct(), getPayPalConfig()]);
+    const [feePct, cfg, cpmText, cpmCard, cpmBanner] = await Promise.all([
+      getPlatformFeePct(),
+      getPayPalConfig(),
+      prisma.platformSettings.findUnique({ where: { key: CPM_TEXT_KEY } }),
+      prisma.platformSettings.findUnique({ where: { key: CPM_CARD_KEY } }),
+      prisma.platformSettings.findUnique({ where: { key: CPM_BANNER_KEY } }),
+    ]);
     const masked = cfg.clientId ? cfg.clientId.slice(0, 6) + "…" + cfg.clientId.slice(-4) : null;
     return res.json({
       platformFeePct: feePct,
@@ -116,10 +130,78 @@ router.get("/platform-settings", requirePortalUser, requireAdminPortalUser, asyn
       paypalEnabled: cfg.enabled,
       paypalClientIdMasked: masked,
       paypalFromDb: cfg.fromDb,
+      cpmTextCents:   parseInt(cpmText?.value   ?? String(DEFAULT_CPM_TEXT),   10),
+      cpmCardCents:   parseInt(cpmCard?.value   ?? String(DEFAULT_CPM_CARD),   10),
+      cpmBannerCents: parseInt(cpmBanner?.value ?? String(DEFAULT_CPM_BANNER), 10),
     });
   } catch (err) {
     logger.error("Get platform settings error", err);
     return res.status(500).json({ error: "Failed to fetch platform settings" });
+  }
+});
+
+router.put("/platform-settings/rates", requirePortalUser, requireAdminPortalUser, async (req, res) => {
+  const parsed = z
+    .object({
+      cpmTextCents:   z.number().int().min(100).max(1_000_000).optional(),
+      cpmCardCents:   z.number().int().min(100).max(1_000_000).optional(),
+      cpmBannerCents: z.number().int().min(100).max(1_000_000).optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid rate values" });
+
+  const { cpmTextCents, cpmCardCents, cpmBannerCents } = parsed.data;
+  if (cpmTextCents === undefined && cpmCardCents === undefined && cpmBannerCents === undefined) {
+    return res.status(400).json({ error: "Provide at least one rate to update" });
+  }
+
+  try {
+    const upserts = [];
+    if (cpmTextCents !== undefined) {
+      upserts.push(
+        prisma.platformSettings.upsert({
+          where: { key: CPM_TEXT_KEY },
+          update: { value: String(cpmTextCents) },
+          create: { key: CPM_TEXT_KEY, value: String(cpmTextCents) },
+        }),
+      );
+    }
+    if (cpmCardCents !== undefined) {
+      upserts.push(
+        prisma.platformSettings.upsert({
+          where: { key: CPM_CARD_KEY },
+          update: { value: String(cpmCardCents) },
+          create: { key: CPM_CARD_KEY, value: String(cpmCardCents) },
+        }),
+      );
+    }
+    if (cpmBannerCents !== undefined) {
+      upserts.push(
+        prisma.platformSettings.upsert({
+          where: { key: CPM_BANNER_KEY },
+          update: { value: String(cpmBannerCents) },
+          create: { key: CPM_BANNER_KEY, value: String(cpmBannerCents) },
+        }),
+      );
+    }
+    await Promise.all(upserts);
+
+    await logAudit({
+      action: "RATE_TABLE_UPDATE",
+      actorUserId: req.portalUser?.id,
+      resourceType: "platform_settings",
+      after: { cpmTextCents, cpmCardCents, cpmBannerCents },
+      req,
+    });
+
+    return res.json({
+      cpmTextCents:   cpmTextCents   ?? DEFAULT_CPM_TEXT,
+      cpmCardCents:   cpmCardCents   ?? DEFAULT_CPM_CARD,
+      cpmBannerCents: cpmBannerCents ?? DEFAULT_CPM_BANNER,
+    });
+  } catch (err) {
+    logger.error("Update CPM rates error", err);
+    return res.status(500).json({ error: "Failed to update CPM rates" });
   }
 });
 

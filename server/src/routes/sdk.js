@@ -4,6 +4,7 @@ import { adRequestSchema, trackEventSchema } from "../schemas.js";
 import { requireSdkKey, requireSdkSignature, ensureSdkBotScope } from "../portal.js";
 import { selectAdForRequest, toSdkAd, sdkTrackEventTypes } from "../helpers.js";
 import { logger } from "../logger.js";
+import { cpmiCents, getPlatformCpmRate } from "../money-utils.js";
 
 const router = express.Router();
 
@@ -62,6 +63,34 @@ router.post("/track/:eventType", requireSdkKey, requireSdkSignature, async (req,
         metadata: parsed.data.metadata,
       },
     });
+
+    // Auto-generate a revenue event for budget-managed ads on each impression.
+    // This links advertiser spend → publisher earnings at the platform CPM rate.
+    if (eventType === "impression") {
+      try {
+        const ad = await prisma.ad.findUnique({
+          where: { id: parsed.data.adId },
+          select: { format: true, dailyBudgetCents: true, lifetimeBudgetCents: true },
+        });
+        if (ad && (ad.dailyBudgetCents > 0 || ad.lifetimeBudgetCents > 0)) {
+          const cpmCents = await getPlatformCpmRate(ad.format, prisma);
+          const chargeAmountCents = cpmiCents(cpmCents);
+          await prisma.adEvent.create({
+            data: {
+              eventType: "revenue",
+              adId: parsed.data.adId,
+              botId: parsed.data.botId,
+              amount: chargeAmountCents,
+              metadata: { source: "auto_cpm", cpmCents },
+            },
+          });
+        }
+      } catch (autoErr) {
+        // Never let auto-revenue failure block the impression response
+        logger.error("Auto-revenue generation failed", autoErr);
+      }
+    }
+
     return res.status(201).json({ success: true });
   } catch (err) {
     logger.error("Event track failed", err);

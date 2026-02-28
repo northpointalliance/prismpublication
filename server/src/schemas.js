@@ -95,6 +95,9 @@ export const advertiserCampaignCreateSchema = z.object({
   format: z.enum(["text", "card", "banner"]).default("card"),
   weight: z.number().int().min(1).max(100).default(1),
   isActive: z.boolean().optional(),
+  dailyBudgetCents: z.number().int().min(0).default(0),
+  lifetimeBudgetCents: z.number().int().min(0).default(0),
+  durationDays: z.number().int().min(1).max(365).optional(),
 });
 
 export const advertiserCampaignUpdateSchema = advertiserCampaignCreateSchema
@@ -108,6 +111,9 @@ export const advertiserCampaignUpdateSchema = advertiserCampaignCreateSchema
     format: true,
     weight: true,
     isActive: true,
+    dailyBudgetCents: true,
+    lifetimeBudgetCents: true,
+    durationDays: true,
   })
   .partial()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");

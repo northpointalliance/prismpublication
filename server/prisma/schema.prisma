@@ -88,6 +88,7 @@ enum AuditAction {
   PAYPAL_CONFIG_UPDATE
   PAYPAL_WEBHOOK_CAPTURE_REVERSED
   PAYPAL_WEBHOOK_PAYOUT_SETTLED
+  RATE_TABLE_UPDATE
 }
 
 model Lead {
@@ -205,12 +206,15 @@ model Ad {
   advertiser  String
   topics      String[]  @default([])
   format      AdFormat  @default(card)
-  isActive    Boolean   @default(true)
-  weight      Int       @default(1)
-  deletedAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  events      AdEvent[]
+  isActive            Boolean   @default(true)
+  weight              Int       @default(1)
+  dailyBudgetCents    Int       @default(0)
+  lifetimeBudgetCents Int       @default(0)
+  endsAt              DateTime?
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  events              AdEvent[]
 
   @@index([isActive, deletedAt, createdAt])
   @@index([advertiser, deletedAt])
