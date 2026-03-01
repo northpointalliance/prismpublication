@@ -212,11 +212,22 @@ export const requirePortalUser = async (req, res, next) => {
 };
 
 export const requireAdminPortalUser = async (req, res, next) => {
-  const workspace = await resolvePortalWorkspace(req.portalUser.id);
-  if (!workspace || workspace.organization.type !== "admin" || !isAdminMembershipRole(workspace.membership.role)) {
+  // Scan ALL memberships for an admin org — admin access does not require the
+  // admin workspace to be the user's default/selected workspace.
+  const user = await prisma.user.findUnique({
+    where: { id: req.portalUser.id },
+    include: { memberships: { include: { organization: true } } },
+  });
+
+  const adminMembership = user?.memberships?.find(
+    (m) => m.organization.type === "admin" && isAdminMembershipRole(m.role),
+  );
+
+  if (!adminMembership) {
     return res.status(403).json({ error: "Admin workspace required" });
   }
-  req.portalWorkspace = workspace;
+
+  req.portalWorkspace = { user, organization: adminMembership.organization, membership: adminMembership };
   return next();
 };
 
