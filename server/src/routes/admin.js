@@ -5,6 +5,7 @@ import { adminCreateAdSchema, adminUpdateAdSchema, leadSchema } from "../schemas
 import { requirePortalUser, requireAdminPortalUser, requireAdminKey } from "../portal.js";
 import {
   getPayPalConfig,
+  getPayPalToken,
   sendPayPalPayout,
   getPlatformFeePct,
   PAYPAL_CLIENT_ID_KEY,
@@ -261,6 +262,20 @@ router.put("/platform-settings/paypal", requirePortalUser, requireAdminPortalUse
   } catch (err) {
     logger.error("Update PayPal config error", err);
     return res.status(500).json({ error: "Failed to update PayPal config" });
+  }
+});
+
+router.post("/platform-settings/paypal/test", requirePortalUser, requireAdminPortalUser, async (req, res) => {
+  try {
+    const cfg = await getPayPalConfig();
+    if (!cfg.enabled) {
+      return res.status(400).json({ ok: false, error: "No PayPal credentials configured" });
+    }
+    await getPayPalToken(cfg);
+    return res.json({ ok: true, mode: cfg.mode });
+  } catch (err) {
+    logger.error("PayPal connection test failed", err);
+    return res.status(200).json({ ok: false, error: "Authentication failed — check your Client ID and Secret" });
   }
 });
 

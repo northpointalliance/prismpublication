@@ -18,15 +18,17 @@ interface Props {
   ppClientSecret: string;
   ppMode: "sandbox" | "live";
   savingPaypal: boolean;
+  testingPaypal: boolean;
   onClientIdChange: (v: string) => void;
   onClientSecretChange: (v: string) => void;
   onModeChange: (v: "sandbox" | "live") => void;
   onSave: () => void;
+  onTest: () => void;
 }
 
 const PayPalConfigForm = ({
-  platformSettings, ppClientId, ppClientSecret, ppMode, savingPaypal,
-  onClientIdChange, onClientSecretChange, onModeChange, onSave,
+  platformSettings, ppClientId, ppClientSecret, ppMode, savingPaypal, testingPaypal,
+  onClientIdChange, onClientSecretChange, onModeChange, onSave, onTest,
 }: Props) => (
   <Card className="sm:col-span-2">
     <CardHeader>
@@ -108,6 +110,11 @@ const PayPalConfigForm = ({
         <Button variant="primary" disabled={savingPaypal} onClick={onSave}>
           {savingPaypal ? "Saving…" : "Save PayPal Config"}
         </Button>
+        {platformSettings?.paypalEnabled && (
+          <Button variant="outline" disabled={testingPaypal} onClick={onTest}>
+            {testingPaypal ? "Testing…" : "Test Connection"}
+          </Button>
+        )}
         <a
           href="https://developer.paypal.com/dashboard/applications"
           target="_blank"

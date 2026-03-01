@@ -103,6 +103,7 @@ const AdminPortal = () => {
   const [ppClientSecret, setPpClientSecret] = useState("");
   const [ppMode, setPpMode] = useState<"sandbox" | "live">("sandbox");
   const [savingPaypal, setSavingPaypal] = useState(false);
+  const [testingPaypal, setTestingPaypal] = useState(false);
 
   // CPM rate table
   const [ratesDraft, setRatesDraft] = useState({ text: "10.00", card: "20.00", banner: "15.00" });
@@ -133,6 +134,7 @@ const AdminPortal = () => {
       ]);
       setPlatformSettings(settings);
       setFeeDraft(String(settings.platformFeePct));
+      setPpMode(settings.paypalMode === "live" ? "live" : "sandbox");
       setRatesDraft({
         text:   ((settings.cpmTextCents   ?? 1000) / 100).toFixed(2),
         card:   ((settings.cpmCardCents   ?? 2000) / 100).toFixed(2),
@@ -201,6 +203,25 @@ const AdminPortal = () => {
       void loadFinance(user.email);
     } catch (err) { setError(err instanceof Error ? err.message : "Failed to update payout"); }
     finally { setProcessingId(null); }
+  };
+
+  const testPaypalConfig = async () => {
+    if (!user?.email) return;
+    setTestingPaypal(true); setError(""); setNotice("");
+    try {
+      const headers = await getPortalHeaders(user.email);
+      const result = await apiRequest<{ ok: boolean; mode: string; error?: string }>(
+        "/admin/platform-settings/paypal/test",
+        { method: "POST" },
+        headers,
+      );
+      if (result.ok) {
+        setNotice(`PayPal credentials verified — connected to ${result.mode} environment.`);
+      } else {
+        setError(`PayPal test failed: ${result.error ?? "Unknown error"}`);
+      }
+    } catch (err) { setError(err instanceof Error ? err.message : "PayPal connection test failed"); }
+    finally { setTestingPaypal(false); }
   };
 
   const saveRates = async () => {
@@ -331,10 +352,12 @@ const AdminPortal = () => {
               ppClientSecret={ppClientSecret}
               ppMode={ppMode}
               savingPaypal={savingPaypal}
+              testingPaypal={testingPaypal}
               onClientIdChange={setPpClientId}
               onClientSecretChange={setPpClientSecret}
               onModeChange={setPpMode}
               onSave={() => void savePaypalConfig()}
+              onTest={() => void testPaypalConfig()}
             />
             <PlatformFeeForm
               platformSettings={platformSettings}
