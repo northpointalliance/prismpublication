@@ -42,9 +42,9 @@ VITE_PAYPAL_CLIENT_ID="your-paypal-client-id"
 | `VITE_SUPABASE_PROJECT_ID` | Identifies your Supabase project | Supabase dashboard → Project Settings → General → Reference ID |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Public API key for login | Supabase dashboard → Project Settings → API → `anon` key |
 | `VITE_SUPABASE_URL` | URL of your Supabase project | Supabase dashboard → Project Settings → API → Project URL |
-| `VITE_PAYPAL_CLIENT_ID` | Identifies your PayPal app to the browser | PayPal Developer Dashboard → My Apps → your app → Client ID |
+| `VITE_PAYPAL_CLIENT_ID` | *(Optional)* Fallback PayPal client ID for the browser | PayPal Developer Dashboard → My Apps → your app → Client ID |
 
-> **Testing only:** Set `VITE_PAYPAL_CLIENT_ID="test"` to enable dummy PayPal buttons. No real payments will process.
+> **Note:** `VITE_PAYPAL_CLIENT_ID` is now optional. The frontend automatically fetches the active PayPal Client ID from the backend (whatever the admin saved via Admin → Settings → PayPal Gateway). You only need to set this as a fallback for local development before credentials are entered. Set it to `"test"` for dummy PayPal buttons with no real payments.
 
 ---
 
@@ -68,7 +68,7 @@ PAYPAL_WEBHOOK_ID="your-webhook-id"
 | `DATABASE_URL` | Connection string to your PostgreSQL database | Your hosting provider (Railway, Render, Supabase DB, etc.) |
 | `SUPABASE_URL` | Same as frontend — server also verifies logins | Same as above |
 | `SUPABASE_PUBLISHABLE_KEY` | Same as frontend anon key | Same as above |
-| `PRISM_API_KEY` | Secret key that AI bots use to request ads | Generate a random 32+ character string (see below) |
+| `PRISM_API_KEY` (or `BOTGRID_API_KEY`) | Secret key that AI bots use to request ads | Generate a random 32+ character string (see below) |
 | `ADMIN_API_KEY` | Secret key for admin API calls | Generate a different random 32+ character string |
 | `PAYPAL_CLIENT_ID` | Same value as `VITE_PAYPAL_CLIENT_ID` | PayPal Developer Dashboard |
 | `PAYPAL_CLIENT_SECRET` | Private PayPal key (never share this) | PayPal Developer Dashboard → your app → Secret |
@@ -96,10 +96,17 @@ Go to [randomkeygen.com](https://randomkeygen.com) and copy any key from the "Fo
 - The same **Client ID** goes into the frontend `.env` as `VITE_PAYPAL_CLIENT_ID`
 
 #### Switching from Test to Live payments
+**Recommended (no restart needed):**
+1. Log into Admin portal → Settings → PayPal Gateway
+2. Paste your **Live** Client ID and Live Secret (different from sandbox credentials)
+3. Switch the toggle to `live`
+4. Click Save — takes effect immediately
+
+**Alternative (via `.env`):**
 1. In `server/.env`, change `PAYPAL_MODE="sandbox"` → `PAYPAL_MODE="live"`
-2. Replace `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` with the **Live** credentials from PayPal (different from sandbox)
-3. Replace `VITE_PAYPAL_CLIENT_ID` with the same live Client ID
-4. Restart the server
+2. Replace `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` with **Live** credentials
+3. Restart the server
+4. Note: credentials set in the Admin console take priority over `.env` values
 
 #### Setting up PayPal Webhooks
 Webhooks let PayPal automatically tell Prism when a payment succeeds or fails.

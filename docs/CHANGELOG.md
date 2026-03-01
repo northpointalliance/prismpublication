@@ -2,6 +2,40 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-03-01 (PayPal fix, delete flows, shared admin config, DB cleanup)
+
+### PayPal order creation — client ID mismatch fixed
+- Root cause: `PayPalScriptProvider` in `App.tsx` was initialized with `VITE_PAYPAL_CLIENT_ID="test"` while the server created orders using the real sandbox/live credentials from `PlatformSettings`. PayPal rejects checkout when the buyer SDK client ID doesn't match the order's merchant.
+- Fix: Added `GET /api/wallet/paypal/config` (public endpoint — client ID is not a secret) that returns the stored client ID from the DB.
+- `BillingPanel` now wraps `PayPalButtons` in a local `PayPalScriptProvider` with the real client ID fetched at runtime. Falls back to `"test"` if not yet loaded.
+- Removed global `PayPalScriptProvider` from `App.tsx` — it was only needed in the billing panel.
+- `VITE_PAYPAL_CLIENT_ID` in the frontend `.env` is now optional; the frontend always uses what the admin saved via the console.
+
+### PayPal credentials — shared across all admins + Test Connection button
+- `loadFinance` now calls `setPpMode` from the API response so all admins see the correct sandbox/live toggle on load (was always defaulting to "sandbox" regardless of what was saved).
+- Added `POST /api/admin/platform-settings/paypal/test` endpoint — calls `getPayPalToken` with stored credentials and returns `{ ok, mode }` or `{ ok: false, error }`.
+- "Test Connection" button appears in the PayPal Credentials card once credentials are configured. Reports success with environment name or specific auth failure.
+
+### Admin review queue — rejected ads no longer appear as pending
+- `GET /api/admin/portal/ads/review` pending query was `WHERE isActive = false` — this also matched rejected/deleted ads (which have `deletedAt` set). Fixed by adding `deletedAt: null` to both the pending and active queries.
+- Fixed `AD_REJECT` audit log: `before.isActive` was hardcoded `true`; corrected to use the actual `ad.isActive` value at time of rejection (pending ads are `isActive: false`).
+
+### Advertiser campaign delete
+- Backend `DELETE /api/advertiser/campaigns/:id` already existed (soft-delete, sets `deletedAt`); frontend had no UI for it.
+- Added `CampaignDeleteDialog` component (AlertDialog pattern, warns that reserved budget stays in wallet).
+- Added trash icon button to each campaign row in `CampaignList`.
+- `AdvertiserPortal` now handles `campaignToDelete` state and `deleteCampaign` handler.
+
+### PayPal sandbox credentials fixed
+- Credentials were entered as sandbox but stored with `paypal_mode = "live"` (hitting `api-m.paypal.com`).
+- Corrected `paypal_mode` in `PlatformSettings` to `"sandbox"`. Verified: token obtained successfully.
+
+### Database cleanup
+- Removed all seed/test data: `test-advertiser@prism.dev`, `test-publisher@prism.dev`, `Acme Ads Inc`, `NovaBots`, Nova Assistant bot, 214 seeded ad events, 3 seed campaigns, 3 old plain-string demo ads, seed leads.
+- Simplified `server/prisma/seed.js` — now a no-op with a comment explaining that defaults are handled at runtime. No fake users or orgs are ever created by the seed script.
+
+---
+
 ## 2026-02-28 (CPM pricing engine — budget enforcement, auto-revenue, admin rate table)
 
 ### Business model — now fully wired
