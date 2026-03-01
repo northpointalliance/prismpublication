@@ -16,6 +16,7 @@ import CampaignList from "@/components/portal/advertiser/CampaignList";
 import BillingPanel from "@/components/portal/advertiser/BillingPanel";
 import CreateCampaignWizard from "@/components/portal/advertiser/CreateCampaignWizard";
 import EditCampaignModal from "@/components/portal/advertiser/EditCampaignModal";
+import CampaignDeleteDialog from "@/components/portal/advertiser/CampaignDeleteDialog";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,9 @@ const AdvertiserPortal = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editInfo, setEditInfo] = useState<CampaignInfoDraft>(emptyInfo);
   const [editBudget, setEditBudget] = useState<CampaignBudgetDraft>(emptyBudget);
+
+  // Delete state
+  const [campaignToDelete, setCampaignToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Billing state
   const [topUpAmountUsd, setTopUpAmountUsd] = useState("250");
@@ -332,6 +336,19 @@ const AdvertiserPortal = () => {
     finally { setSaving(false); }
   };
 
+  const deleteCampaign = async () => {
+    if (!user?.email || !campaignToDelete) return;
+    const { id, title } = campaignToDelete;
+    setCampaignToDelete(null); setSaving(true); setError(""); setNotice("");
+    try {
+      const headers = await getPortalHeaders(user.email);
+      await apiRequest(`/advertiser/campaigns/${id}`, { method: "DELETE" }, headers);
+      setNotice(`Campaign "${title}" deleted.`);
+      await loadDashboard(user.email);
+    } catch (err) { setError(err instanceof Error ? err.message : "Failed to delete campaign"); }
+    finally { setSaving(false); }
+  };
+
   // ── PayPal billing ─────────────────────────────────────────────────────────
 
   const createPayPalOrder = useCallback(async () => {
@@ -416,6 +433,10 @@ const AdvertiserPortal = () => {
           onCreateAd={openWizard}
           onToggle={(id, nextLive) => void toggleCampaign(id, nextLive)}
           onEdit={openEdit}
+          onDelete={(id) => {
+            const c = data?.campaigns.find((x) => x.id === id);
+            setCampaignToDelete({ id, title: c?.title ?? "this campaign" });
+          }}
         />
         <BillingPanel
           walletLoading={walletLoading}
@@ -473,6 +494,13 @@ const AdvertiserPortal = () => {
           onSave={() => void saveEdit()}
         />
       )}
+
+      <CampaignDeleteDialog
+        campaignTitle={campaignToDelete?.title ?? null}
+        open={!!campaignToDelete}
+        onConfirm={() => void deleteCampaign()}
+        onCancel={() => setCampaignToDelete(null)}
+      />
     </PortalShell>
   );
 };

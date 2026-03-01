@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Pencil } from "lucide-react";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 
 interface CampaignSummary {
   id: string;
@@ -43,11 +43,12 @@ interface Props {
   onCreateAd: () => void;
   onToggle: (id: string, nextLive: boolean) => void;
   onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const CampaignList = ({
   loading, campaigns, campaignRecords, campaignBudgets,
-  saving, formatCurrency, onCreateAd, onToggle, onEdit,
+  saving, formatCurrency, onCreateAd, onToggle, onEdit, onDelete,
 }: Props) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between gap-3">
@@ -116,6 +117,9 @@ const CampaignList = ({
                   <ExternalLink className="h-3 w-3" />View URL
                 </a>
               )}
+              <Button size="sm" variant="ghost" disabled={saving} onClick={() => onDelete(c.id)} className="ml-auto text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
             </div>
           </div>
         );

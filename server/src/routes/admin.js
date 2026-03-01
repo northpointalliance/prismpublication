@@ -56,12 +56,12 @@ router.get("/portal/overview", requirePortalUser, requireAdminPortalUser, async 
 router.get("/portal/ads/review", requirePortalUser, requireAdminPortalUser, async (_req, res) => {
   try {
     const pending = await prisma.ad.findMany({
-      where: { isActive: false },
+      where: { isActive: false, deletedAt: null },
       orderBy: { createdAt: "desc" },
       take: 100,
     });
     const active = await prisma.ad.findMany({
-      where: { isActive: true },
+      where: { isActive: true, deletedAt: null },
       orderBy: { updatedAt: "desc" },
       take: 50,
     });
@@ -104,7 +104,7 @@ router.post("/portal/ads/:id/reject", requirePortalUser, requireAdminPortalUser,
       actorUserId: req.portalUser?.id,
       resourceId: req.params.id,
       resourceType: "ad",
-      before: { isActive: true },
+      before: { isActive: ad.isActive },
       after: { isActive: false, deletedAt: new Date().toISOString() },
       req,
     });
