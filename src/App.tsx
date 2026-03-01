@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { PortalAuthProvider } from "@/components/portal/PortalAuthProvider";
 import {
   RequirePortalLogin,
@@ -12,8 +11,6 @@ import {
   RequireWorkspaceSelection,
   RequireAdminAccess,
 } from "@/components/portal/PortalRouteGuards";
-
-const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || "test";
 
 const Index = lazy(() => import("./pages/Index"));
 const Demo = lazy(() => import("./pages/Demo"));
@@ -36,7 +33,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD" }}>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -86,7 +82,6 @@ const App = () => (
       </PortalAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
-  </PayPalScriptProvider>
 );
 
 export default App;

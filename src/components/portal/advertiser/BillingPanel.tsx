@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PayPalButtons } from "@paypal/react-paypal-js";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 interface WalletTransaction {
   id: string;
@@ -21,11 +21,13 @@ interface Props {
   createPayPalOrder: () => Promise<string>;
   onPayPalApprove: (data: { orderID: string }) => Promise<void>;
   onPayPalError: (err: unknown) => void;
+  paypalClientId?: string | null;
 }
 
 const BillingPanel = ({
   walletLoading, walletBalanceCents, topUpAmountUsd, transactions,
   formatCurrency, onTopUpAmountChange, createPayPalOrder, onPayPalApprove, onPayPalError,
+  paypalClientId,
 }: Props) => (
   <Card>
     <CardHeader>
@@ -52,12 +54,14 @@ const BillingPanel = ({
               onChange={(e) => onTopUpAmountChange(e.target.value)}
             />
           </div>
-          <PayPalButtons
-            style={{ layout: "vertical", color: "blue", shape: "pill", label: "pay" }}
-            createOrder={createPayPalOrder}
-            onApprove={onPayPalApprove}
-            onError={onPayPalError}
-          />
+          <PayPalScriptProvider options={{ clientId: paypalClientId || "test", currency: "USD" }}>
+            <PayPalButtons
+              style={{ layout: "vertical", color: "blue", shape: "pill", label: "pay" }}
+              createOrder={createPayPalOrder}
+              onApprove={onPayPalApprove}
+              onError={onPayPalError}
+            />
+          </PayPalScriptProvider>
           <p className="text-center text-[11px] text-muted-foreground">
             Secured by PayPal · No card details stored on Prism
           </p>

@@ -9,6 +9,16 @@ import { parsePayPalCaptureCents, checkWalletSpend } from "../money-utils.js";
 
 const router = express.Router();
 
+// Public — PayPal client ID is not a secret (it appears in browser JS on every PayPal-integrated site)
+router.get("/paypal/config", async (_req, res) => {
+  try {
+    const cfg = await getPayPalConfig();
+    return res.json({ clientId: cfg.enabled ? cfg.clientId : null, currency: "USD" });
+  } catch {
+    return res.json({ clientId: null, currency: "USD" });
+  }
+});
+
 router.get("/balance", requirePortalUser, async (req, res) => {
   const workspace = await requireAdvertiserWorkspace(req.portalUser.id);
   if (!workspace) return res.status(403).json({ error: "Advertiser workspace required" });

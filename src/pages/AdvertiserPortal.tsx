@@ -135,6 +135,7 @@ const AdvertiserPortal = () => {
 
   // Billing state
   const [topUpAmountUsd, setTopUpAmountUsd] = useState("250");
+  const [paypalClientId, setPaypalClientId] = useState<string | null>(null);
 
   // ── computed ───────────────────────────────────────────────────────────────
 
@@ -174,11 +175,15 @@ const AdvertiserPortal = () => {
     setWalletLoading(true);
     try {
       const headers = await getPortalHeaders(email);
-      const res = await apiRequest<{ walletBalanceCents: number; transactions: WalletTransaction[] }>(
-        "/wallet/balance", undefined, headers,
-      );
+      const [res, ppConfig] = await Promise.all([
+        apiRequest<{ walletBalanceCents: number; transactions: WalletTransaction[] }>(
+          "/wallet/balance", undefined, headers,
+        ),
+        apiRequest<{ clientId: string | null }>("/wallet/paypal/config").catch(() => ({ clientId: null })),
+      ]);
       setWalletBalanceCents(res.walletBalanceCents);
       setWalletTransactions(res.transactions);
+      if (ppConfig.clientId) setPaypalClientId(ppConfig.clientId);
     } catch {
       // non-fatal
     } finally {
@@ -422,6 +427,7 @@ const AdvertiserPortal = () => {
           createPayPalOrder={createPayPalOrder}
           onPayPalApprove={onPayPalApprove}
           onPayPalError={(err) => setError(String(err))}
+          paypalClientId={paypalClientId}
         />
       </div>
 
