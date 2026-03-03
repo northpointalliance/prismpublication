@@ -7,7 +7,7 @@ const installSnippet = `npm install @prism/sdk`;
 const usageSnippet = `import { PrismAds } from "@prism/sdk";
 
 // Keep API keys on your server; never bundle them in frontend env vars.
-const botGrid = new PrismAds({
+const prism = new PrismAds({
   apiKey: process.env.PRISM_API_KEY!,
   botId: "my-chatbot",
   adFormat: "card",
@@ -15,10 +15,10 @@ const botGrid = new PrismAds({
 });
 
 export async function handleMessage(userId: string, topic: string) {
-  if (botGrid.shouldShowAd(userId, 5)) {
-    const ad = await botGrid.displayAd({ topic, userId });
+  if (prism.shouldShowAd(userId, 5)) {
+    const ad = await prism.displayAd({ topic, userId });
     if (ad) {
-      await botGrid.trackImpression(ad.id, userId);
+      await prism.trackImpression(ad.id, userId);
     }
     return ad;
   }

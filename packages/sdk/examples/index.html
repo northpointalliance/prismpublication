@@ -233,7 +233,7 @@
     }
 
     // Initialize SDK
-    const botGrid = new MockPrismAds({
+    const prism = new MockPrismAds({
       apiKey: 'MOCK_API_KEY',
       botId: 'demo-bot',
       adFormat: 'text'
@@ -288,12 +288,12 @@
       addMessage(response, 'bot');
 
       // Check if we should show an ad
-      if (botGrid.shouldShowAd(userId, 3)) {
+      if (prism.shouldShowAd(userId, 3)) {
         await new Promise(r => setTimeout(r, 300));
-        const ad = await botGrid.displayAd({ topic: 'tech' });
+        const ad = await prism.displayAd({ topic: 'tech' });
         if (ad) {
           addMessage(ad, 'bot', true);
-          botGrid.trackImpression();
+          prism.trackImpression();
         }
       }
     }

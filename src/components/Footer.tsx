@@ -97,7 +97,7 @@ const Footer = () => {
           </div>
 
           <div className="flex flex-col gap-3 border-t border-border/70 py-5 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
-            <p>© {year} Prism. All rights reserved.</p>
+            <p>© {year} Prism Publication. All rights reserved.</p>
             <div className="flex items-center gap-5">
               <Link to="/company" className="transition-colors hover:text-foreground">About</Link>
               <Link to="/docs" className="transition-colors hover:text-foreground">Docs</Link>
