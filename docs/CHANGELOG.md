@@ -2,6 +2,17 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-03-03 — v0.1.2 (branding cleanup)
+
+### Legacy `botGrid` naming removed from public code examples
+- SDK page (`src/pages/SDK.tsx`): the code snippet visible to visitors used `const botGrid = new PrismAds(...)` — renamed to `const prism`.
+- SDK demo (`packages/sdk/examples/index.html`): same rename applied to the interactive demo.
+
+### Copyright clarified
+- Footer now reads "© 2026 Prism Publication. All rights reserved." instead of just "Prism".
+
+---
+
 ## 2026-03-01 (PayPal fix, delete flows, shared admin config, DB cleanup)
 
 ### PayPal order creation — client ID mismatch fixed
