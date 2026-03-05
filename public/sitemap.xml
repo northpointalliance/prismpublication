@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Blog post URLs are served dynamically by the backend at GET /sitemap.xml -->
+<!-- This file covers static pages only. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://prismpublication.com/</loc>
@@ -38,18 +40,6 @@
   </url>
   <url>
     <loc>https://prismpublication.com/blog</loc>
-    <lastmod>2026-02-26</lastmod>
-  </url>
-  <url>
-    <loc>https://prismpublication.com/blog/intent-signals-for-conversational-ads</loc>
-    <lastmod>2026-02-26</lastmod>
-  </url>
-  <url>
-    <loc>https://prismpublication.com/blog/publisher-ad-load-without-conversation-fatigue</loc>
-    <lastmod>2026-02-26</lastmod>
-  </url>
-  <url>
-    <loc>https://prismpublication.com/blog/creative-patterns-for-native-chatbot-ads</loc>
     <lastmod>2026-02-26</lastmod>
   </url>
 </urlset>

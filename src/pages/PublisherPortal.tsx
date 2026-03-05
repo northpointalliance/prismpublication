@@ -3,13 +3,14 @@ import PortalShell from "@/components/portal/PortalShell";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
 import { getPortalHeaders } from "@/lib/portal-api";
-import { Activity, Bot, ServerCog, Wallet } from "lucide-react";
+import { Activity, Bot, BookOpen, ServerCog, Wallet } from "lucide-react";
 import PublisherSummaryMetrics from "@/components/portal/publisher/PublisherSummaryMetrics";
 import BotPerformanceChart from "@/components/portal/publisher/BotPerformanceChart";
 import BotRegistry, { BotListItem, BotMetrics } from "@/components/portal/publisher/BotRegistry";
 import RegisterBotPanel from "@/components/portal/publisher/RegisterBotPanel";
 import PayoutsPanel from "@/components/portal/publisher/PayoutsPanel";
 import BotDeleteDialog from "@/components/portal/publisher/BotDeleteDialog";
+import SdkDocsTab from "@/components/portal/publisher/SdkDocsTab";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -44,8 +45,11 @@ const formatDateTime = (value: string | null) => {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+type Tab = "dashboard" | "sdk-docs";
+
 const PublisherPortal = () => {
   const { user } = usePortalAuth();
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -213,57 +217,84 @@ const PublisherPortal = () => {
 
   // ── render ─────────────────────────────────────────────────────────────────
 
+  const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
+    { key: "dashboard", label: "Dashboard", icon: Bot },
+    { key: "sdk-docs", label: "SDK Docs", icon: BookOpen },
+  ];
+
   return (
     <PortalShell title="Bot Developer Portal" subtitle="Insights, bot registry, and SDK key management.">
-      <PublisherSummaryMetrics cards={summaryCards} />
-      <BotPerformanceChart data={chartData} />
-
-      {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {notice && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>}
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-[1.4fr_0.6fr]">
-        <BotRegistry
-          bots={bots}
-          loading={loading}
-          metricsByBotId={metricsByBotId}
-          latestToken={latestToken}
-          saving={saving}
-          formatCurrency={formatCurrency}
-          formatDateTime={formatDateTime}
-          onCopyToken={(token, label) => void copyToken(token, label)}
-          onCreateKey={(bot) => void createKey(bot)}
-          onDeleteBot={setBotToDelete}
-        />
-        <div className="space-y-4">
-          <RegisterBotPanel
-            botName={botName}
-            botEnvironment={botEnvironment}
-            saving={saving}
-            latestToken={latestToken}
-            onNameChange={setBotName}
-            onEnvironmentChange={setBotEnvironment}
-            onCreate={() => void createBot()}
-            onCopyToken={(token, label) => void copyToken(token, label)}
-          />
-          <PayoutsPanel
-            payoutData={payoutData}
-            paypalEmailDraft={paypalEmailDraft}
-            savingEmail={savingEmail}
-            withdrawing={withdrawing}
-            formatCurrency={formatCurrency}
-            onEmailChange={setPaypalEmailDraft}
-            onSaveEmail={() => void savePaypalEmail()}
-            onWithdraw={() => void requestWithdrawal()}
-          />
-        </div>
+      <div className="mb-6 flex gap-1 rounded-xl border border-border bg-muted/40 p-1">
+        {tabs.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => { setActiveTab(key); setError(""); setNotice(""); }}
+            className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </button>
+        ))}
       </div>
 
-      <BotDeleteDialog
-        botName={botToDelete?.name ?? null}
-        open={!!botToDelete}
-        onConfirm={() => void confirmDeleteBot()}
-        onCancel={() => setBotToDelete(null)}
-      />
+      {activeTab === "dashboard" && (
+        <>
+          <PublisherSummaryMetrics cards={summaryCards} />
+          <BotPerformanceChart data={chartData} />
+
+          {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+          {notice && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>}
+
+          <div className="mt-6 grid gap-5 xl:grid-cols-[1.4fr_0.6fr]">
+            <BotRegistry
+              bots={bots}
+              loading={loading}
+              metricsByBotId={metricsByBotId}
+              latestToken={latestToken}
+              saving={saving}
+              formatCurrency={formatCurrency}
+              formatDateTime={formatDateTime}
+              onCopyToken={(token, label) => void copyToken(token, label)}
+              onCreateKey={(bot) => void createKey(bot)}
+              onDeleteBot={setBotToDelete}
+            />
+            <div className="space-y-4">
+              <RegisterBotPanel
+                botName={botName}
+                botEnvironment={botEnvironment}
+                saving={saving}
+                latestToken={latestToken}
+                onNameChange={setBotName}
+                onEnvironmentChange={setBotEnvironment}
+                onCreate={() => void createBot()}
+                onCopyToken={(token, label) => void copyToken(token, label)}
+              />
+              <PayoutsPanel
+                payoutData={payoutData}
+                paypalEmailDraft={paypalEmailDraft}
+                savingEmail={savingEmail}
+                withdrawing={withdrawing}
+                formatCurrency={formatCurrency}
+                onEmailChange={setPaypalEmailDraft}
+                onSaveEmail={() => void savePaypalEmail()}
+                onWithdraw={() => void requestWithdrawal()}
+              />
+            </div>
+          </div>
+
+          <BotDeleteDialog
+            botName={botToDelete?.name ?? null}
+            open={!!botToDelete}
+            onConfirm={() => void confirmDeleteBot()}
+            onCancel={() => setBotToDelete(null)}
+          />
+        </>
+      )}
+
+      {activeTab === "sdk-docs" && <SdkDocsTab />}
     </PortalShell>
   );
 };

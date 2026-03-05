@@ -13,6 +13,7 @@ const companyLinks = [
   { label: "Product", to: "/product" },
   { label: "Use Cases", to: "/use-cases" },
   { label: "Documentation", to: "/docs" },
+  { label: "Ad Policy", to: "/ad-policy" },
   { label: "SDK", to: "/demo" },
   { label: "Blog", to: "/blog" },
 ];
@@ -103,6 +104,7 @@ const Footer = () => {
               <Link to="/docs" className="transition-colors hover:text-foreground">Docs</Link>
               <Link to="/blog" className="transition-colors hover:text-foreground">Blog</Link>
               <Link to="/demo" className="transition-colors hover:text-foreground">Demo</Link>
+              <Link to="/ad-policy" className="transition-colors hover:text-foreground">Ad Policy</Link>
             </div>
           </div>
         </div>

@@ -1,5 +1,7 @@
 import "dotenv/config";
 import crypto from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express from "express";
 import { port, corsOrigin, isProduction, allowInsecureDevAuth, sdkApiKey, adminApiKey } from "./config.js";
@@ -20,6 +22,9 @@ import sdkRouter from "./routes/sdk.js";
 import demoRouter from "./routes/demo.js";
 import leadsRouter from "./routes/leads.js";
 import webhooksRouter from "./routes/webhooks.js";
+import blogRouter from "./routes/blog.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ─── Startup validation ───────────────────────────────────────────────────────
 
@@ -92,6 +97,9 @@ const leadRateLimiter = createIpRateLimiter({ prefix: "lead", windowMs: 10 * 60 
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
+// Serve uploaded blog images as static files
+app.use("/uploads", express.static(path.join(__dirname, "../../public/uploads")));
+
 app.use(healthRouter);
 app.use("/api/auth", authRateLimiter, authRouter);
 app.use("/api/me", authRateLimiter, meRouter);
@@ -101,9 +109,37 @@ app.use("/api/publisher", publisherRouter);
 app.use("/api/payouts", payoutsRouter);
 app.use("/api/admin", adminRateLimiter, adminRouter);
 app.use("/api/leads", leadRateLimiter, leadsRouter);
+app.use("/api/blog", blogRouter);
 app.use("/api", sdkRouter); // /api/ads and /api/track/:eventType
 app.use("/api/demo", demoRateLimiter, demoRouter);
 app.use("/api/webhooks", webhooksRouter);
+
+// Dynamic sitemap — includes all published blog posts
+app.get("/sitemap.xml", async (_req, res) => {
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { published: true },
+      select: { slug: true, publishedAt: true },
+      orderBy: { publishedAt: "desc" },
+    });
+    const domain = process.env.SITE_URL ?? "https://prism.so";
+    const staticUrls = ["/", "/blog", "/about", "/pricing", "/advertiser", "/publisher", "/ad-policy"];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${staticUrls.map((u) => `  <url><loc>${domain}${u}</loc></url>`).join("\n")}
+${posts
+  .map(
+    (p) =>
+      `  <url><loc>${domain}/blog/${p.slug}</loc>${p.publishedAt ? `<lastmod>${p.publishedAt.toISOString().split("T")[0]}</lastmod>` : ""}</url>`,
+  )
+  .join("\n")}
+</urlset>`;
+    res.header("Content-Type", "application/xml").send(xml);
+  } catch (err) {
+    logger.error("Sitemap generation failed", err);
+    res.status(500).send("Failed to generate sitemap");
+  }
+});
 
 // ─── Server ───────────────────────────────────────────────────────────────────
 

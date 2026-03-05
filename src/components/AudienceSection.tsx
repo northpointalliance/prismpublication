@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Bot, Megaphone, Shield, TrendingUp, Users, Layers } from "lucide-react";
+import { ArrowRight, Bot, Megaphone, Shield, Sparkles, TrendingUp, Users, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const publisherFeatures = [
@@ -14,6 +14,82 @@ const advertiserFeatures = [
   { icon: Layers, text: "Intent-level targeting no other ad network can offer" },
 ];
 
+// ── Mini dashboard preview ──────────────────────────────────────────────────
+
+const MiniDashboard = () => (
+  <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 mb-8">
+    <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
+      <div className="h-2 w-2 rounded-full bg-red-400/70" />
+      <div className="h-2 w-2 rounded-full bg-yellow-400/70" />
+      <div className="h-2 w-2 rounded-full bg-green-400/70" />
+      <span className="ml-2 text-[9px] text-white/30 font-mono">Publisher Dashboard</span>
+    </div>
+    <div className="p-3 space-y-2.5">
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "Revenue", value: "$48.20", change: "+18%" },
+          { label: "Fill Rate", value: "94.2%", change: "+3.1%" },
+          { label: "Active Bots", value: "3", change: "" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-md bg-white/5 p-2">
+            <p className="text-[8px] text-white/40">{s.label}</p>
+            <p className="text-sm font-bold text-white">{s.value}</p>
+            {s.change && <p className="text-[8px] text-emerald-400">{s.change}</p>}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-end gap-1 h-10">
+        {[30, 42, 35, 55, 48, 65, 58, 72, 68, 85].map((h, i) => (
+          <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-primary/60 to-primary/20" style={{ height: `${h}%` }} />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// ── Mini campaign preview ───────────────────────────────────────────────────
+
+const MiniCampaign = () => (
+  <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 mb-8">
+    <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
+      <div className="h-2 w-2 rounded-full bg-red-400/70" />
+      <div className="h-2 w-2 rounded-full bg-yellow-400/70" />
+      <div className="h-2 w-2 rounded-full bg-green-400/70" />
+      <span className="ml-2 text-[9px] text-white/30 font-mono">Advertiser Portal</span>
+    </div>
+    <div className="p-3 space-y-2.5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[10px] text-white/90 font-medium">Notion AI — Productivity</p>
+          <p className="text-[8px] text-white/40">Card format</p>
+        </div>
+        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] font-medium text-emerald-400">Live</span>
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {["productivity", "ai", "writing"].map((tag) => (
+          <span key={tag} className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[8px] text-primary">{tag}</span>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-md bg-white/5 p-1.5 text-center">
+          <p className="text-sm font-bold text-white">4.2k</p>
+          <p className="text-[7px] text-white/40">Impressions</p>
+        </div>
+        <div className="rounded-md bg-white/5 p-1.5 text-center">
+          <p className="text-sm font-bold text-white">3.8%</p>
+          <p className="text-[7px] text-white/40">CTR</p>
+        </div>
+        <div className="rounded-md bg-white/5 p-1.5 text-center">
+          <p className="text-sm font-bold text-emerald-400">$84</p>
+          <p className="text-[7px] text-white/40">Spent</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Main ────────────────────────────────────────────────────────────────────
+
 const AudienceSection = () => {
   return (
     <section className="relative py-32" aria-labelledby="audience-heading">
@@ -27,9 +103,10 @@ const AudienceSection = () => {
               <h3 id="pub-heading" className="text-3xl md:text-4xl font-bold mt-4 mb-4 tracking-tight">
                 Monetize every <span className="text-gradient-primary">conversation</span>
               </h3>
-              <p className="text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-muted-foreground mb-6 leading-relaxed">
                 Connect your chatbot, set pacing rules, and monetize high-intent sessions while keeping conversation quality intact.
               </p>
+              <MiniDashboard />
               <ul className="space-y-4 mb-10" aria-label="Publisher benefits">
                 {publisherFeatures.map((f) => (
                   <li key={f.text} className="flex items-center gap-3 text-sm text-secondary-foreground">
@@ -55,9 +132,10 @@ const AudienceSection = () => {
               <h3 id="adv-heading" className="text-3xl md:text-4xl font-bold mt-4 mb-4 tracking-tight">
                 Ads that feel like <span className="text-gradient-primary">answers</span>
               </h3>
-              <p className="text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-muted-foreground mb-6 leading-relaxed">
                 Reach users while they are actively asking relevant questions instead of passively scrolling through generic inventory.
               </p>
+              <MiniCampaign />
               <ul className="space-y-4 mb-10" aria-label="Advertiser benefits">
                 {advertiserFeatures.map((f) => (
                   <li key={f.text} className="flex items-center gap-3 text-sm text-secondary-foreground">

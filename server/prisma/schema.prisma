@@ -89,6 +89,10 @@ enum AuditAction {
   PAYPAL_WEBHOOK_CAPTURE_REVERSED
   PAYPAL_WEBHOOK_PAYOUT_SETTLED
   RATE_TABLE_UPDATE
+  BLOG_POST_CREATE
+  BLOG_POST_UPDATE
+  BLOG_POST_DELETE
+  BLOG_POST_PUBLISH
 }
 
 model Lead {
@@ -278,6 +282,24 @@ model AuditLog {
   @@index([organizationId, createdAt])
   @@index([resourceId])
   @@map("audit_logs")
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  body        String
+  imageUrl    String?
+  category    String?
+  readingTime Int?
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([published, publishedAt])
+  @@map("blog_posts")
 }
 
 model BotSdkKey {

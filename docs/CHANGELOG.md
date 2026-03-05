@@ -2,6 +2,40 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-03-05 — v0.2.0 (blog system, ad policy, page redesigns, portal docs)
+
+### Blog system
+- Added `BlogPost` Prisma model with title, slug, excerpt, body (Markdown), imageUrl, category, readingTime, published/publishedAt timestamps.
+- Public API: `GET /api/blog` (list published) and `GET /api/blog/:slug` (single post) — no auth required.
+- Admin CRUD: list all, create, update, delete, publish toggle, image upload via multer to `public/uploads/blog/`.
+- Zod validation (`blogPostSchema`) and audit logging (BLOG_POST_CREATE, UPDATE, DELETE, PUBLISH).
+- Blog Manager tab added to Admin Portal with full Markdown editor, image upload, category/reading-time fields.
+- Public `/blog` listing page and `/blog/:slug` article page with Markdown rendering.
+
+### Ad Policy page
+- New `/ad-policy` route with 4 sections: Prohibited Categories (11 rows), Creative Requirements, Enforcement Process, Reporting.
+- Added to footer links and dynamic sitemap.
+
+### Page redesigns with mock graphics
+- **Publishers**: 7 sections — hero with `DashboardMockup` (stats, revenue chart, bot list), stats bar, 4-step integration flow, SDK code preview, feature cards, ad format previews (text/card/banner in conversation context), CTA.
+- **Advertisers**: 7 sections — hero with `CampaignMockup` (form fields, topic tags, performance preview), advantage stats, campaign flow, comparison table (Prism vs Display), feature cards, CPM pricing cards, CTA.
+- **Company**: Hero with `PlatformFlowMockup` (Advertiser → Prism → Publisher with revenue flow bar), stats bar, mission pillars, sticky values sidebar, "How ads look in conversation" section with `ConversationExample` mockup and engagement stats, marketplace split cards, approach timeline, CTA.
+- **Homepage hero**: Split layout — copy left, `ConversationMockup` right showing a user question → bot reply → native card ad → follow-up.
+- **Homepage audience cards**: Added `MiniDashboard` inside publisher card and `MiniCampaign` inside advertiser card.
+
+### Public docs → promo-oriented
+- Rewrote `/docs` to remove all code snippets and technical details.
+- Now shows: capabilities grid (SDK, REST API, formats, tracking, HMAC, bot-scoped keys), 4-step integration flow with code hints, ad format preview cards, publisher/advertiser split pointing to in-portal docs, CTA.
+
+### In-portal documentation tabs
+- **Publisher Portal**: Added tab system (Dashboard + SDK Docs). `SdkDocsTab` with sidebar nav and 7 sections: Install, Quick Start, React Hooks, REST API, Event Tracking, Ad Formats, Authentication.
+- **Advertiser Portal**: Added tab system (Dashboard + Campaign Guide). `CampaignGuideTab` with sidebar nav and 6 sections: Campaign Setup, Ad Formats & Pricing, Creative Guidelines, Topic Targeting, Billing & Budget, FAQ.
+
+### Dynamic sitemap
+- `GET /sitemap.xml` now generates from static URLs + all published blog post slugs.
+
+---
+
 ## 2026-03-03 — v0.1.2 (branding cleanup)
 
 ### Legacy `botGrid` naming removed from public code examples

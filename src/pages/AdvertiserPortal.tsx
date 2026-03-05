@@ -4,6 +4,7 @@ import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
 import { getPortalHeaders } from "@/lib/portal-api";
 import {
+  BookOpen,
   CreditCard,
   MousePointerClick,
   TrendingUp,
@@ -17,6 +18,7 @@ import BillingPanel from "@/components/portal/advertiser/BillingPanel";
 import CreateCampaignWizard from "@/components/portal/advertiser/CreateCampaignWizard";
 import EditCampaignModal from "@/components/portal/advertiser/EditCampaignModal";
 import CampaignDeleteDialog from "@/components/portal/advertiser/CampaignDeleteDialog";
+import CampaignGuideTab from "@/components/portal/advertiser/CampaignGuideTab";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -82,6 +84,7 @@ interface WalletTransaction {
   createdAt: string;
 }
 
+type PortalTab = "dashboard" | "campaign-guide";
 type WizardStep = 1 | 2 | 3;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -108,6 +111,7 @@ const emptyBudget: CampaignBudgetDraft = { dailyBudgetUsd: "50", lifetimeBudgetU
 
 const AdvertiserPortal = () => {
   const { user } = usePortalAuth();
+  const [activeTab, setActiveTab] = useState<PortalTab>("dashboard");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -414,93 +418,120 @@ const AdvertiserPortal = () => {
 
   // ── render ─────────────────────────────────────────────────────────────────
 
+  const portalTabs: { key: PortalTab; label: string; icon: React.ElementType }[] = [
+    { key: "dashboard", label: "Dashboard", icon: Zap },
+    { key: "campaign-guide", label: "Campaign Guide", icon: BookOpen },
+  ];
+
   return (
     <PortalShell title="Advertiser Portal" subtitle="Insights, campaigns, and billing in one place.">
-      <AdvertiserSummaryMetrics cards={summaryCards} />
-      <CampaignPerformanceChart data={chartData} />
-
-      {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {notice && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>}
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
-        <CampaignList
-          loading={loading}
-          campaigns={data?.campaigns || []}
-          campaignRecords={campaignRecords}
-          campaignBudgets={campaignBudgets}
-          saving={saving}
-          formatCurrency={formatCurrency}
-          onCreateAd={openWizard}
-          onToggle={(id, nextLive) => void toggleCampaign(id, nextLive)}
-          onEdit={openEdit}
-          onDelete={(id) => {
-            const c = data?.campaigns.find((x) => x.id === id);
-            setCampaignToDelete({ id, title: c?.title ?? "this campaign" });
-          }}
-        />
-        <BillingPanel
-          walletLoading={walletLoading}
-          walletBalanceCents={walletBalanceCents}
-          topUpAmountUsd={topUpAmountUsd}
-          transactions={walletTransactions}
-          formatCurrency={formatCurrency}
-          onTopUpAmountChange={setTopUpAmountUsd}
-          createPayPalOrder={createPayPalOrder}
-          onPayPalApprove={onPayPalApprove}
-          onPayPalError={(err) => setError(String(err))}
-          paypalClientId={paypalClientId}
-        />
+      <div className="mb-6 flex gap-1 rounded-xl border border-border bg-muted/40 p-1">
+        {portalTabs.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => { setActiveTab(key); setError(""); setNotice(""); }}
+            className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </button>
+        ))}
       </div>
 
-      {wizardOpen && (
-        <CreateCampaignWizard
-          wizardStep={wizardStep}
-          infoDraft={infoDraft}
-          wizardDailyUsd={wizardDailyUsd}
-          wizardDurationDays={wizardDurationDays}
-          wizardDailyBudgetCents={wizardDailyBudgetCents}
-          wizardDays={wizardDays}
-          wizardTotalBudgetCents={wizardTotalBudgetCents}
-          walletBalanceCents={walletBalanceCents}
-          dragActive={dragActive}
-          uploadedPreviewUrl={uploadedPreviewUrl}
-          saving={saving}
-          error={error}
-          fileInputRef={fileInputRef}
-          formatCurrency={formatCurrency}
-          onInfoChange={(p) => setInfoDraft((prev) => ({ ...prev, ...p }))}
-          onDailyUsdChange={setWizardDailyUsd}
-          onDurationDaysChange={setWizardDurationDays}
-          onClose={closeWizard}
-          onBack={() => moveStep("back")}
-          onNext={() => moveStep("next")}
-          onSubmit={() => void submitCampaign()}
-          onFileChange={onFileChange}
-          onDrop={onDrop}
-          onDragOver={() => setDragActive(true)}
-          onDragLeave={() => setDragActive(false)}
-        />
+      {activeTab === "dashboard" && (
+        <>
+          <AdvertiserSummaryMetrics cards={summaryCards} />
+          <CampaignPerformanceChart data={chartData} />
+
+          {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+          {notice && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>}
+
+          <div className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+            <CampaignList
+              loading={loading}
+              campaigns={data?.campaigns || []}
+              campaignRecords={campaignRecords}
+              campaignBudgets={campaignBudgets}
+              saving={saving}
+              formatCurrency={formatCurrency}
+              onCreateAd={openWizard}
+              onToggle={(id, nextLive) => void toggleCampaign(id, nextLive)}
+              onEdit={openEdit}
+              onDelete={(id) => {
+                const c = data?.campaigns.find((x) => x.id === id);
+                setCampaignToDelete({ id, title: c?.title ?? "this campaign" });
+              }}
+            />
+            <BillingPanel
+              walletLoading={walletLoading}
+              walletBalanceCents={walletBalanceCents}
+              topUpAmountUsd={topUpAmountUsd}
+              transactions={walletTransactions}
+              formatCurrency={formatCurrency}
+              onTopUpAmountChange={setTopUpAmountUsd}
+              createPayPalOrder={createPayPalOrder}
+              onPayPalApprove={onPayPalApprove}
+              onPayPalError={(err) => setError(String(err))}
+              paypalClientId={paypalClientId}
+            />
+          </div>
+
+          {wizardOpen && (
+            <CreateCampaignWizard
+              wizardStep={wizardStep}
+              infoDraft={infoDraft}
+              wizardDailyUsd={wizardDailyUsd}
+              wizardDurationDays={wizardDurationDays}
+              wizardDailyBudgetCents={wizardDailyBudgetCents}
+              wizardDays={wizardDays}
+              wizardTotalBudgetCents={wizardTotalBudgetCents}
+              walletBalanceCents={walletBalanceCents}
+              dragActive={dragActive}
+              uploadedPreviewUrl={uploadedPreviewUrl}
+              saving={saving}
+              error={error}
+              fileInputRef={fileInputRef}
+              formatCurrency={formatCurrency}
+              onInfoChange={(p) => setInfoDraft((prev) => ({ ...prev, ...p }))}
+              onDailyUsdChange={setWizardDailyUsd}
+              onDurationDaysChange={setWizardDurationDays}
+              onClose={closeWizard}
+              onBack={() => moveStep("back")}
+              onNext={() => moveStep("next")}
+              onSubmit={() => void submitCampaign()}
+              onFileChange={onFileChange}
+              onDrop={onDrop}
+              onDragOver={() => setDragActive(true)}
+              onDragLeave={() => setDragActive(false)}
+            />
+          )}
+
+          {editingId && (
+            <EditCampaignModal
+              info={editInfo}
+              budget={editBudget}
+              saving={saving}
+              error={error}
+              onInfoChange={(p) => setEditInfo((prev) => ({ ...prev, ...p }))}
+              onBudgetChange={(p) => setEditBudget((prev) => ({ ...prev, ...p }))}
+              onClose={closeEdit}
+              onSave={() => void saveEdit()}
+            />
+          )}
+
+          <CampaignDeleteDialog
+            campaignTitle={campaignToDelete?.title ?? null}
+            open={!!campaignToDelete}
+            onConfirm={() => void deleteCampaign()}
+            onCancel={() => setCampaignToDelete(null)}
+          />
+        </>
       )}
 
-      {editingId && (
-        <EditCampaignModal
-          info={editInfo}
-          budget={editBudget}
-          saving={saving}
-          error={error}
-          onInfoChange={(p) => setEditInfo((prev) => ({ ...prev, ...p }))}
-          onBudgetChange={(p) => setEditBudget((prev) => ({ ...prev, ...p }))}
-          onClose={closeEdit}
-          onSave={() => void saveEdit()}
-        />
-      )}
-
-      <CampaignDeleteDialog
-        campaignTitle={campaignToDelete?.title ?? null}
-        open={!!campaignToDelete}
-        onConfirm={() => void deleteCampaign()}
-        onCancel={() => setCampaignToDelete(null)}
-      />
+      {activeTab === "campaign-guide" && <CampaignGuideTab />}
     </PortalShell>
   );
 };

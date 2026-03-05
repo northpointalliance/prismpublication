@@ -210,14 +210,49 @@ logs() {
   tail -n 40 "$CLOUDFLARED_LOG" 2>/dev/null || true
 }
 
+bump_version() {
+  local part="${1:-patch}"
+  case "$part" in patch|minor|major) ;; *)
+    echo "Unknown bump type '$part'. Use: patch, minor, or major."
+    exit 1
+    ;;
+  esac
+
+  echo "Bumping $part version..."
+  cd "$PROJECT_DIR"
+
+  local new_version
+  new_version="$(npm version "$part" --no-git-tag-version 2>/dev/null | tr -d 'v')"
+
+  if [[ -z "$new_version" ]]; then
+    echo "Failed to bump version in package.json."
+    exit 1
+  fi
+
+  echo "Version: $new_version"
+
+  local env_file="$PROJECT_DIR/.env"
+  if grep -q "^VITE_APP_BUILD_ID=" "$env_file" 2>/dev/null; then
+    sed -i "s/^VITE_APP_BUILD_ID=.*/VITE_APP_BUILD_ID=\"$new_version\"/" "$env_file"
+  else
+    printf '\nVITE_APP_BUILD_ID="%s"\n' "$new_version" >> "$env_file"
+  fi
+
+  echo "VITE_APP_BUILD_ID set to $new_version in .env"
+  echo "Restarting stack..."
+  "$0" stop
+  "$0" start
+}
+
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/prism_stack.sh start     # Start API + Vite + Cloudflare tunnel in background
-  ./scripts/prism_stack.sh stop      # Stop tunnel + Vite + API
-  ./scripts/prism_stack.sh restart   # Restart all
-  ./scripts/prism_stack.sh status    # Show process status
-  ./scripts/prism_stack.sh logs      # Show recent logs
+  ./scripts/prism_stack.sh start              # Start API + Vite + Cloudflare tunnel in background
+  ./scripts/prism_stack.sh stop               # Stop tunnel + Vite + API
+  ./scripts/prism_stack.sh restart            # Restart all
+  ./scripts/prism_stack.sh bump [patch|minor|major]  # Bump version, update .env, restart (default: patch)
+  ./scripts/prism_stack.sh status             # Show process status
+  ./scripts/prism_stack.sh logs               # Show recent logs
 EOF
 }
 
@@ -237,6 +272,9 @@ case "$cmd" in
   restart)
     "$0" stop
     "$0" start
+    ;;
+  bump)
+    bump_version "${2:-patch}"
     ;;
   status)
     status

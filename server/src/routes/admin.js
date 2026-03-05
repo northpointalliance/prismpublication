@@ -1,5 +1,9 @@
 import express from "express";
 import { z } from "zod";
+import path from "path";
+import { fileURLToPath } from "url";
+import multer from "multer";
+import fs from "fs";
 import { prisma } from "../db.js";
 import { adminCreateAdSchema, adminUpdateAdSchema, leadSchema } from "../schemas.js";
 import { requirePortalUser, requireAdminPortalUser, requireAdminKey } from "../portal.js";
@@ -24,6 +28,46 @@ import {
   DEFAULT_CPM_CARD,
   DEFAULT_CPM_BANNER,
 } from "../config.js";
+
+// ─── Blog image upload setup ──────────────────────────────────────────────────
+
+const __adminDirname = path.dirname(fileURLToPath(import.meta.url));
+const UPLOADS_DIR = path.join(__adminDirname, "../../../public/uploads/blog");
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+const blogImageStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (_req, file, cb) => {
+    const safe = file.originalname.replace(/[^a-z0-9._-]/gi, "_").toLowerCase();
+    cb(null, `${Date.now()}-${safe}`);
+  },
+});
+
+const uploadBlogImage = multer({
+  storage: blogImageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPEG, PNG, WebP and GIF images are allowed"));
+    }
+  },
+});
+
+// ─── Blog schema + helpers ────────────────────────────────────────────────────
+
+const blogPostSchema = z.object({
+  title:       z.string().min(1).max(200),
+  slug:        z.string().min(1).max(200).optional(),
+  excerpt:     z.string().max(500).optional(),
+  body:        z.string().min(1),
+  category:    z.string().max(100).optional(),
+  readingTime: z.number().int().min(1).max(60).optional(),
+});
+
+const toSlug = (title) =>
+  title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 const router = express.Router();
 
@@ -411,6 +455,162 @@ router.put("/payout-requests/:id/status", requirePortalUser, requireAdminPortalU
     return res.status(500).json({ error: "Failed to update payout status" });
   }
 });
+
+// ─── Blog admin CRUD routes ───────────────────────────────────────────────────
+
+// GET /api/admin/portal/blog — list all posts including drafts
+router.get("/portal/blog", requirePortalUser, requireAdminPortalUser, async (_req, res) => {
+  try {
+    const posts = await prisma.blogPost.findMany({ orderBy: { createdAt: "desc" } });
+    return res.json(posts);
+  } catch (err) {
+    logger.error("Blog list (admin) failed", err);
+    return res.status(500).json({ error: "Failed to fetch blog posts" });
+  }
+});
+
+// POST /api/admin/portal/blog — create a new post
+router.post("/portal/blog", requirePortalUser, requireAdminPortalUser, async (req, res) => {
+  const parsed = blogPostSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid post data", details: parsed.error.flatten() });
+
+  try {
+    const slug = parsed.data.slug || toSlug(parsed.data.title);
+    const post = await prisma.blogPost.create({
+      data: {
+        title:       parsed.data.title,
+        slug,
+        excerpt:     parsed.data.excerpt,
+        body:        parsed.data.body,
+        category:    parsed.data.category,
+        readingTime: parsed.data.readingTime,
+      },
+    });
+    await logAudit({
+      action: "BLOG_POST_CREATE",
+      actorUserId: req.portalUser?.id,
+      resourceId: post.id,
+      resourceType: "blog_post",
+      after: { title: post.title, slug: post.slug },
+      req,
+    });
+    return res.status(201).json(post);
+  } catch (err) {
+    if (err.code === "P2002") return res.status(409).json({ error: "A post with that slug already exists" });
+    logger.error("Blog create failed", err);
+    return res.status(500).json({ error: "Failed to create blog post" });
+  }
+});
+
+// PUT /api/admin/portal/blog/:id — update an existing post
+router.put("/portal/blog/:id", requirePortalUser, requireAdminPortalUser, async (req, res) => {
+  const parsed = blogPostSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid post data", details: parsed.error.flatten() });
+
+  try {
+    const existing = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: "Post not found" });
+
+    const updateData = {};
+    if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
+    if (parsed.data.slug !== undefined) updateData.slug = parsed.data.slug;
+    if (parsed.data.excerpt !== undefined) updateData.excerpt = parsed.data.excerpt;
+    if (parsed.data.body !== undefined) updateData.body = parsed.data.body;
+    if (parsed.data.category !== undefined) updateData.category = parsed.data.category;
+    if (parsed.data.readingTime !== undefined) updateData.readingTime = parsed.data.readingTime;
+
+    const post = await prisma.blogPost.update({ where: { id: req.params.id }, data: updateData });
+    await logAudit({
+      action: "BLOG_POST_UPDATE",
+      actorUserId: req.portalUser?.id,
+      resourceId: post.id,
+      resourceType: "blog_post",
+      before: { title: existing.title, slug: existing.slug },
+      after: { title: post.title, slug: post.slug },
+      req,
+    });
+    return res.json(post);
+  } catch (err) {
+    if (err.code === "P2002") return res.status(409).json({ error: "A post with that slug already exists" });
+    logger.error("Blog update failed", err);
+    return res.status(500).json({ error: "Failed to update blog post" });
+  }
+});
+
+// DELETE /api/admin/portal/blog/:id — hard delete
+router.delete("/portal/blog/:id", requirePortalUser, requireAdminPortalUser, async (req, res) => {
+  try {
+    const existing = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: "Post not found" });
+
+    await prisma.blogPost.delete({ where: { id: req.params.id } });
+    await logAudit({
+      action: "BLOG_POST_DELETE",
+      actorUserId: req.portalUser?.id,
+      resourceId: req.params.id,
+      resourceType: "blog_post",
+      before: { title: existing.title, slug: existing.slug, published: existing.published },
+      req,
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error("Blog delete failed", err);
+    return res.status(500).json({ error: "Failed to delete blog post" });
+  }
+});
+
+// POST /api/admin/portal/blog/:id/publish — toggle published state
+router.post("/portal/blog/:id/publish", requirePortalUser, requireAdminPortalUser, async (req, res) => {
+  try {
+    const existing = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: "Post not found" });
+
+    const nextPublished = !existing.published;
+    const post = await prisma.blogPost.update({
+      where: { id: req.params.id },
+      data: {
+        published: nextPublished,
+        publishedAt: nextPublished && !existing.publishedAt ? new Date() : existing.publishedAt,
+      },
+    });
+    await logAudit({
+      action: "BLOG_POST_PUBLISH",
+      actorUserId: req.portalUser?.id,
+      resourceId: post.id,
+      resourceType: "blog_post",
+      before: { published: existing.published },
+      after: { published: post.published, publishedAt: post.publishedAt },
+      req,
+    });
+    return res.json(post);
+  } catch (err) {
+    logger.error("Blog publish toggle failed", err);
+    return res.status(500).json({ error: "Failed to toggle publish state" });
+  }
+});
+
+// POST /api/admin/portal/blog/:id/image — upload a cover image (multipart/form-data, field: image)
+router.post(
+  "/portal/blog/:id/image",
+  requirePortalUser,
+  requireAdminPortalUser,
+  uploadBlogImage.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No image file provided" });
+
+      const existing = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+      if (!existing) return res.status(404).json({ error: "Post not found" });
+
+      const imageUrl = `/uploads/blog/${req.file.filename}`;
+      await prisma.blogPost.update({ where: { id: req.params.id }, data: { imageUrl } });
+      return res.json({ imageUrl });
+    } catch (err) {
+      logger.error("Blog image upload failed", err);
+      return res.status(500).json({ error: "Failed to upload image" });
+    }
+  },
+);
 
 // ─── Legacy admin key routes (for SDK/CLI access) ─────────────────────────────
 

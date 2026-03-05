@@ -22,6 +22,7 @@ const Company = lazy(() => import("./pages/Company"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogArticle = lazy(() => import("./pages/BlogArticle"));
 const Docs = lazy(() => import("./pages/Docs"));
+const AdPolicy = lazy(() => import("./pages/AdPolicy"));
 const Contact = lazy(() => import("./pages/Contact"));
 const AppLogin = lazy(() => import("./pages/AppLogin"));
 const ChooseWorkspace = lazy(() => import("./pages/ChooseWorkspace"));
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/company" element={<Company />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/docs" element={<Docs />} />
+              <Route path="/ad-policy" element={<AdPolicy />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/demo" element={<Demo />} />

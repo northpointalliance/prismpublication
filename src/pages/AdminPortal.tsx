@@ -9,6 +9,7 @@ import FinancePanel from "@/components/portal/admin/FinancePanel";
 import PayPalConfigForm from "@/components/portal/admin/PayPalConfigForm";
 import PlatformFeeForm from "@/components/portal/admin/PlatformFeeForm";
 import RateTableForm from "@/components/portal/admin/RateTableForm";
+import BlogManagerTab from "@/components/portal/admin/BlogManagerTab";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,7 @@ const formatDate = (value: string) => {
   return Number.isNaN(d.getTime()) ? "--" : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-type Tab = "review" | "finance" | "settings";
+type Tab = "review" | "finance" | "settings" | "blog";
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -288,6 +289,7 @@ const AdminPortal = () => {
     { key: "review", label: "Review Queue", badge: pendingAds.length || undefined },
     { key: "finance", label: "Finance", badge: pendingPayouts.length || undefined },
     { key: "settings", label: "Settings" },
+    { key: "blog", label: "Blog" },
   ];
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -379,6 +381,7 @@ const AdminPortal = () => {
           />
         </div>
       )}
+      {activeTab === "blog" && <BlogManagerTab />}
     </PortalShell>
   );
 };

@@ -21,6 +21,14 @@ export default defineConfig(({ mode }) => ({
         target: "http://127.0.0.1:8787",
         changeOrigin: true,
       },
+      "/uploads": {
+        target: "http://127.0.0.1:8787",
+        changeOrigin: true,
+      },
+      "/sitemap.xml": {
+        target: "http://127.0.0.1:8787",
+        changeOrigin: true,
+      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
