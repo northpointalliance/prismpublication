@@ -2,6 +2,42 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-03-06 — v0.3.0 (TypeScript backend, reliability & observability)
+
+### Backend TypeScript conversion
+- Converted all 28 backend source files from JavaScript to TypeScript (strict mode).
+- Added `tsconfig.json`, installed `tsx` for dev/runtime, `@types/node`, `@types/express`, `@types/cors`, `@types/multer`.
+- Updated `package.json` scripts: `dev` and `start` use `tsx`, added `build` (tsc) and `typecheck` scripts.
+- Zero type errors on `tsc --noEmit`.
+
+### Error tracking (Sentry)
+- Added `@sentry/node` integration with `initSentry()` in `sentry.ts`.
+- Express error handler wired after all routes via `Sentry.setupExpressErrorHandler(app)`.
+- Logger `error` level automatically forwards to Sentry via `captureException`.
+- Opt-in via `SENTRY_DSN` env var — no-op when unset.
+
+### Background job processing (BullMQ)
+- Added `bullmq` + `ioredis` with graceful fallback when Redis is unavailable.
+- `queue.ts` exports `enqueuePayoutProcess` and `enqueueWebhookProcess`.
+- Webhook event processing and admin payout processing now go through the queue.
+- Without `REDIS_URL`, jobs execute inline (identical to previous behavior).
+- Workers start on server boot and shut down gracefully on SIGTERM/SIGINT.
+
+### Backend integration tests (95 tests)
+- `test/money-utils.test.ts` — 40 tests covering financial logic.
+- `test/helpers.test.ts` — 25 tests covering crypto and ad helpers.
+- `test/security-utils.test.ts` — 30 tests covering auth utilities.
+- All pure-function tests using `node:test` — no database required.
+
+### CI pipeline (GitHub Actions)
+- `.github/workflows/ci.yml` with two jobs: frontend (typecheck + build) and backend (typecheck + test).
+- Triggers on push/PR to main branch.
+
+### Frontend improvements
+- Extracted Company, Publishers, Advertisers page sub-components into dedicated directories.
+- Removed unused `darkMode: ["class"]` from Tailwind config.
+- Fixed Company page hero heading/paragraph misalignment on tablet screens.
+
 ## 2026-03-05 — v0.2.0 (blog system, ad policy, page redesigns, portal docs)
 
 ### Blog system

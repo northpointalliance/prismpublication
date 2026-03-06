@@ -61,6 +61,8 @@ PAYPAL_CLIENT_ID="your-paypal-client-id"
 PAYPAL_CLIENT_SECRET="your-paypal-client-secret"
 PAYPAL_MODE="sandbox"
 PAYPAL_WEBHOOK_ID="your-webhook-id"
+SENTRY_DSN=""
+REDIS_URL=""
 ```
 
 | Setting | What it does | Where to get it |
@@ -74,6 +76,8 @@ PAYPAL_WEBHOOK_ID="your-webhook-id"
 | `PAYPAL_CLIENT_SECRET` | Private PayPal key (never share this) | PayPal Developer Dashboard → your app → Secret |
 | `PAYPAL_MODE` | `sandbox` = test mode, `live` = real money | Set to `live` when ready for real payments |
 | `PAYPAL_WEBHOOK_ID` | Lets PayPal notify you of payment events | See PayPal Webhooks section below |
+| `SENTRY_DSN` | Error tracking — sends crash reports to Sentry | [sentry.io](https://sentry.io) → Create project → copy DSN. Optional — leave blank to skip |
+| `REDIS_URL` | Background job queue for payouts/webhooks | Any Redis provider (Upstash, Railway, etc.). Optional — leave blank for inline processing |
 
 #### How to generate a random secret key
 Go to [randomkeygen.com](https://randomkeygen.com) and copy any key from the "Fort Knox Passwords" section. Use a different one for `PRISM_API_KEY` and `ADMIN_API_KEY`.

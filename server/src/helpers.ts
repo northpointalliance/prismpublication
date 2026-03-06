@@ -1,0 +1,232 @@
+import crypto from "node:crypto";
+import type { Ad, AdEvent, BotSdkKey, PublisherBot } from "@prisma/client";
+import { prisma } from "./db.js";
+
+// --- Crypto helpers ----------------------------------------------------------
+
+export const hashSecret = (value: string = ""): string =>
+  crypto.createHash("sha256").update(String(value)).digest("hex");
+
+export const createSdkToken = (): string => `bgsk_${crypto.randomBytes(20).toString("hex")}`;
+
+export const createBotPublicId = ({ organizationId, name }: { organizationId: string; name: string }): string => {
+  const baseSlug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  const suffix = crypto.randomBytes(3).toString("hex");
+  return `orgbot_${organizationId}_${baseSlug || "bot"}_${suffix}`;
+};
+
+interface PublicSdkKey {
+  id: string;
+  label: string;
+  prefix: string;
+  last4: string;
+  createdAt: Date;
+  revokedAt: Date | null;
+}
+
+export const toPublicSdkKey = (key: BotSdkKey): PublicSdkKey => ({
+  id: key.id,
+  label: key.label,
+  prefix: key.prefix,
+  last4: key.last4,
+  createdAt: key.createdAt,
+  revokedAt: key.revokedAt,
+});
+
+export const createPublisherSdkKey = async ({
+  botId,
+  label,
+  revokeExisting = false,
+}: {
+  botId: string;
+  label: string;
+  revokeExisting?: boolean;
+}): Promise<PublicSdkKey & { token: string }> => {
+  const token = createSdkToken();
+  const tokenHash = hashSecret(token);
+  const prefix = token.slice(0, 10);
+  const last4 = token.slice(-4);
+
+  const created = await prisma.$transaction(async (tx) => {
+    if (revokeExisting) {
+      await tx.botSdkKey.updateMany({
+        where: { botId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+    return tx.botSdkKey.create({
+      data: { botId, label, tokenHash, prefix, last4 },
+    });
+  });
+
+  return { ...toPublicSdkKey(created), token };
+};
+
+// --- Ad helpers --------------------------------------------------------------
+
+export const normalizeTopic = (value: string = ""): string => value.toLowerCase().trim();
+
+interface WeightedItem {
+  weight?: number | null;
+}
+
+export const weightedPick = <T extends WeightedItem>(items: T[]): T | null => {
+  if (!items.length) return null;
+  const totalWeight = items.reduce((acc, item) => acc + Math.max(item.weight || 1, 1), 0);
+  let cursor = Math.random() * totalWeight;
+  for (const item of items) {
+    cursor -= Math.max(item.weight || 1, 1);
+    if (cursor <= 0) return item;
+  }
+  return items[items.length - 1] ?? null;
+};
+
+interface SdkAd {
+  id: string;
+  title: string;
+  description: string;
+  ctaText: string;
+  clickUrl: string;
+  imageUrl: string | undefined;
+  advertiser: string;
+  tags: string[];
+}
+
+export const toSdkAd = (ad: Ad): SdkAd => ({
+  id: ad.id,
+  title: ad.title,
+  description: ad.description,
+  ctaText: ad.ctaText,
+  clickUrl: ad.clickUrl,
+  imageUrl: ad.imageUrl || undefined,
+  advertiser: ad.advertiser,
+  tags: ad.topics || [],
+});
+
+export const sdkTrackEventTypes = new Set(["impression", "click", "revenue"]);
+export const demoTrackEventTypes = new Set(["impression", "click"]);
+
+export const selectAdForRequest = async ({
+  format,
+  topic = "",
+}: {
+  format: string;
+  topic?: string;
+}): Promise<Ad | null> => {
+  const activeAds = await prisma.ad.findMany({
+    where: {
+      isActive: true,
+      deletedAt: null,
+      OR: [{ format: format as Ad["format"] }, { format: "card" }],
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 200,
+  });
+
+  if (!activeAds.length) return null;
+
+  // Filter out expired campaigns
+  const now = new Date();
+  const notExpired = activeAds.filter((ad) => !ad.endsAt || ad.endsAt > now);
+
+  // For budget-managed ads, filter out ones that have exhausted their daily or lifetime budget
+  const budgeted = notExpired.filter((ad) => ad.dailyBudgetCents > 0 || ad.lifetimeBudgetCents > 0);
+  let eligible = notExpired;
+
+  if (budgeted.length) {
+    const ids = budgeted.map((ad) => ad.id);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [todaySpends, lifetimeSpends] = await Promise.all([
+      prisma.adEvent.groupBy({
+        by: ["adId"],
+        where: { adId: { in: ids }, eventType: "revenue", createdAt: { gte: todayStart } },
+        _sum: { amount: true },
+      }),
+      prisma.adEvent.groupBy({
+        by: ["adId"],
+        where: { adId: { in: ids }, eventType: "revenue" },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const todayMap = new Map(todaySpends.map((r) => [r.adId, r._sum.amount ?? 0]));
+    const lifetimeMap = new Map(lifetimeSpends.map((r) => [r.adId, r._sum.amount ?? 0]));
+
+    eligible = notExpired.filter((ad) => {
+      if (ad.dailyBudgetCents > 0 && (todayMap.get(ad.id) ?? 0) >= ad.dailyBudgetCents) return false;
+      if (ad.lifetimeBudgetCents > 0 && (lifetimeMap.get(ad.id) ?? 0) >= ad.lifetimeBudgetCents) return false;
+      return true;
+    });
+  }
+
+  if (!eligible.length) return null;
+
+  const normalizedTopic = normalizeTopic(topic);
+  const topicMatched = normalizedTopic
+    ? eligible.filter((ad) => ad.topics.some((value) => normalizeTopic(value).includes(normalizedTopic)))
+    : eligible;
+
+  return weightedPick(topicMatched.length ? topicMatched : eligible);
+};
+
+// --- Publisher bot metrics ---------------------------------------------------
+
+interface BotMetricsResult {
+  requests7d: number;
+  fillRate7d: number;
+  revenueTodayCents: number;
+  sdkErrors: number;
+  impressions: number;
+  clicks: number;
+}
+
+export const summarizeBotMetrics = (
+  events: AdEvent[] = [],
+  bot: Pick<PublisherBot, "requests7d" | "fillRateHint" | "sdkErrorsHint"> | null | undefined,
+): BotMetricsResult => {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  let impressions = 0;
+  let clicks = 0;
+  let revenueTodayCents = 0;
+  let metadataRequests = Number(bot?.requests7d || 0);
+  let metadataFillRate = Number(bot?.fillRateHint || 0);
+  let metadataErrors = Number(bot?.sdkErrorsHint || 0);
+  let metadataSeen = false;
+
+  for (const event of events) {
+    if (event.eventType === "impression") impressions += 1;
+    if (event.eventType === "click") clicks += 1;
+    if (event.eventType === "revenue" && event.createdAt >= todayStart) {
+      revenueTodayCents += Math.max(Number(event.amount || 0), 0);
+    }
+
+    if (!metadataSeen && event.metadata && typeof event.metadata === "object") {
+      metadataSeen = true;
+      const meta = event.metadata as Record<string, unknown>;
+      metadataRequests = Number(meta.requests7d || metadataRequests || 0);
+      metadataFillRate = Number(meta.fillRate || metadataFillRate || 0);
+      metadataErrors = Number(meta.sdkErrors || metadataErrors || 0);
+    }
+  }
+
+  const computedRequests = metadataRequests > 0 ? metadataRequests : Math.max(impressions, 1);
+  const computedFillRate = metadataFillRate > 0 ? metadataFillRate : (impressions / computedRequests) * 100;
+
+  return {
+    requests7d: computedRequests,
+    fillRate7d: Math.max(0, Math.min(computedFillRate, 100)),
+    revenueTodayCents,
+    sdkErrors: Math.max(0, metadataErrors),
+    impressions,
+    clicks,
+  };
+};

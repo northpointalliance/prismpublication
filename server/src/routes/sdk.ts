@@ -1,0 +1,103 @@
+import express from "express";
+import type { Request, Response } from "express";
+import { prisma } from "../db.js";
+import { adRequestSchema, trackEventSchema } from "../schemas.js";
+import { requireSdkKey, requireSdkSignature, ensureSdkBotScope } from "../portal.js";
+import type { AdEventType } from "@prisma/client";
+import { selectAdForRequest, toSdkAd, sdkTrackEventTypes } from "../helpers.js";
+import { logger } from "../logger.js";
+import { cpmiCents, getPlatformCpmRate } from "../money-utils.js";
+
+const router = express.Router();
+
+router.post("/ads", requireSdkKey, requireSdkSignature, async (req: Request, res: Response) => {
+  const parsed = adRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, error: "Invalid ad request", details: parsed.error.flatten() });
+  }
+
+  try {
+    const scope = ensureSdkBotScope(req, parsed.data.botId);
+    if (!scope.ok) {
+      return res.status(scope.status!).json({ error: scope.error });
+    }
+
+    const selected = await selectAdForRequest({
+      format: parsed.data.format,
+      topic: parsed.data.context?.topic || "",
+    });
+    if (!selected) {
+      return res.json({ success: true, data: [] });
+    }
+
+    return res.json({ success: true, data: [toSdkAd(selected)] });
+  } catch (err) {
+    logger.error("Ad fetch failed", err);
+    return res.status(500).json({ success: false, error: "Failed to fetch ads" });
+  }
+});
+
+router.post("/track/:eventType", requireSdkKey, requireSdkSignature, async (req: Request, res: Response) => {
+  const eventType = req.params.eventType;
+  if (!sdkTrackEventTypes.has(eventType)) {
+    return res.status(400).json({ error: "Invalid event type" });
+  }
+
+  const parsed = trackEventSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid tracking payload", details: parsed.error.flatten() });
+  }
+
+  try {
+    const scope = ensureSdkBotScope(req, parsed.data.botId);
+    if (!scope.ok) {
+      return res.status(scope.status!).json({ error: scope.error });
+    }
+
+    await prisma.adEvent.create({
+      data: {
+        eventType: eventType as AdEventType,
+        adId: parsed.data.adId,
+        botId: parsed.data.botId,
+        userId: parsed.data.userId,
+        topic: parsed.data.topic,
+        amount: parsed.data.amount,
+        metadata: parsed.data.metadata,
+      },
+    });
+
+    // Auto-generate a revenue event for budget-managed ads on each impression.
+    // This links advertiser spend → publisher earnings at the platform CPM rate.
+    if (eventType === "impression") {
+      try {
+        const ad = await prisma.ad.findUnique({
+          where: { id: parsed.data.adId },
+          select: { format: true, dailyBudgetCents: true, lifetimeBudgetCents: true },
+        });
+        if (ad && (ad.dailyBudgetCents > 0 || ad.lifetimeBudgetCents > 0)) {
+          const cpmCents = await getPlatformCpmRate(ad.format, prisma);
+          const chargeAmountCents = cpmiCents(cpmCents);
+          await prisma.adEvent.create({
+            data: {
+              eventType: "revenue",
+              adId: parsed.data.adId,
+              botId: parsed.data.botId,
+              amount: chargeAmountCents,
+              metadata: { source: "auto_cpm", cpmCents },
+            },
+          });
+        }
+      } catch (autoErr) {
+        // Never let auto-revenue failure block the impression response
+        logger.error("Auto-revenue generation failed", autoErr);
+      }
+    }
+
+    return res.status(201).json({ success: true });
+  } catch (err) {
+    logger.error("Event track failed", err);
+    return res.status(500).json({ error: "Failed to track event" });
+  }
+});
+
+export default router;
