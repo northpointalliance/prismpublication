@@ -57,7 +57,7 @@ const SDK = () => {
 
           <div className="rounded-2xl glow-border bg-card p-6">
             <h2 className="text-xl font-bold">Integration Notes</h2>
-            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+            <ul className="mt-4 space-y-3 text-base text-muted-foreground">
               <li>Use frequency guards (`shouldShowAd`) to avoid over-serving.</li>
               <li>Log and monitor `trackImpression` / `trackClick` for performance.</li>
               <li>Use `/notadmin` to manage ad inventory and review event logs.</li>
@@ -65,7 +65,7 @@ const SDK = () => {
 
             <div className="mt-7 rounded-xl border border-border bg-background p-4">
               <p className="text-xs font-mono uppercase tracking-[0.15em] text-primary">Next</p>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 Validate placement and UX first, then move to production serving rules.
               </p>
               <Link to="/docs" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">

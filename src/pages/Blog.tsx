@@ -138,7 +138,7 @@ const Blog = () => {
                     </div>
                     <h3 className="mt-3 text-2xl font-bold tracking-tight">{post.title}</h3>
                     {post.excerpt && (
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{post.excerpt}</p>
+                      <p className="mt-2 text-base leading-relaxed text-muted-foreground">{post.excerpt}</p>
                     )}
                     <Link
                       to={`/blog/${post.slug}`}

@@ -188,7 +188,7 @@ const Docs = () => {
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-semibold text-foreground">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
@@ -215,9 +215,9 @@ const Docs = () => {
                   {step}
                 </div>
                 <h3 className="font-semibold text-foreground">{title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{description}</p>
                 <div className="mt-3 inline-flex rounded-lg bg-slate-950 px-2.5 py-1.5">
-                  <code className="text-[11px] text-slate-400 font-mono">{badge}</code>
+                  <code className="text-xs text-slate-400 font-mono">{badge}</code>
                 </div>
               </div>
             ))}
@@ -250,12 +250,12 @@ const Docs = () => {
                     {format}
                   </span>
                   {popular && (
-                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
                       Most used
                     </span>
                   )}
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{description}</p>
+                <p className="mt-3 text-base text-muted-foreground leading-relaxed">{description}</p>
                 <div className="mt-4">{mock}</div>
               </div>
             ))}
@@ -270,7 +270,7 @@ const Docs = () => {
                 Publisher SDK Docs
               </div>
               <h3 className="mt-4 text-xl font-bold">Full technical reference inside your portal</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-2 text-base text-muted-foreground leading-relaxed">
                 After signup, the SDK Docs tab in your Publisher Portal gives you:
               </p>
               <ul className="mt-4 space-y-2">
@@ -282,7 +282,7 @@ const Docs = () => {
                   "Event tracking for impressions & clicks",
                   "Ad format specs with live previews",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li key={item} className="flex items-center gap-2 text-base text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                     {item}
                   </li>
@@ -302,7 +302,7 @@ const Docs = () => {
                 Advertiser Campaign Guide
               </div>
               <h3 className="mt-4 text-xl font-bold">Campaign setup guide inside your portal</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-2 text-base text-muted-foreground leading-relaxed">
                 The Campaign Guide tab in your Advertiser Portal covers:
               </p>
               <ul className="mt-4 space-y-2">
@@ -314,7 +314,7 @@ const Docs = () => {
                   "Billing, budgets, and wallet management",
                   "FAQ for common advertiser questions",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li key={item} className="flex items-center gap-2 text-base text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                     {item}
                   </li>

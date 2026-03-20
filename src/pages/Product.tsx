@@ -62,7 +62,7 @@ const Product = () => {
                   <item.icon className="h-5 w-5 text-primary" />
                 </div>
                 <h2 className="text-xl font-bold">{item.title}</h2>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                <p className="mt-3 text-base text-muted-foreground leading-relaxed">{item.description}</p>
               </article>
             ))}
           </div>

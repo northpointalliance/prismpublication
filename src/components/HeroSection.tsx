@@ -112,10 +112,10 @@ const HeroSection = () => {
                   <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
                 </Button>
               </Link>
-              <p className="text-xs text-muted-foreground">No signup required. See the full flow in under 2 minutes.</p>
+              <p className="text-sm text-muted-foreground">No signup required. See the full flow in under 2 minutes.</p>
             </div>
 
-            <div className="animate-fade-up-delay-3 mt-10 flex flex-wrap justify-center lg:justify-start gap-3 text-sm text-muted-foreground" role="list" aria-label="Core value points">
+            <div className="animate-fade-up-delay-3 mt-10 flex flex-wrap justify-center lg:justify-start gap-3 text-base text-muted-foreground" role="list" aria-label="Core value points">
               {[
                 "Publisher pacing controls",
                 "Context-aware ad matching",

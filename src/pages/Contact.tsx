@@ -74,7 +74,7 @@ const Contact = () => {
           <div className="rounded-3xl border border-border bg-card p-6 shadow-xl md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Contact Us</p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-5xl">Let&apos;s launch your campaign.</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
               Tell us your goals and we&apos;ll help you set up contextual ad placements for your assistant or brand.
             </p>
             {(source || ad) && (

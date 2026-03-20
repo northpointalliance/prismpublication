@@ -2,6 +2,25 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-03-20 — v0.3.1 (ad policy update, sitemap fix, typography pass)
+
+### Ad policy — gambling moved to restricted
+- Gambling & sports betting moved from "Prohibited" to a new "Restricted Categories" section with case-by-case review.
+- Conditions: valid licensing, US state-level legality for chatbot publishers, age restrictions matching state/federal law, local rules for international markets.
+- "Illegal gambling operations" (unlicensed, offshore, targeting minors) remains in the prohibited list.
+- New amber-styled "RESTRICTED" badge and nav item added to the page.
+
+### Sitemap update
+- Added missing `/contact` and `/ad-policy` pages.
+- Removed `/sdk` (redirect to `/demo`, not a real page).
+- Updated all `lastmod` dates to `2026-03-20`.
+
+### Typography pass
+- Bumped body text from `text-sm` to `text-base` across Hero, HowItWorks, Stats, Audience, FAQ, Footer sections and inner pages for improved readability.
+
+### Demo page
+- Replaced Nike Air Force 1 creative with generic sneakers image and updated ad copy.
+
 ## 2026-03-06 — v0.3.0 (TypeScript backend, reliability & observability)
 
 ### Backend TypeScript conversion

@@ -8,6 +8,7 @@ The website is now a multi-page marketing/product experience with:
 
 - Home (`/`)
 - Product (`/product`)
+- Use Cases (`/use-cases`)
 - Publishers (`/publishers`)
 - Advertisers (`/advertisers`)
 - How It Works + Demo (`/demo`)
@@ -15,6 +16,7 @@ The website is now a multi-page marketing/product experience with:
 - Company (`/company`)
 - Contact (`/contact`)
 - Website Docs (`/docs`)
+- Ad Policy (`/ad-policy`)
 - Admin (`/notadmin`, key-protected)
 - App Login (`/app/login`)
 - Workspace Selector (`/app/choose-workspace`)
@@ -26,7 +28,12 @@ The website is now a multi-page marketing/product experience with:
 Demo page notes:
 - `/demo` now combines "How It Works", SDK quickstart snippets, and live conversation playback in one page.
 - Demo playback uses a scripted sponsored sequence with local creative assets in `public/demo-ads/`.
-- Demo CTA buttons ("Shop Nike Air Force 1", "Reserve a Table", "Order Flowers") route to `/contact` with source metadata.
+- Demo CTA buttons route to `/contact` with source metadata.
+
+Ad Policy notes:
+- `/ad-policy` has 5 sections: Prohibited Categories, Restricted Categories (case-by-case), Creative Requirements, Enforcement Process, Reporting.
+- Gambling is in the "Restricted" tier — allowed case-by-case with valid licensing, US state-level legality, and local-law compliance for international markets.
+- Illegal/unlicensed gambling operations remain in the fully prohibited list.
 
 Homepage / shell notes:
 - Shared brand mark now uses `public/prismlogo.png` in the navbar and footer.
@@ -277,7 +284,8 @@ All data fetching and state management stays in the parent pages (`AdvertiserPor
 
 ## Documentation Map
 
-- [CHANGELOG.md](/home/tokyo/Desktop/AIADS/docs/CHANGELOG.md): Evolution log and verification checklist
+- [CHANGELOG.md](/home/tokyo/Desktop/AIADS/CHANGELOG.md): Release summary (root)
+- [docs/CHANGELOG.md](/home/tokyo/Desktop/AIADS/docs/CHANGELOG.md): Detailed evolution log and verification checklist
 - [LOCAL_DATABASE.md](/home/tokyo/Desktop/AIADS/docs/LOCAL_DATABASE.md): Local Postgres + Prisma setup
 - [DEEP_DIVE.md](/home/tokyo/Desktop/AIADS/docs/DEEP_DIVE.md): Technical deep-dive
 - [INTEGRATION_EXAMPLES.md](/home/tokyo/Desktop/AIADS/docs/INTEGRATION_EXAMPLES.md): SDK/integration examples

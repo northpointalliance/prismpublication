@@ -71,7 +71,7 @@ const Company = () => {
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="text-3xl font-bold tracking-tight text-foreground">{stat.value}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+              <p className="mt-1 text-base text-muted-foreground">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -98,7 +98,7 @@ const Company = () => {
                   <Icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold">{title}</h3>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-3 flex-1 text-base leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
@@ -120,8 +120,8 @@ const Company = () => {
               </p>
 
               <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                <p className="text-sm font-semibold text-foreground">Our ad policy is public</p>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                <p className="text-base font-semibold text-foreground">Our ad policy is public</p>
+                <p className="mt-2 text-base text-muted-foreground leading-relaxed">
                   11 permanently excluded categories, creative quality standards, and a clear
                   enforcement process. No exceptions for brand size or budget.
                 </p>
@@ -142,7 +142,7 @@ const Company = () => {
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <h3 className="font-semibold text-foreground">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
                 </div>
               ))}
             </div>
@@ -174,7 +174,7 @@ const Company = () => {
                     <Icon className="h-4 w-4 text-primary" />
                     <h3 className="font-semibold text-foreground">{title}</h3>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
                 </div>
               </div>
             ))}
@@ -255,7 +255,7 @@ const Company = () => {
                   "Full frequency and format controls",
                   "Monthly PayPal payouts",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li key={item} className="flex items-center gap-2 text-base text-muted-foreground">
                     <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
                     {item}
                   </li>
@@ -287,7 +287,7 @@ const Company = () => {
                   "Transparent CPM pricing",
                   "Real-time performance dashboard",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li key={item} className="flex items-center gap-2 text-base text-muted-foreground">
                     <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
                     {item}
                   </li>

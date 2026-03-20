@@ -22,9 +22,9 @@ const prohibitedCategories = [
       "Pornography, sexual services, adult dating platforms, explicit imagery or suggestive content targeting adults",
   },
   {
-    category: "Gambling and sports betting",
+    category: "Illegal gambling operations",
     covers:
-      "Online casinos, poker platforms, sports betting, lottery services, fantasy sports with cash prizes",
+      "Unlicensed gambling services, offshore casinos operating without jurisdiction-specific permits, any gambling service targeting minors",
   },
   {
     category: "Crypto, NFT, and speculative investment schemes",
@@ -131,6 +131,7 @@ const enforcementActions = [
 
 const navItems = [
   { label: "Prohibited Categories", href: "#prohibited" },
+  { label: "Restricted Categories", href: "#restricted" },
   { label: "Creative Requirements", href: "#creative" },
   { label: "Enforcement", href: "#enforcement" },
   { label: "Reporting", href: "#reporting" },
@@ -202,7 +203,7 @@ const AdPolicy = () => {
             <p className="text-xs font-mono uppercase tracking-[0.16em] text-red-500">Permanently Excluded</p>
           </div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Prohibited Categories</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             The following categories are permanently excluded from the Prism network. No exceptions
             will be made regardless of brand size, budget, or framing of the request.
           </p>
@@ -227,13 +228,70 @@ const AdPolicy = () => {
                   <ShieldX className="hidden h-4 w-4 flex-shrink-0 text-red-500 sm:block" />
                   <span className="text-sm font-medium text-foreground">{row.category}</span>
                 </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{row.covers}</p>
+                <p className="text-base leading-relaxed text-muted-foreground">{row.covers}</p>
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                   NOT ALLOWED
                 </span>
               </div>
             ))}
+          </div>
+        </section>
+
+        <hr className="border-border/60" />
+
+        {/* ── Section: Restricted Categories ─────────────────────────────── */}
+        <section id="restricted" className="scroll-mt-28">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+              <AlertTriangle className="h-3.5 w-3.5" />
+            </span>
+            <p className="text-xs font-mono uppercase tracking-[0.16em] text-amber-600">Case-by-Case Review</p>
+          </div>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Restricted Categories</h2>
+          <p className="mt-2 text-base text-muted-foreground">
+            The following categories are not banned outright but require additional review and must meet
+            strict compliance conditions before approval.
+          </p>
+
+          <div className="mt-8 overflow-hidden rounded-2xl border border-amber-200">
+            <div className="grid grid-cols-[1fr_2fr_auto] gap-4 border-b border-amber-200 bg-amber-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-amber-700">
+              <span>Category</span>
+              <span>Conditions</span>
+              <span className="text-right">Status</span>
+            </div>
+
+            <div className="grid grid-cols-[1fr_2fr_auto] items-center gap-4 bg-card px-5 py-4">
+              <div className="flex items-center gap-2.5">
+                <ShieldAlert className="hidden h-4 w-4 flex-shrink-0 text-amber-500 sm:block" />
+                <span className="text-sm font-medium text-foreground">Gambling &amp; sports betting</span>
+              </div>
+              <div className="text-base leading-relaxed text-muted-foreground">
+                <p>
+                  Online casinos, poker platforms, sports betting, lottery services, and fantasy sports
+                  with cash prizes are evaluated on a case-by-case basis. Approval requires:
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                  <li>
+                    <strong>United States:</strong> Chatbot publishers and chatbots must operate in states
+                    where online gambling is legal. Age restrictions must match the relevant state and
+                    federal laws.
+                  </li>
+                  <li>
+                    <strong>Other countries:</strong> Where online gambling and chatbots are published,
+                    all applicable local regulations, licensing requirements, and age restrictions apply.
+                  </li>
+                  <li>
+                    Advertisers must provide proof of valid licensing for every jurisdiction they intend
+                    to target.
+                  </li>
+                </ul>
+              </div>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                RESTRICTED
+              </span>
+            </div>
           </div>
         </section>
 
@@ -248,7 +306,7 @@ const AdPolicy = () => {
             <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Quality Standards</p>
           </div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Creative Requirements</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             All ads on the Prism network must meet these baseline quality standards before they
             can be approved for serving.
           </p>
@@ -262,7 +320,7 @@ const AdPolicy = () => {
                   </div>
                   <h3 className="font-semibold text-foreground">{title}</h3>
                 </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
@@ -274,7 +332,7 @@ const AdPolicy = () => {
                 <p className="text-sm font-semibold text-amber-900">
                   Conversational context matters
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                <p className="mt-1 text-base leading-relaxed text-amber-800">
                   Because Prism ads appear inside real-time conversations, we hold creatives to a
                   higher standard than display or banner networks. Ads that might be acceptable on
                   a webpage sidebar can still be rejected if they disrupt conversational flow or
@@ -296,7 +354,7 @@ const AdPolicy = () => {
             <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Compliance</p>
           </div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Enforcement Process</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             Prism reviews all ads before they go live. Violations discovered after approval are
             handled through the following escalation process.
           </p>
@@ -314,7 +372,7 @@ const AdPolicy = () => {
                 </div>
                 <div className="pb-1">
                   <h3 className="font-semibold text-foreground">{level}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  <p className="mt-1 text-base leading-relaxed text-muted-foreground">{description}</p>
                 </div>
               </div>
             ))}
@@ -332,7 +390,7 @@ const AdPolicy = () => {
             <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Contact</p>
           </div>
           <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Report a Violation</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             If you encounter an ad on the Prism network that you believe violates these policies,
             we want to hear about it.
           </p>
@@ -340,7 +398,7 @@ const AdPolicy = () => {
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-border bg-card p-6">
               <h3 className="font-semibold text-foreground">For publishers</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-base leading-relaxed text-muted-foreground">
                 If an ad is appearing in your bot that doesn't meet these standards, you can flag
                 it directly from the Publisher Portal or reach out via the contact form. Include
                 the ad ID if possible — it's returned in every SDK response.
@@ -356,7 +414,7 @@ const AdPolicy = () => {
 
             <div className="rounded-2xl border border-border bg-card p-6">
               <h3 className="font-semibold text-foreground">For end users</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-base leading-relaxed text-muted-foreground">
                 If you're a user of a chatbot powered by Prism and you've seen an ad that feels
                 inappropriate, misleading, or harmful, please let us know. Every report is reviewed
                 by a human.
@@ -373,7 +431,7 @@ const AdPolicy = () => {
 
           <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Our commitment</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2 text-base leading-relaxed text-muted-foreground">
               Prism exists to make conversational advertising trustworthy. These policies aren't
               just guidelines — they're enforced automatically during ad review and continuously
               monitored after approval. We'd rather reject revenue than compromise the experience

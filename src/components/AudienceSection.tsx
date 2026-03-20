@@ -109,7 +109,7 @@ const AudienceSection = () => {
               <MiniDashboard />
               <ul className="space-y-4 mb-10" aria-label="Publisher benefits">
                 {publisherFeatures.map((f) => (
-                  <li key={f.text} className="flex items-center gap-3 text-sm text-secondary-foreground">
+                  <li key={f.text} className="flex items-center gap-3 text-base text-secondary-foreground">
                     <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0" aria-hidden="true">
                       <f.icon className="h-4 w-4 text-primary" />
                     </div>
@@ -138,7 +138,7 @@ const AudienceSection = () => {
               <MiniCampaign />
               <ul className="space-y-4 mb-10" aria-label="Advertiser benefits">
                 {advertiserFeatures.map((f) => (
-                  <li key={f.text} className="flex items-center gap-3 text-sm text-secondary-foreground">
+                  <li key={f.text} className="flex items-center gap-3 text-base text-secondary-foreground">
                     <div className="h-8 w-8 rounded-lg bg-glow-secondary/10 flex items-center justify-center shrink-0" aria-hidden="true">
                       <f.icon className="h-4 w-4 text-glow-secondary" />
                     </div>

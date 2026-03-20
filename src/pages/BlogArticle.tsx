@@ -114,7 +114,7 @@ const BlogArticle = () => {
 
               <aside className="h-fit rounded-2xl border border-border/70 bg-card p-6 lg:sticky lg:top-28">
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                  <p className="text-sm font-semibold">Want to see this in product form?</p>
+                  <p className="text-base font-semibold">Want to see this in product form?</p>
                   <Link to="/demo" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
                     Open live demo
                     <ArrowRight className="h-4 w-4" />

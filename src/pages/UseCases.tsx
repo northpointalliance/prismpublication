@@ -23,7 +23,7 @@ const UseCases = () => {
           <article className="rounded-3xl glow-border bg-card p-8">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-primary mb-3">For Publishers</p>
             <h2 className="text-3xl font-bold tracking-tight">Chatbot teams and AI products</h2>
-            <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
+            <ul className="mt-5 space-y-3 text-base text-muted-foreground">
               <li>Monetize high-volume support and assistant conversations.</li>
               <li>Insert sponsored placements at natural points in chat flow.</li>
               <li>Keep full control over pacing and ad display rules.</li>
@@ -40,7 +40,7 @@ const UseCases = () => {
           <article className="rounded-3xl glow-border bg-card p-8">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-primary mb-3">For Advertisers</p>
             <h2 className="text-3xl font-bold tracking-tight">Campaigns in intent-rich moments</h2>
-            <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
+            <ul className="mt-5 space-y-3 text-base text-muted-foreground">
               <li>Reach users while they are actively asking for recommendations.</li>
               <li>Run native ad cards instead of interruptive banner units.</li>
               <li>Optimize creative by topic, vertical, and response quality.</li>

@@ -45,7 +45,7 @@ const Footer = () => {
                 <span className="text-xl font-bold tracking-tight">Prism</span>
               </Link>
 
-              <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-4 max-w-sm text-base leading-relaxed text-muted-foreground">
                 Conversational ad infrastructure for publishers and advertisers who care about relevance, trust, and measurable outcomes.
               </p>
 
@@ -85,7 +85,7 @@ const Footer = () => {
             <section className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-white/40 p-5">
               <p className="font-[Poppins] text-xs font-bold uppercase tracking-[0.16em] text-black">Start Here</p>
               <h2 className="mt-3 text-xl font-bold tracking-tight">See Prism in action</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-base leading-relaxed text-muted-foreground">
                 Run the interactive conversation demo and review the integration flow in minutes.
               </p>
               <Link to="/demo" className="mt-5 inline-flex">

@@ -100,14 +100,14 @@ const howItWorksSteps = [
   },
 ] as const;
 
-const nikeDemoAd: DemoAd = {
-  id: "fallback-demo-ad-nike-airforce1",
-  title: "Nike Air Force 1",
-  description: "Clean everyday style with iconic Nike design. Easy to pair with streetwear and casual fits.",
-  ctaText: "Shop Nike Air Force 1",
-  clickUrl: "/contact?source=demo&ad=nike-air-force-1",
-  imageUrl: "/demo-ads/nikeairforce1.jpg",
-  advertiser: "Nike",
+const sneakerDemoAd: DemoAd = {
+  id: "fallback-demo-ad-stride-classic",
+  title: "Stride Classic Runner",
+  description: "Clean everyday style meets lightweight performance. Easy to pair with streetwear and casual fits.",
+  ctaText: "Shop Stride Classic",
+  clickUrl: "/contact?source=demo&ad=stride-classic",
+  imageUrl: "/demo-ads/sneakers.jpg",
+  advertiser: "Stride",
   tags: ["running", "style", "sneakers"],
 };
 
@@ -133,7 +133,7 @@ const flowerDemoAd: DemoAd = {
   tags: ["flowers", "gift", "shop"],
 };
 
-const sponsoredSequence: DemoAd[] = [nikeDemoAd, sushiDemoAd, flowerDemoAd, nikeDemoAd];
+const sponsoredSequence: DemoAd[] = [sneakerDemoAd, sushiDemoAd, flowerDemoAd, sneakerDemoAd];
 const isFallbackAd = (adId: string) => adId.startsWith("fallback-demo-ad-");
 
 const Demo = () => {
@@ -346,7 +346,7 @@ const Demo = () => {
                     <RotateCcw className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                <p className="mt-2 text-center text-xs text-muted-foreground">
                   Scripted playback — input disabled to keep the scenario consistent.
                 </p>
               </div>
@@ -356,20 +356,20 @@ const Demo = () => {
                 <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                   <MessageSquare className="mx-auto h-4 w-4 text-primary" />
                   <p className="mt-1 text-2xl font-bold">{messageCount}</p>
-                  <p className="text-[11px] text-muted-foreground">Messages</p>
+                  <p className="text-xs text-muted-foreground">Messages</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                   <Radio className="mx-auto h-4 w-4 text-emerald-600" />
                   <p className="mt-1 text-2xl font-bold">{adCount}</p>
-                  <p className="text-[11px] text-muted-foreground">Ads Served</p>
+                  <p className="text-xs text-muted-foreground">Ads Served</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                   <MousePointerClick className="mx-auto h-4 w-4 text-sky-600" />
                   <p className="mt-1 text-2xl font-bold">4.2%</p>
-                  <p className="text-[11px] text-muted-foreground">CTR est.*</p>
+                  <p className="text-xs text-muted-foreground">CTR est.*</p>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">* Illustrative benchmark only.</p>
+              <p className="text-xs text-muted-foreground">* Illustrative benchmark only.</p>
             </div>
 
             {/* ── Right: chat window ────────────────────────────────────── */}
@@ -381,11 +381,11 @@ const Demo = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">AI Lifestyle Assistant</p>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    Scenario: Planning a city evening 🌆
+                  <p className="text-xs text-muted-foreground truncate">
+                    Scenario: Planning a city evening
                   </p>
                 </div>
-                <span className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+                <span className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
                   Live
                 </span>
@@ -418,10 +418,10 @@ const Demo = () => {
                       /* ── Sponsored ad card ── */
                       <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900 p-3.5 shadow-lg">
                         <div className="mb-2.5 flex items-center gap-2">
-                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
+                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white/70">
                             Sponsored
                           </span>
-                          <span className="text-[11px] font-medium text-white/60">{message.ad.advertiser}</span>
+                          <span className="text-xs font-medium text-white/60">{message.ad.advertiser}</span>
                         </div>
                         {message.ad.imageUrl && (
                           <img
@@ -506,7 +506,7 @@ const Demo = () => {
                     {index + 1}
                   </div>
                   <h3 className="font-semibold text-foreground">{step.title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{step.description}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
                 </div>
               ))}
             </div>
@@ -521,7 +521,7 @@ const Demo = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2.5">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     1
                   </span>
                   <p className="font-semibold text-foreground">Install the package</p>
@@ -532,7 +532,7 @@ const Demo = () => {
               </div>
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2.5">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     2
                   </span>
                   <p className="font-semibold text-foreground">Initialize and serve</p>

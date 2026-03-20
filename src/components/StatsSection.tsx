@@ -35,7 +35,7 @@ const StatsSection = () => {
               role="listitem"
             >
               <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.sub}</p>
+              <p className="mt-2 text-base text-muted-foreground leading-relaxed">{item.sub}</p>
             </article>
           ))}
         </div>

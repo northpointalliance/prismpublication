@@ -86,7 +86,7 @@ const Publishers = () => {
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="text-3xl font-bold tracking-tight text-foreground">{stat.value}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+              <p className="mt-1 text-base text-muted-foreground">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -113,7 +113,7 @@ const Publishers = () => {
                   <Icon className="h-5 w-5 text-foreground" />
                 </div>
                 <h3 className="text-lg font-bold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
@@ -145,7 +145,7 @@ const Publishers = () => {
                     <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
-                    <span className="text-sm text-foreground">{text}</span>
+                    <span className="text-base text-foreground">{text}</span>
                   </div>
                 ))}
               </div>
@@ -196,10 +196,10 @@ const Publishers = () => {
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
                 <ul className="mt-4 space-y-2">
                   {highlights.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <li key={item} className="flex items-center gap-2 text-base text-muted-foreground">
                       <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
                       {item}
                     </li>
@@ -253,14 +253,14 @@ const Publishers = () => {
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">Minimal footprint. Blends into message flow as a subtle inline suggestion.</p>
+              <p className="mt-4 text-base text-muted-foreground">Minimal footprint. Blends into message flow as a subtle inline suggestion.</p>
             </div>
 
             {/* Card format */}
             <div className="rounded-2xl border border-border bg-card p-6">
               <div className="mb-4 flex items-center gap-2">
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-mono uppercase tracking-wide text-primary">Card</span>
-                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">Most popular</span>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">Most popular</span>
               </div>
               <div className="rounded-xl bg-muted/50 p-4">
                 <div className="overflow-hidden rounded-lg border border-border bg-background">
@@ -277,7 +277,7 @@ const Publishers = () => {
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">Rich visual card with image, copy, and CTA. Best engagement rates across the network.</p>
+              <p className="mt-4 text-base text-muted-foreground">Rich visual card with image, copy, and CTA. Best engagement rates across the network.</p>
             </div>
 
             {/* Banner format */}
@@ -299,7 +299,7 @@ const Publishers = () => {
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">Full-width visual banner. Works well for brand awareness campaigns between messages.</p>
+              <p className="mt-4 text-base text-muted-foreground">Full-width visual banner. Works well for brand awareness campaigns between messages.</p>
             </div>
           </div>
         </div>

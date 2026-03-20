@@ -90,7 +90,7 @@ const Advertisers = () => {
               </div>
               <p className="text-3xl font-bold tracking-tight text-foreground">{stat}</p>
               <p className="mt-0.5 text-sm font-medium text-foreground">{label}</p>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{description}</p>
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{description}</p>
             </div>
           ))}
         </div>
@@ -117,7 +117,7 @@ const Advertisers = () => {
                   <Icon className="h-5 w-5 text-foreground" />
                 </div>
                 <h3 className="text-lg font-bold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
@@ -208,10 +208,10 @@ const Advertisers = () => {
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p>
                 <ul className="mt-4 space-y-2">
                   {highlights.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <li key={item} className="flex items-center gap-2 text-base text-muted-foreground">
                       <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
                       {item}
                     </li>
@@ -260,7 +260,7 @@ const Advertisers = () => {
                 }`}
               >
                 {featured && (
-                  <span className="mb-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  <span className="mb-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
                     Most popular
                   </span>
                 )}
@@ -268,10 +268,10 @@ const Advertisers = () => {
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold">{title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+                <p className="mt-1 text-base text-muted-foreground">{description}</p>
                 <div className="mt-4 border-t border-border/60 pt-4">
                   <p className="text-3xl font-bold tracking-tight">{cpm} <span className="text-sm font-normal text-muted-foreground">CPM</span></p>
-                  <p className="mt-1 text-xs text-muted-foreground">{perImpression} per impression</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{perImpression} per impression</p>
                 </div>
               </div>
             ))}
