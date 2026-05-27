@@ -9,7 +9,7 @@ User=tokyo
 Group=tokyo
 WorkingDirectory=/home/tokyo/Desktop/AIADS/server
 Environment=NODE_ENV=production
-Environment=PORT=8787
+Environment=PORT=8080
 ExecStart=/bin/bash -lc 'source "$HOME/.nvm/nvm.sh" && npm run start'
 Restart=always
 RestartSec=5

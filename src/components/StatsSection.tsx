@@ -1,3 +1,5 @@
+import Reveal from "@/components/Reveal";
+
 const highlights = [
   { title: "Publisher Controls", sub: "Set ad frequency caps, category filters, and pacing rules per chatbot." },
   { title: "Intent Matching", sub: "Place ads when users are already discussing relevant topics." },
@@ -16,27 +18,30 @@ const StatsSection = () => {
       </div>
 
       <div className="relative container mx-auto px-6">
-        <header className="text-center mb-20">
-          <span className="text-xs font-mono text-primary uppercase tracking-widest">The Network</span>
-          <h2 id="stats-heading" className="text-4xl md:text-5xl font-bold mt-4 tracking-tight">
-            Built for <span className="text-gradient-primary">trust and outcomes</span>
-          </h2>
-          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Conversion performance matters, but long-term retention matters more.
-            Prism is designed to help teams grow revenue without damaging the chat experience.
-          </p>
-        </header>
+        <Reveal>
+          <header className="text-center mb-20">
+            <span className="text-xs font-mono text-primary uppercase tracking-widest">The Network</span>
+            <h2 id="stats-heading" className="text-4xl md:text-5xl font-medium mt-4 tracking-tight">
+              Built for <span className="text-gradient-primary">trust and outcomes</span>
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+              Conversion performance matters, but long-term retention matters more.
+              Prism is designed to help teams grow revenue without damaging the chat experience.
+            </p>
+          </header>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="list" aria-label="Platform highlights">
-          {highlights.map((item) => (
-            <article
-              key={item.title}
-              className="rounded-2xl glow-border bg-card p-8 hover:shadow-md transition-all duration-300"
-              role="listitem"
-            >
-              <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
-              <p className="mt-2 text-base text-muted-foreground leading-relaxed">{item.sub}</p>
-            </article>
+          {highlights.map((item, i) => (
+            <Reveal key={item.title} delay={i * 80}>
+              <article
+                className="rounded-2xl glow-border bg-card p-8 hover:shadow-md transition-all duration-300 h-full"
+                role="listitem"
+              >
+                <h3 className="text-lg font-medium text-foreground">{item.title}</h3>
+                <p className="mt-2 text-base text-muted-foreground leading-relaxed">{item.sub}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>

@@ -110,8 +110,8 @@ npm run db:down
 ```
 
 This now starts:
-- Local API (`:8787`)
-- Vite (`:8080`)
+- Local API (`:8080`)
+- Vite (`:5173`)
 - Cloudflare tunnel
 
 ### Start on reboot (`systemd`)
@@ -203,7 +203,7 @@ Backend (`server/.env`):
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
 - `API_CORS_ORIGIN` with all allowed origins, for example:
-  - `https://prismpublication.com,https://www.prismpublication.com,http://localhost:8080`
+  - `https://prismpublication.com,https://www.prismpublication.com,http://localhost:5173`
 
 Supabase Auth dashboard:
 - Set **Site URL** to production domain.

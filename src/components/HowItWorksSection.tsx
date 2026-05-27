@@ -1,4 +1,5 @@
 import { MessageSquare, Target, DollarSign, BarChart3 } from "lucide-react";
+import Reveal from "@/components/Reveal";
 
 const steps = [
   {
@@ -31,32 +32,35 @@ const HowItWorksSection = () => {
   return (
     <section id="how-it-works" className="relative py-32" aria-labelledby="how-heading">
       <div className="container mx-auto px-6">
-        <header className="text-center mb-20">
-          <span className="text-xs font-mono text-primary uppercase tracking-widest">How It Works</span>
-          <h2 id="how-heading" className="text-4xl md:text-5xl font-bold mt-4 tracking-tight">
-            From integration to <span className="text-gradient-primary">income</span>
-          </h2>
-          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Prism makes it simple for chatbot developers and publishers to start earning ad revenue in under 10 minutes. Here's the step-by-step process.
-          </p>
-        </header>
+        <Reveal>
+          <header className="text-center mb-20">
+            <span className="text-xs font-mono text-primary uppercase tracking-widest">How It Works</span>
+            <h2 id="how-heading" className="text-4xl md:text-5xl font-medium mt-4 tracking-tight">
+              From integration to <span className="text-gradient-primary">income</span>
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+              Prism makes it simple for chatbot developers and publishers to start earning ad revenue in under 10 minutes. Here's the step-by-step process.
+            </p>
+          </header>
+        </Reveal>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" role="list">
           {steps.map((step, i) => (
-            <article
-              key={step.title}
-              className="group relative rounded-2xl glow-border bg-card p-8 hover:shadow-lg transition-all duration-500"
-              role="listitem"
-            >
-              <div className="absolute top-6 right-6 text-5xl font-bold text-muted/30 font-mono" aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
-              </div>
-              <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${step.accent} flex items-center justify-center mb-6`} aria-hidden="true">
-                <step.icon className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-3">{step.title}</h3>
-              <p className="text-base text-muted-foreground leading-relaxed">{step.description}</p>
-            </article>
+            <Reveal key={step.title} delay={i * 100}>
+              <article
+                className="group relative rounded-2xl glow-border bg-card p-8 hover:shadow-lg transition-all duration-500 h-full"
+                role="listitem"
+              >
+                <div className="absolute top-6 right-6 text-5xl font-bold text-muted/30 font-mono" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${step.accent} flex items-center justify-center mb-6`} aria-hidden="true">
+                  <step.icon className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-3">{step.title}</h3>
+                <p className="text-base text-muted-foreground leading-relaxed">{step.description}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>

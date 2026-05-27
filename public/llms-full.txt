@@ -1,0 +1,81 @@
+# Prism — Full LLM Reference
+
+> The ad network purpose-built for AI chatbot conversations.
+
+## What Prism is
+
+Prism is a conversational advertising platform that turns AI chatbot conversations into a monetization channel. The Prism SDK reads the live conversation context (topic, intent, recent turns) and serves a native sponsored recommendation that fits the moment, rendered inline in the chatbot's response. This avoids interruptive banners while reaching users at the point of high purchase intent.
+
+The platform serves two sides:
+
+- **Publishers**: chatbot operators (consumer assistants, support bots, e-commerce agents, vertical AI tools) who want a non-disruptive revenue stream.
+- **Advertisers**: brands and performance marketers who want to reach users mid-conversation, when they are actively asking questions about a category.
+
+## How it works
+
+1. **Integrate the SDK** — Drop Prism into any chatbot framework with a small code addition. Compatible with OpenAI / GPT, LangChain, Rasa, and any custom agent that emits text turns.
+2. **Context-aware ad matching** — On each turn, Prism analyzes the topic and intent in real-time and selects an ad that matches the moment. No user profile tracking — context only.
+3. **Render in the response** — The ad is rendered as a native card or text recommendation inside the bot's reply, clearly labeled as Sponsored.
+4. **Earn on impressions and engagement** — Publishers receive CPM + CPC revenue, paid out monthly. Advertisers only pay for genuine engagement.
+
+## Publisher details
+
+- Install the SDK with a small code change in the chatbot's response pipeline.
+- Set ad frequency caps per session, category filters, and pacing rules per chatbot.
+- Restrict topics or block categories to align with brand and audience expectations.
+- Test mode before enabling broader traffic.
+- Track impressions, clicks, and quality signals in the publisher dashboard.
+- Monthly payouts via PayPal once minimum threshold is reached.
+
+## Advertiser details
+
+- Campaigns target conversation context and topic intent, not demographic profiles.
+- Configure placement and category controls per campaign.
+- Brand-safety preferences: block adjacency to sensitive topics, restrict creative types.
+- Operational visibility into delivery and engagement signals.
+
+## Privacy and compliance
+
+Prism is designed around contextual ad matching. The platform does not require persistent user profiles or cross-site identifiers. Publishers retain control over what conversation signals (if any) are persisted. The design supports privacy-first workflows appropriate to the publisher's regulatory environment (GDPR, CCPA, and similar).
+
+## FAQ
+
+### Will ads hurt my chatbot user experience?
+Not if they are paced correctly. Prism is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely.
+
+### How long does integration take?
+Most teams can get the SDK running quickly, then iterate on placement and pacing rules over time. You can start in a test mode before enabling broader traffic.
+
+### Which chatbot stacks are supported?
+Prism can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic.
+
+### How do advertisers target campaigns?
+Campaigns are matched to conversation context and topic intent instead of generic banner inventory. Teams can configure placement and category controls based on campaign goals.
+
+### Can publishers control what gets shown?
+Yes. Publishers can apply frequency limits, topic restrictions, and guardrails so sponsored content aligns with brand standards and user expectations.
+
+### What about privacy and compliance requirements?
+Prism is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment.
+
+## Brand identity
+
+- Legal name: Prism Publication
+- Founding year: 2025
+- Contact: info@prismpublication.com
+- Website: https://prismpublication.com
+
+## Index
+
+- Homepage: https://prismpublication.com/
+- Product: https://prismpublication.com/product
+- Use cases: https://prismpublication.com/use-cases
+- Publishers: https://prismpublication.com/publishers
+- Advertisers: https://prismpublication.com/advertisers
+- Demo: https://prismpublication.com/demo
+- Documentation: https://prismpublication.com/docs
+- Blog: https://prismpublication.com/blog
+- Ad policy: https://prismpublication.com/ad-policy
+- Company: https://prismpublication.com/company
+- Contact: https://prismpublication.com/contact
+- Sitemap: https://prismpublication.com/sitemap.xml

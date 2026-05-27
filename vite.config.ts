@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: "::",
-    port: 8080,
+    port: 5173,
     // Required when serving dev server through Cloudflare Tunnel/custom hostnames.
     allowedHosts: true,
     hmr: {
@@ -18,15 +18,15 @@ export default defineConfig(({ mode }) => ({
     },
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8787",
+        target: "http://127.0.0.1:8080",
         changeOrigin: true,
       },
       "/uploads": {
-        target: "http://127.0.0.1:8787",
+        target: "http://127.0.0.1:8080",
         changeOrigin: true,
       },
       "/sitemap.xml": {
-        target: "http://127.0.0.1:8787",
+        target: "http://127.0.0.1:8080",
         changeOrigin: true,
       },
     },

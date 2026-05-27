@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ChunkErrorBoundary from "@/components/ChunkErrorBoundary";
 import { PortalAuthProvider } from "@/components/portal/PortalAuthProvider";
 import {
   RequirePortalLogin,
@@ -40,6 +41,7 @@ const App = () => (
       <Sonner />
       <PortalAuthProvider>
         <BrowserRouter>
+          <ChunkErrorBoundary>
           <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -80,6 +82,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </ChunkErrorBoundary>
         </BrowserRouter>
       </PortalAuthProvider>
     </TooltipProvider>

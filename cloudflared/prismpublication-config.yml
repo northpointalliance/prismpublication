@@ -3,7 +3,7 @@ credentials-file: /home/tokyo/.cloudflared/d69b9706-62c7-4d67-9aef-ba17bd3e0455.
 
 ingress:
   - hostname: prismpublication.com
-    service: http://localhost:8080
+    service: http://localhost:5173
   - hostname: www.prismpublication.com
-    service: http://localhost:8080
+    service: http://localhost:5173
   - service: http_status:404

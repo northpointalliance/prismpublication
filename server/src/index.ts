@@ -130,8 +130,8 @@ app.get("/sitemap.xml", async (_req: Request, res: Response) => {
       select: { slug: true, publishedAt: true },
       orderBy: { publishedAt: "desc" },
     });
-    const domain = process.env.SITE_URL ?? "https://prism.so";
-    const staticUrls = ["/", "/blog", "/about", "/pricing", "/advertiser", "/publisher", "/ad-policy"];
+    const domain = process.env.SITE_URL ?? "https://prismpublication.com";
+    const staticUrls = ["/", "/product", "/use-cases", "/publishers", "/advertisers", "/company", "/contact", "/docs", "/ad-policy", "/demo", "/blog"];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticUrls.map((u) => `  <url><loc>${domain}${u}</loc></url>`).join("\n")}
@@ -148,6 +148,18 @@ ${posts
     res.status(500).send("Failed to generate sitemap");
   }
 });
+
+// ─── Serve frontend (production) ─────────────────────────────────────────────
+
+const distDir = path.join(__dirname, "../../dist");
+if (isProduction) {
+  app.use(express.static(distDir, { maxAge: "1y", immutable: true, index: false }));
+  app.get("*", (_req: Request, res: Response) => {
+    // Remove restrictive CSP for HTML pages so the SPA can load scripts/styles
+    res.removeHeader("Content-Security-Policy");
+    res.sendFile(path.join(distDir, "index.html"));
+  });
+}
 
 // ─── Sentry error handler (must be after all routes) ─────────────────────────
 

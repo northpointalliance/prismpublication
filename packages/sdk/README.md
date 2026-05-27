@@ -18,7 +18,7 @@ From the Bot Developer portal (`/app/publisher`):
 4. Use:
    - `apiKey` = SDK key token
    - `botId` = portal bot ID
-   - `baseUrl` = your API base (for local: `http://localhost:8787/api`)
+   - `baseUrl` = your API base (for local: `http://localhost:8080/api`)
 
 ## Quick Start
 
@@ -65,7 +65,7 @@ function ChatMessage() {
   const { ad, loading, refresh } = usePrismAd({
     apiKey: 'YOUR_API_KEY',
     botId: 'your-bot-id',
-    baseUrl: 'http://localhost:8787/api',
+    baseUrl: 'http://localhost:8080/api',
     topic: 'technology',
     userId: 'user-123',
     frequency: 5
@@ -89,7 +89,7 @@ function App() {
     <PrismAdComponent
       apiKey="YOUR_API_KEY"
       botId="your-bot-id"
-      baseUrl="http://localhost:8787/api"
+      baseUrl="http://localhost:8080/api"
       topic="tech"
       userId="user-123"
       frequency={5}

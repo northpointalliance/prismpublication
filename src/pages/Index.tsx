@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import ScrollVideoSection from "@/components/ScrollVideoSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import AudienceSection from "@/components/AudienceSection";
 import StatsSection from "@/components/StatsSection";
@@ -10,6 +11,7 @@ const Index = () => {
   return (
     <SiteShell>
       <HeroSection />
+      <ScrollVideoSection />
       <HowItWorksSection />
       <AudienceSection />
       <StatsSection />

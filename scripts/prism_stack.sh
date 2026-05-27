@@ -33,9 +33,7 @@ find_existing_vite_pid() {
 }
 
 find_existing_api_pid() {
-  ps -eo pid=,args= | awk -v target="$PROJECT_DIR/server/src/index.js" '
-    $2 == "node" && (($3 == "--watch" && $4 == target) || $3 == target) { print $1; exit }
-  '
+  ps -eo pid=,args= | grep -E "tsx.*(--watch )?$PROJECT_DIR/server/src/index\\.ts" | grep -v grep | awk '{ print $1; exit }'
 }
 
 find_existing_tunnel_pid() {
@@ -89,9 +87,9 @@ start_api() {
     return
   fi
 
-  echo "Starting local API on :8787 ..."
+  echo "Starting local API on :8080 ..."
   cd "$PROJECT_DIR/server"
-  nohup node --watch "$PROJECT_DIR/server/src/index.js" >"$API_LOG" 2>&1 &
+  nohup npx tsx --watch "$PROJECT_DIR/server/src/index.ts" >"$API_LOG" 2>&1 &
   sleep 1
   local api_pid
   api_pid="$(find_existing_api_pid)"

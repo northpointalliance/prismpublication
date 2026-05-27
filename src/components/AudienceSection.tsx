@@ -1,158 +1,101 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Bot, Megaphone, Shield, Sparkles, TrendingUp, Users, Layers } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CheckCircle2, Lock, Zap } from "lucide-react";
+import Reveal from "@/components/Reveal";
 
-const publisherFeatures = [
-  { icon: Bot, text: "Works with any chatbot framework — OpenAI, LangChain, Rasa, custom agents" },
-  { icon: Shield, text: "Non-intrusive, context-aware ad placement that respects user experience" },
-  { icon: TrendingUp, text: "Average 3.2x revenue vs traditional display advertising networks" },
+const publisherBullets = [
+  "Publisher Controls — frequency caps, category filters, pacing rules",
+  "Operational Visibility — impressions, clicks, quality signals",
 ];
 
-const advertiserFeatures = [
-  { icon: Users, text: "Reach 200M+ unique users through AI chatbots and virtual assistants" },
-  { icon: Megaphone, text: "Ads delivered as natural recommendations within real conversations" },
-  { icon: Layers, text: "Intent-level targeting no other ad network can offer" },
+const advertiserBullets = [
+  "Intent Matching — ads placed in topically relevant moments",
+  "Advertiser Guardrails — placement controls and brand-safety preferences",
 ];
-
-// ── Mini dashboard preview ──────────────────────────────────────────────────
-
-const MiniDashboard = () => (
-  <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 mb-8">
-    <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
-      <div className="h-2 w-2 rounded-full bg-red-400/70" />
-      <div className="h-2 w-2 rounded-full bg-yellow-400/70" />
-      <div className="h-2 w-2 rounded-full bg-green-400/70" />
-      <span className="ml-2 text-[9px] text-white/30 font-mono">Publisher Dashboard</span>
-    </div>
-    <div className="p-3 space-y-2.5">
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Revenue", value: "$48.20", change: "+18%" },
-          { label: "Fill Rate", value: "94.2%", change: "+3.1%" },
-          { label: "Active Bots", value: "3", change: "" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-md bg-white/5 p-2">
-            <p className="text-[8px] text-white/40">{s.label}</p>
-            <p className="text-sm font-bold text-white">{s.value}</p>
-            {s.change && <p className="text-[8px] text-emerald-400">{s.change}</p>}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-end gap-1 h-10">
-        {[30, 42, 35, 55, 48, 65, 58, 72, 68, 85].map((h, i) => (
-          <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-primary/60 to-primary/20" style={{ height: `${h}%` }} />
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// ── Mini campaign preview ───────────────────────────────────────────────────
-
-const MiniCampaign = () => (
-  <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 mb-8">
-    <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
-      <div className="h-2 w-2 rounded-full bg-red-400/70" />
-      <div className="h-2 w-2 rounded-full bg-yellow-400/70" />
-      <div className="h-2 w-2 rounded-full bg-green-400/70" />
-      <span className="ml-2 text-[9px] text-white/30 font-mono">Advertiser Portal</span>
-    </div>
-    <div className="p-3 space-y-2.5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] text-white/90 font-medium">Notion AI — Productivity</p>
-          <p className="text-[8px] text-white/40">Card format</p>
-        </div>
-        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] font-medium text-emerald-400">Live</span>
-      </div>
-      <div className="flex flex-wrap gap-1">
-        {["productivity", "ai", "writing"].map((tag) => (
-          <span key={tag} className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[8px] text-primary">{tag}</span>
-        ))}
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-md bg-white/5 p-1.5 text-center">
-          <p className="text-sm font-bold text-white">4.2k</p>
-          <p className="text-[7px] text-white/40">Impressions</p>
-        </div>
-        <div className="rounded-md bg-white/5 p-1.5 text-center">
-          <p className="text-sm font-bold text-white">3.8%</p>
-          <p className="text-[7px] text-white/40">CTR</p>
-        </div>
-        <div className="rounded-md bg-white/5 p-1.5 text-center">
-          <p className="text-sm font-bold text-emerald-400">$84</p>
-          <p className="text-[7px] text-white/40">Spent</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// ── Main ────────────────────────────────────────────────────────────────────
 
 const AudienceSection = () => {
   return (
     <section className="relative py-32" aria-labelledby="audience-heading">
       <h2 id="audience-heading" className="sr-only">For Publishers and Advertisers</h2>
-      <div className="container mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Publishers */}
-          <article id="publishers" className="rounded-3xl glow-border bg-card p-10 md:p-14 flex flex-col justify-between" aria-labelledby="pub-heading">
-            <div>
-              <span className="text-xs font-mono text-primary uppercase tracking-widest">For Chatbot Publishers</span>
-              <h3 id="pub-heading" className="text-3xl md:text-4xl font-bold mt-4 mb-4 tracking-tight">
-                Monetize every <span className="text-gradient-primary">conversation</span>
+      <div className="container mx-auto px-6 max-w-6xl">
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* ─── For Publishers ─────────────────────────────────────────── */}
+          <Reveal className="flex flex-col gap-4">
+            <article
+              id="publishers"
+              aria-labelledby="pub-heading"
+              className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-sky-50 via-white to-blue-50 p-10 md:p-12"
+            >
+              <span className="text-[11px] font-mono text-primary uppercase tracking-widest">
+                Audience Owners
+              </span>
+              <h3 id="pub-heading" className="text-3xl md:text-4xl font-medium mt-4 mb-5 tracking-tight">
+                For Publishers
               </h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                Connect your chatbot, set pacing rules, and monetize high-intent sessions while keeping conversation quality intact.
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                Set ad frequency caps, category filters, and pacing rules per chatbot.
+                Track impressions, clicks, and quality signals in one workflow.
+                Use contextual signals without relying on personal profile targeting.
               </p>
-              <MiniDashboard />
-              <ul className="space-y-4 mb-10" aria-label="Publisher benefits">
-                {publisherFeatures.map((f) => (
-                  <li key={f.text} className="flex items-center gap-3 text-base text-secondary-foreground">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0" aria-hidden="true">
-                      <f.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    {f.text}
+              <ul className="space-y-3" aria-label="Publisher benefits">
+                {publisherBullets.map((text) => (
+                  <li key={text} className="flex items-start gap-3 text-sm md:text-base text-foreground/80">
+                    <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>{text}</span>
                   </li>
                 ))}
               </ul>
-            </div>
-            <Link to="/publishers">
-              <Button variant="primary" className="w-fit">
-                Start Publishing <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
-              </Button>
-            </Link>
-          </article>
+            </article>
 
-          {/* Advertisers */}
-          <article id="advertisers" className="rounded-3xl glow-border bg-card p-10 md:p-14 flex flex-col justify-between" aria-labelledby="adv-heading">
-            <div>
-              <span className="text-xs font-mono text-glow-secondary uppercase tracking-widest">For Advertisers</span>
-              <h3 id="adv-heading" className="text-3xl md:text-4xl font-bold mt-4 mb-4 tracking-tight">
-                Ads that feel like <span className="text-gradient-primary">answers</span>
+            {/* Inline supporting card */}
+            <div className="rounded-2xl border border-border bg-card px-6 py-5 flex items-start gap-4">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0" aria-hidden="true">
+                <Zap className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Fast Integration</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Deploy the SDK quickly</p>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* ─── For Advertisers ────────────────────────────────────────── */}
+          <Reveal delay={150} className="flex flex-col gap-4">
+            <article
+              id="advertisers"
+              aria-labelledby="adv-heading"
+              className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-sky-50 via-white to-blue-50 p-10 md:p-12"
+            >
+              <span className="text-[11px] font-mono text-primary uppercase tracking-widest">
+                Brand Growth
+              </span>
+              <h3 id="adv-heading" className="text-3xl md:text-4xl font-medium mt-4 mb-5 tracking-tight">
+                For Advertisers
               </h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                Reach users while they are actively asking relevant questions instead of passively scrolling through generic inventory.
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                Reach high-intent users inside live chatbot conversations.
+                Place ads when users are already discussing relevant topics.
+                Run campaigns with placement controls and brand-safety preferences.
               </p>
-              <MiniCampaign />
-              <ul className="space-y-4 mb-10" aria-label="Advertiser benefits">
-                {advertiserFeatures.map((f) => (
-                  <li key={f.text} className="flex items-center gap-3 text-base text-secondary-foreground">
-                    <div className="h-8 w-8 rounded-lg bg-glow-secondary/10 flex items-center justify-center shrink-0" aria-hidden="true">
-                      <f.icon className="h-4 w-4 text-glow-secondary" />
-                    </div>
-                    {f.text}
+              <ul className="space-y-3" aria-label="Advertiser benefits">
+                {advertiserBullets.map((text) => (
+                  <li key={text} className="flex items-start gap-3 text-sm md:text-base text-foreground/80">
+                    <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>{text}</span>
                   </li>
                 ))}
               </ul>
+            </article>
+
+            {/* Inline supporting card */}
+            <div className="rounded-2xl border border-border bg-card px-6 py-5 flex items-start gap-4">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0" aria-hidden="true">
+                <Lock className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Privacy-Forward Design</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Contextual signals, not profile-based targeting</p>
+              </div>
             </div>
-            <Link to="/advertisers">
-              <Button variant="secondary" className="w-fit">
-                Launch a Campaign <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
-              </Button>
-            </Link>
-          </article>
+          </Reveal>
         </div>
       </div>
     </section>

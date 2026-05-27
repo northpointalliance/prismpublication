@@ -1,61 +1,24 @@
-(() => {
-  const url = new URL(self.location.href);
-  const buildId = url.searchParams.get("build") || "dev";
-  const runtimeCacheName = `prism-runtime-${buildId}`;
+// Self-unregistering service worker — clears caches and removes itself.
+// This file is intentionally a no-op SW that nukes any prior cached state on
+// the client. Once browsers fetch this new copy, the old SW (which intercepted
+// JS/CSS chunk requests) is replaced, all caches are cleared, and the SW
+// unregisters itself so future page loads go straight to the network.
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
 
-  self.addEventListener("install", () => {
-    self.skipWaiting();
-  });
-
-  self.addEventListener("activate", (event) => {
-    event.waitUntil(
-      (async () => {
-        const cacheKeys = await caches.keys();
-        await Promise.all(
-          cacheKeys
-            .filter((key) => key !== runtimeCacheName)
-            .map((key) => caches.delete(key)),
-        );
-
-        await self.clients.claim();
-
-        const clients = await self.clients.matchAll({
-          type: "window",
-          includeUncontrolled: true,
-        });
-
-        clients.forEach((client) => {
-          client.postMessage({
-            type: "PRISM_SW_REFRESH",
-            buildId,
-          });
-        });
-      })(),
-    );
-  });
-
-  self.addEventListener("fetch", (event) => {
-    const { request } = event;
-    if (request.method !== "GET") return;
-
-    const requestUrl = new URL(request.url);
-    if (requestUrl.origin !== self.location.origin) return;
-    if (requestUrl.pathname.startsWith("/api/")) return;
-    if (request.headers.has("authorization")) return;
-
-    event.respondWith(
-      (async () => {
-        try {
-          const fresh = await fetch(request, { cache: "no-store" });
-          const cache = await caches.open(runtimeCacheName);
-          cache.put(request, fresh.clone());
-          return fresh;
-        } catch (_err) {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-          throw _err;
-        }
-      })(),
-    );
-  });
-})();
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+      await self.clients.claim();
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      clients.forEach((client) => client.navigate(client.url).catch(() => undefined));
+      const registration = self.registration;
+      if (registration) {
+        await registration.unregister().catch(() => undefined);
+      }
+    })(),
+  );
+});

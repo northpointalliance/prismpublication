@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import Reveal from "@/components/Reveal";
 
 const CTASection = () => {
   return (
     <section className="relative py-32" aria-labelledby="cta-heading">
       <div className="container mx-auto px-6">
-        <div
-          className="relative overflow-hidden rounded-3xl border border-border/80 bg-card shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+        <Reveal>
+          <div
+            className="relative overflow-hidden rounded-3xl border border-border/80 bg-card shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
           style={{
             backgroundImage:
               "linear-gradient(135deg, rgba(238,244,255,0.96), rgba(249,251,255,0.92)), url('/login-assets/pattern.svg')",
@@ -20,7 +22,7 @@ const CTASection = () => {
           <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-primary/10 blur-[100px]" aria-hidden="true" />
 
           <div className="relative p-12 md:p-20 text-center">
-            <h2 id="cta-heading" className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+            <h2 id="cta-heading" className="text-4xl md:text-6xl font-medium tracking-tight mb-6">
               Validate your chatbot
               <br />
               <span className="text-gradient-primary">ad strategy in minutes.</span>
@@ -48,7 +50,8 @@ const CTASection = () => {
               </Link>
             </div>
           </div>
-        </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

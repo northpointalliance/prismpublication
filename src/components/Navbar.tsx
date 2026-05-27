@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
+import { routeForRole } from "@/lib/portal-auth";
 
 const primaryLinks = [
   { label: "Publishers", to: "/publishers" },
@@ -13,8 +14,16 @@ const primaryLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user } = usePortalAuth();
+  const { user, currentRole } = usePortalAuth();
   const closeMobileMenu = () => setMobileOpen(false);
+
+  // If logged in with a selected workspace, jump straight to its dashboard.
+  // Otherwise send to the workspace picker (or login if no session).
+  const openAppHref = !user
+    ? "/app/login"
+    : currentRole
+      ? routeForRole(currentRole)
+      : "/app/choose-workspace";
 
   return (
     <nav
@@ -39,7 +48,7 @@ const Navbar = () => {
           <Link to="/demo">
             <Button variant="secondary" size="sm">Demo</Button>
           </Link>
-          <Link to={user ? "/app/choose-workspace" : "/app/login"}>
+          <Link to={openAppHref}>
             <Button variant="primary" size="sm">{user ? "Open App" : "Login"}</Button>
           </Link>
         </div>
@@ -77,7 +86,7 @@ const Navbar = () => {
             <Link to="/demo" onClick={closeMobileMenu}>
               <Button variant="secondary" size="sm" className="w-full">Demo</Button>
             </Link>
-            <Link to={user ? "/app/choose-workspace" : "/app/login"} onClick={closeMobileMenu}>
+            <Link to={openAppHref} onClick={closeMobileMenu}>
               <Button variant="primary" size="sm" className="w-full">{user ? "Open App" : "Login"}</Button>
             </Link>
           </div>

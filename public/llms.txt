@@ -1,0 +1,36 @@
+# Prism
+
+> The ad network purpose-built for AI chatbot conversations. Publishers monetize chat sessions with context-aware native ads; advertisers reach high-intent users in real chatbot dialog.
+
+Prism (prismpublication.com) is a conversational advertising platform. The SDK reads live chatbot conversation context and serves native sponsored recommendations that fit the moment, rather than generic banners. Publishers earn CPM + CPC revenue with monthly payouts; advertisers pay only for genuine engagement.
+
+## Core Pages
+
+- [Homepage](https://prismpublication.com/): Product overview, how it works, FAQ.
+- [Product](https://prismpublication.com/product): Full platform overview — SDK, context matching, controls.
+- [Use cases](https://prismpublication.com/use-cases): Supported chatbot types and integration patterns.
+- [For Publishers](https://prismpublication.com/publishers): SDK install, pacing controls, revenue model.
+- [For Advertisers](https://prismpublication.com/advertisers): Intent-level targeting inside live chatbot conversations, brand-safety controls.
+- [Interactive Demo](https://prismpublication.com/demo): Two-minute simulated chatbot ad flow, no signup.
+- [Documentation](https://prismpublication.com/docs): SDK reference and integration guides.
+- [Blog](https://prismpublication.com/blog): Strategy, monetization, and product updates.
+- [Ad Policy](https://prismpublication.com/ad-policy): Content and category restrictions.
+- [Company](https://prismpublication.com/company): About Prism.
+- [Contact](https://prismpublication.com/contact): Talk to the team.
+
+## Key Facts
+
+- Category: Conversational advertising / chatbot monetization SDK
+- Supported stacks: OpenAI / GPT, LangChain, Rasa, custom AI agents, GPT wrappers, customer support bots, e-commerce assistants
+- Ad formats: Native sponsored recommendations rendered inside the chatbot response
+- Targeting: Real-time conversation context (no profile-based tracking)
+- Privacy: Contextual signals only; GDPR / CCPA aligned
+- Pricing model: CPM + CPC, monthly payouts to publishers
+- Publisher controls: Frequency caps, category filters, topic restrictions, pacing rules
+- Advertiser controls: Placement controls, brand-safety preferences, category targeting
+- Integration: SDK-first, three-line install, supports test mode before broader rollout
+
+## Optional
+
+- [Sitemap](https://prismpublication.com/sitemap.xml): Full URL index.
+- [Robots](https://prismpublication.com/robots.txt): Crawl policy.

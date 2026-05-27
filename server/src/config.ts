@@ -1,4 +1,4 @@
-export const port: number = Number(process.env.PORT || 8787);
+export const port: number = Number(process.env.PORT || 8080);
 export const isProduction: boolean = process.env.NODE_ENV === "production";
 export const allowInsecureDevAuth: boolean = process.env.ALLOW_INSECURE_DEV_AUTH === "true";
 export const supabaseUrl: string =
@@ -7,7 +7,7 @@ export const supabasePublishableKey: string =
   process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 export const sdkApiKey: string = process.env.PRISM_API_KEY || process.env.BOTGRID_API_KEY || "";
 export const adminApiKey: string = process.env.ADMIN_API_KEY || "";
-export const corsOrigin: string = process.env.API_CORS_ORIGIN || "http://localhost:8080";
+export const corsOrigin: string = process.env.API_CORS_ORIGIN || "http://localhost:5173";
 // When true, every SDK request must include X-Prism-Timestamp + X-Prism-Signature headers.
 export const requireSdkHmac: boolean = process.env.REQUIRE_SDK_HMAC !== "false";
 // PayPal webhook ID from developer.paypal.com -> Apps -> Webhooks (required for signature verification).
