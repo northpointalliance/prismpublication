@@ -11,6 +11,8 @@ import blog from "./routes/blog.ts";
 import leads from "./routes/leads.ts";
 import auth from "./routes/auth.ts";
 import me from "./routes/me.ts";
+import advertiser from "./routes/advertiser.ts";
+import wallet from "./routes/wallet.ts";
 
 const app = new Hono<Env>();
 
@@ -33,6 +35,8 @@ app.route("/api/blog", blog);
 app.route("/api/leads", leads);
 app.route("/api/auth", auth);
 app.route("/api/me", me);
+app.route("/api/advertiser", advertiser);
+app.route("/api/wallet", wallet);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 app.onError((err, c) => {

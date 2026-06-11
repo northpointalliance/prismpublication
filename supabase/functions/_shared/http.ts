@@ -44,3 +44,12 @@ export const baseMiddleware: MiddlewareHandler<Env> = async (c, next) => {
 // Small JSON error helper.
 export const fail = (c: Ctx, status: number, error: string, extra?: Record<string, unknown>) =>
   c.json({ error, ...(extra ?? {}) }, status as 400);
+
+// Safe JSON body read (returns undefined on empty/invalid body).
+export const readJson = async (c: Ctx): Promise<unknown> => {
+  try {
+    return await c.req.json();
+  } catch {
+    return undefined;
+  }
+};
