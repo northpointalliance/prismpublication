@@ -48,3 +48,12 @@ export const createSdkToken = (): string => {
   crypto.getRandomValues(bytes);
   return "bgsk_" + Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 };
+
+// Public bot id: orgbot_<orgId>_<slug>_<3 random bytes hex> (mirrors helpers.ts createBotPublicId).
+export const createBotPublicId = ({ organizationId, name }: { organizationId: string; name: string }): string => {
+  const baseSlug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+  const bytes = new Uint8Array(3);
+  crypto.getRandomValues(bytes);
+  const suffix = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `orgbot_${organizationId}_${baseSlug || "bot"}_${suffix}`;
+};

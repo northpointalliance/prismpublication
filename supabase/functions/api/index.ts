@@ -13,6 +13,7 @@ import auth from "./routes/auth.ts";
 import me from "./routes/me.ts";
 import advertiser from "./routes/advertiser.ts";
 import wallet from "./routes/wallet.ts";
+import publisher from "./routes/publisher.ts";
 
 const app = new Hono<Env>();
 
@@ -37,6 +38,7 @@ app.route("/api/auth", auth);
 app.route("/api/me", me);
 app.route("/api/advertiser", advertiser);
 app.route("/api/wallet", wallet);
+app.route("/api/publisher", publisher);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 app.onError((err, c) => {
