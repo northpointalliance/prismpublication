@@ -1,1 +1,10 @@
-project_id = "aidgvgbqnklocmudiilk"
+project_id = "botnabfogcjrkpmdjgpr"
+
+# The `api` gateway does its own auth (some routes are public, others use Supabase JWT / admin / SDK
+# keys), so the platform JWT gate must be OFF for it.
+[functions.api]
+verify_jwt = false
+
+# query-fan-out is already public (open CORS, no Supabase JWT).
+[functions.query-fan-out]
+verify_jwt = false
