@@ -17,6 +17,7 @@ import publisher from "./routes/publisher.ts";
 import payouts from "./routes/payouts.ts";
 import sdk from "./routes/sdk.ts";
 import demo from "./routes/demo.ts";
+import admin from "./routes/admin.ts";
 
 const app = new Hono<Env>();
 
@@ -43,6 +44,7 @@ app.route("/api/advertiser", advertiser);
 app.route("/api/wallet", wallet);
 app.route("/api/publisher", publisher);
 app.route("/api/payouts", payouts);
+app.route("/api/admin", admin);
 app.route("/api/demo", demo);
 app.route("/api", sdk); // /api/ads + /api/track/:eventType
 
