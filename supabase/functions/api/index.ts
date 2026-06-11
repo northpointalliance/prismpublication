@@ -18,6 +18,7 @@ import payouts from "./routes/payouts.ts";
 import sdk from "./routes/sdk.ts";
 import demo from "./routes/demo.ts";
 import admin from "./routes/admin.ts";
+import webhooks from "./routes/webhooks.ts";
 
 const app = new Hono<Env>();
 
@@ -46,6 +47,7 @@ app.route("/api/publisher", publisher);
 app.route("/api/payouts", payouts);
 app.route("/api/admin", admin);
 app.route("/api/demo", demo);
+app.route("/api/webhooks", webhooks);
 app.route("/api", sdk); // /api/ads + /api/track/:eventType
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));

@@ -8,3 +8,7 @@ verify_jwt = false
 # query-fan-out is already public (open CORS, no Supabase JWT).
 [functions.query-fan-out]
 verify_jwt = false
+
+# queue-worker is invoked by pg_cron; it guards itself with the x-worker-secret header.
+[functions.queue-worker]
+verify_jwt = false
