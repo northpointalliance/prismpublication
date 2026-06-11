@@ -14,6 +14,9 @@ import me from "./routes/me.ts";
 import advertiser from "./routes/advertiser.ts";
 import wallet from "./routes/wallet.ts";
 import publisher from "./routes/publisher.ts";
+import payouts from "./routes/payouts.ts";
+import sdk from "./routes/sdk.ts";
+import demo from "./routes/demo.ts";
 
 const app = new Hono<Env>();
 
@@ -39,6 +42,9 @@ app.route("/api/me", me);
 app.route("/api/advertiser", advertiser);
 app.route("/api/wallet", wallet);
 app.route("/api/publisher", publisher);
+app.route("/api/payouts", payouts);
+app.route("/api/demo", demo);
+app.route("/api", sdk); // /api/ads + /api/track/:eventType
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 app.onError((err, c) => {
