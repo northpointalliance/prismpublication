@@ -1,6 +1,13 @@
 # Prism Docs
 
-This folder is the source of truth for project context, architecture, and operational setup.
+This folder holds project context, product notes, and operational setup.
+
+> **⚠️ Architecture updated (June 2026).** The backend now runs on **Supabase Edge Functions** (Deno),
+> the database is **Supabase Postgres**, the queue is **pgmq**, and the frontend is a **static site**
+> (cPanel/Vercel). The current source of truth is **[../HANDOVER.md](../HANDOVER.md)** and
+> **[ARCHITECTURE.md](ARCHITECTURE.md)**. Sections below that mention `server/.env`, the local Node API
+> (`:8080`), `prism_stack.sh`, `REDIS_URL`, or "Local DB" describe the **legacy/rollback** setup. Product,
+> portal-structure, persona, HMAC, and security sections remain accurate.
 
 ## Current Product Snapshot
 
@@ -284,13 +291,19 @@ All data fetching and state management stays in the parent pages (`AdvertiserPor
 
 ## Documentation Map
 
-- [CHANGELOG.md](/home/tokyo/Desktop/AIADS/CHANGELOG.md): Release summary (root)
-- [docs/CHANGELOG.md](/home/tokyo/Desktop/AIADS/docs/CHANGELOG.md): Detailed evolution log and verification checklist
-- [LOCAL_DATABASE.md](/home/tokyo/Desktop/AIADS/docs/LOCAL_DATABASE.md): Local Postgres + Prisma setup
-- [DEEP_DIVE.md](/home/tokyo/Desktop/AIADS/docs/DEEP_DIVE.md): Technical deep-dive
-- [INTEGRATION_EXAMPLES.md](/home/tokyo/Desktop/AIADS/docs/INTEGRATION_EXAMPLES.md): SDK/integration examples
-- [BUSINESS_IDEA.md](/home/tokyo/Desktop/AIADS/docs/BUSINESS_IDEA.md): Product/business framing
-- [SETUP_GUIDE.md](/home/tokyo/Desktop/AIADS/SETUP_GUIDE.md): Non-technical operator setup and handoff guide
+**Current (post-migration):**
+- [HANDOVER.md](../HANDOVER.md): **Master handover** — architecture, ops, deploy, rollback, pending items
+- [ARCHITECTURE.md](ARCHITECTURE.md): Current system architecture (Supabase Edge Functions)
+- [FRONTEND_DEPLOY.md](FRONTEND_DEPLOY.md): Deploy the frontend to cPanel or Vercel
+- [SUPABASE_CONNECTION.md](SUPABASE_CONNECTION.md): Supabase project, DB connection strings, credentials
+- [SETUP_GUIDE.md](../SETUP_GUIDE.md): Operator setup & handoff guide (updated)
+- [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md): SDK/integration examples (API paths now under the functions URL)
+- [BUSINESS_IDEA.md](BUSINESS_IDEA.md): Product/business framing
+- [CHANGELOG.md](../CHANGELOG.md) / [docs/CHANGELOG.md](CHANGELOG.md): Release + evolution log
+
+**Legacy (pre-migration, rollback/reference only):**
+- [LOCAL_DATABASE.md](LOCAL_DATABASE.md): Local Postgres + Prisma + Express setup
+- [DEEP_DIVE.md](DEEP_DIVE.md): Technical deep-dive of the old Express backend
 
 ## Notes
 

@@ -1,5 +1,9 @@
 # Prism - Deep Dive
 
+> **⚠️ LEGACY (pre-migration).** Describes the old self-hosted Express/Prisma backend. The system now runs
+> on Supabase Edge Functions + Postgres. Current source of truth: [../HANDOVER.md](../HANDOVER.md) and
+> [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## 1) Architecture Overview
 
 This project currently runs as a split frontend + API stack:

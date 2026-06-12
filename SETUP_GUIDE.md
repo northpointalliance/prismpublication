@@ -1,13 +1,17 @@
 # Prism — Setup & Handoff Guide
 
-> Written for non-technical operators. No coding experience required to follow this guide.
-> If something breaks, the "Who to call" section at the bottom tells you what to hand to a developer.
+> Written for operators. For the full technical handover see [HANDOVER.md](HANDOVER.md);
+> for architecture see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+>
+> **⚠️ Architecture updated (June 2026):** the backend now runs entirely on **Supabase Edge Functions**
+> (not a self-hosted Express server), the database is **Supabase Postgres**, the job queue is **pgmq**, and
+> the frontend is a **static site** deployed to **cPanel or Vercel**. Older mentions of `server/.env`,
+> `DATABASE_URL` to Railway/Render, or `REDIS_URL` are legacy.
 
 ---
 
 ## What is Prism?
-
-Prism is an ad marketplace that connects three types of users:
+An ad marketplace connecting three user types:
 
 | Who | What they do |
 |-----|-------------|
@@ -15,219 +19,111 @@ Prism is an ad marketplace that connects three types of users:
 | **Publishers (Bot Developers)** | Register their bots to show ads and earn money |
 | **Admins** | Review ads, approve payouts, and configure platform settings |
 
-The platform has a website (public marketing pages) and a private app (the three portals above).
+A public marketing site + a private app with the three portals above.
 
 ---
 
-## The Two Config Files You Need to Fill In
+## How it's hosted now
+| Piece | Runs on | Config |
+|---|---|---|
+| Frontend (website + app) | Static host — **cPanel or Vercel** | build-time `VITE_` env vars |
+| Backend (API) | **Supabase Edge Functions** | function secrets (Supabase dashboard) |
+| Database | **Supabase Postgres** | managed |
+| Payments | PayPal | set in **Admin → Settings → PayPal** |
 
-There are two plain text files that control how the platform connects to external services. Both are named `.env` and live in different folders. Think of them as a list of passwords and settings.
-
-> **How to edit them:** Open the file in any text editor (Notepad, TextEdit, VS Code). Change the value after the `=` sign. Do not add spaces around the `=`. Save the file.
+There is no server to run or `DATABASE_URL` to fill in anymore — Supabase hosts the backend and database.
 
 ---
 
-### File 1 — Frontend settings
-**Location:** `AIADS/.env`
-
+## Frontend settings (`AIADS/.env`, used at build time)
 ```
-VITE_SUPABASE_PROJECT_ID="your-project-id"
-VITE_SUPABASE_PUBLISHABLE_KEY="your-supabase-anon-key"
-VITE_SUPABASE_URL="https://your-project.supabase.co"
-VITE_PAYPAL_CLIENT_ID="your-paypal-client-id"
+VITE_API_BASE_URL=https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api
+VITE_SUPABASE_URL=https://botnabfogcjrkpmdjgpr.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_3OE-gh5j9AhXsAIlNySH5A_Nqo3VRUi
+VITE_SUPABASE_PROJECT_ID=botnabfogcjrkpmdjgpr
 ```
+| Setting | What it does |
+|---|---|
+| `VITE_API_BASE_URL` | Where the app sends API calls (the Supabase Edge Function) |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` | Used for login (Supabase Auth) |
 
-| Setting | What it does | Where to get it |
-|---------|-------------|-----------------|
-| `VITE_SUPABASE_PROJECT_ID` | Identifies your Supabase project | Supabase dashboard → Project Settings → General → Reference ID |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public API key for login | Supabase dashboard → Project Settings → API → `anon` key |
-| `VITE_SUPABASE_URL` | URL of your Supabase project | Supabase dashboard → Project Settings → API → Project URL |
-| `VITE_PAYPAL_CLIENT_ID` | *(Optional)* Fallback PayPal client ID for the browser | PayPal Developer Dashboard → My Apps → your app → Client ID |
-
-> **Note:** `VITE_PAYPAL_CLIENT_ID` is now optional. The frontend automatically fetches the active PayPal Client ID from the backend (whatever the admin saved via Admin → Settings → PayPal Gateway). You only need to set this as a fallback for local development before credentials are entered. Set it to `"test"` for dummy PayPal buttons with no real payments.
-
----
-
-### File 2 — Backend (server) settings
-**Location:** `AIADS/server/.env`
-
-```
-DATABASE_URL="postgresql://..."
-SUPABASE_URL="https://your-project.supabase.co"
-SUPABASE_PUBLISHABLE_KEY="your-supabase-anon-key"
-PRISM_API_KEY="replace-with-strong-random-key"
-ADMIN_API_KEY="replace-with-strong-random-key"
-PAYPAL_CLIENT_ID="your-paypal-client-id"
-PAYPAL_CLIENT_SECRET="your-paypal-client-secret"
-PAYPAL_MODE="sandbox"
-PAYPAL_WEBHOOK_ID="your-webhook-id"
-SENTRY_DSN=""
-REDIS_URL=""
-```
-
-| Setting | What it does | Where to get it |
-|---------|-------------|-----------------|
-| `DATABASE_URL` | Connection string to your PostgreSQL database | Your hosting provider (Railway, Render, Supabase DB, etc.) |
-| `SUPABASE_URL` | Same as frontend — server also verifies logins | Same as above |
-| `SUPABASE_PUBLISHABLE_KEY` | Same as frontend anon key | Same as above |
-| `PRISM_API_KEY` (or `BOTGRID_API_KEY`) | Secret key that AI bots use to request ads | Generate a random 32+ character string (see below) |
-| `ADMIN_API_KEY` | Secret key for admin API calls | Generate a different random 32+ character string |
-| `PAYPAL_CLIENT_ID` | Same value as `VITE_PAYPAL_CLIENT_ID` | PayPal Developer Dashboard |
-| `PAYPAL_CLIENT_SECRET` | Private PayPal key (never share this) | PayPal Developer Dashboard → your app → Secret |
-| `PAYPAL_MODE` | `sandbox` = test mode, `live` = real money | Set to `live` when ready for real payments |
-| `PAYPAL_WEBHOOK_ID` | Lets PayPal notify you of payment events | See PayPal Webhooks section below |
-| `SENTRY_DSN` | Error tracking — sends crash reports to Sentry | [sentry.io](https://sentry.io) → Create project → copy DSN. Optional — leave blank to skip |
-| `REDIS_URL` | Background job queue for payouts/webhooks | Any Redis provider (Upstash, Railway, etc.). Optional — leave blank for inline processing |
-
-#### How to generate a random secret key
-Go to [randomkeygen.com](https://randomkeygen.com) and copy any key from the "Fort Knox Passwords" section. Use a different one for `PRISM_API_KEY` and `ADMIN_API_KEY`.
+## Backend settings (Supabase → Edge Functions → Secrets)
+Set once in the dashboard. PayPal is configured in the Admin portal, not here.
+| Secret | What it does |
+|---|---|
+| `ADMIN_API_KEY` | Secret key for admin API/CLI calls *(currently a dev placeholder — rotate before production)* |
+| `PRISM_API_KEY` | Master key AI bots use to request ads *(dev placeholder — rotate)* |
+| `API_CORS_ORIGIN` | Comma-separated list of allowed frontend domains |
+| `DB_URL` | Pooled Postgres connection (transaction pooler) |
 
 ---
 
-## Service Accounts You Need
+## Service accounts
+### Supabase (login + backend + database)
+- Project `botnabfogcjrkpmdjgpr` — dashboard: https://supabase.com/dashboard/project/botnabfogcjrkpmdjgpr
+- Add app users: Authentication → Users → Invite. Assign roles in the `organization_members` table.
+- **After choosing the production domain:** Authentication → URL Configuration → set Site URL + add the
+  domain to Redirect URLs (else login/password-reset redirects fail).
 
-### 1. Supabase (handles user login)
-- Go to [supabase.com](https://supabase.com) → New Project
-- Free tier is fine for getting started
-- Copy the **Project URL**, **anon key**, and **Reference ID** into both `.env` files
-- To add users: Supabase dashboard → Authentication → Users → Invite user
-
-### 2. PayPal Developer (handles payments)
-- Go to [developer.paypal.com](https://developer.paypal.com) → Log In with your PayPal business account
-- Click **My Apps & Credentials**
-- Create an app (or use the default sandbox app)
-- Copy **Client ID** and **Secret** into `server/.env`
-- The same **Client ID** goes into the frontend `.env` as `VITE_PAYPAL_CLIENT_ID`
-
-#### Switching from Test to Live payments
-**Recommended (no restart needed):**
-1. Log into Admin portal → Settings → PayPal Gateway
-2. Paste your **Live** Client ID and Live Secret (different from sandbox credentials)
-3. Switch the toggle to `live`
-4. Click Save — takes effect immediately
-
-**Alternative (via `.env`):**
-1. In `server/.env`, change `PAYPAL_MODE="sandbox"` → `PAYPAL_MODE="live"`
-2. Replace `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` with **Live** credentials
-3. Restart the server
-4. Note: credentials set in the Admin console take priority over `.env` values
-
-#### Setting up PayPal Webhooks
-Webhooks let PayPal automatically tell Prism when a payment succeeds or fails.
-
-1. In PayPal Developer Dashboard → your app → **Webhooks** → Add Webhook
-2. Enter URL: `https://yourdomain.com/api/webhooks/paypal`
-3. Check these events:
-   - `PAYMENT.CAPTURE.COMPLETED`
-   - `PAYMENT.CAPTURE.DENIED`
-   - `PAYMENT.CAPTURE.REVERSED`
-   - `PAYOUT_ITEM.SUCCEEDED`
-   - `PAYOUT_ITEM.FAILED`
-4. Copy the **Webhook ID** shown after saving → paste into `PAYPAL_WEBHOOK_ID` in `server/.env`
-
-### 3. PostgreSQL Database
-The platform needs a database to store campaigns, bots, wallets, and payouts. Options:
-
-| Provider | Notes |
-|----------|-------|
-| [Railway](https://railway.app) | Easiest, one-click Postgres, free tier available |
-| [Render](https://render.com) | Also easy, free tier available |
-| [Supabase DB](https://supabase.com) | Your Supabase project includes a Postgres DB |
-| Local (Docker) | For development only — not suitable for production |
-
-After creating the database, copy the **connection string** (looks like `postgresql://user:password@host:5432/dbname`) into `DATABASE_URL` in `server/.env`.
+### PayPal (payments)
+- Configure in **Admin portal → Settings → PayPal Gateway** (Client ID + Secret + sandbox/live). Takes
+  effect immediately. Stored in the database, not in env.
+- **Webhooks:** PayPal Developer → your app → Webhooks → Add Webhook with URL
+  `https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/webhooks/paypal`, events:
+  `PAYMENT.CAPTURE.COMPLETED/DENIED/REVERSED`, `PAYOUT_ITEM.SUCCEEDED/FAILED`. Copy the Webhook ID into the
+  `PAYPAL_WEBHOOK_ID` function secret.
 
 ---
 
-## Admin Portal — First-Time Setup
+## Deploying the frontend
+See [docs/FRONTEND_DEPLOY.md](docs/FRONTEND_DEPLOY.md). Summary:
+- **cPanel:** `npm run build` → upload the contents of `dist/` to the web root (`.htaccess` handles routing).
+- **Vercel:** import the repo (auto-detected; `vercel.json` included) and set the four `VITE_` env vars.
 
-Once everything is running, log into the Admin portal at `/app/admin`:
-
-1. **Set the Platform Fee** (Settings tab)
-   - This is the percentage Prism keeps from publisher earnings
-   - Default recommendation: 30%
-
-2. **Enter PayPal Credentials** (Settings tab)
-   - Paste your Client ID and Client Secret
-   - Choose Sandbox (testing) or Live (real money)
-   - Click Save — takes effect immediately, no restart needed
-
-3. **Review the first ad** (Review Queue tab)
-   - New advertiser campaigns go here before going live
-   - Click Approve or Reject
-
-4. **Process publisher payouts** (Finance tab → Payouts sub-tab)
-   - Pending payout requests appear here
-   - Click "Pay via PayPal" to send money directly
-   - Or "Mark Paid" if you sent payment manually
+## Deploying a backend change
+`supabase functions deploy api` (after editing `supabase/functions/`). See HANDOVER.md.
 
 ---
 
-## User Roles Explained
+## Admin Portal — first-time setup
+Log into `/app/admin`:
+1. **Settings** → set the **Platform Fee** (default 30%).
+2. **Settings → PayPal Gateway** → enter Client ID + Secret, choose Sandbox/Live, Save.
+3. **Review Queue** → approve/reject new campaigns.
+4. **Finance → Payouts** → process pending publisher payouts ("Pay via PayPal" or "Mark Paid").
 
-| Role | Portal | What they can do |
-|------|--------|-----------------|
-| `advertiser_owner` | `/app/advertiser` | Create/manage campaigns, top up wallet via PayPal |
-| `advertiser_member` | `/app/advertiser` | Same as owner (read + write) |
-| `publisher_owner` | `/app/publisher` | Register bots, manage SDK keys, request payouts |
-| `publisher_dev` | `/app/publisher` | Same as owner |
-| `admin` | `/app/admin` | Review ads, manage payouts, configure PayPal & fees |
-| `super_admin` | `/app/admin` | Same as admin |
+## User roles
+| Role | Portal | Can do |
+|------|--------|--------|
+| `advertiser_owner` / `advertiser_member` | `/app/advertiser` | Campaigns, wallet top-up |
+| `publisher_owner` / `publisher_dev` | `/app/publisher` | Bots, SDK keys, payouts |
+| `admin` / `super_admin` | `/app/admin` | Review ads, payouts, settings |
 | `reviewer` | `/app/admin` | Review queue only |
 
-To assign a role: ask your developer to run the database seed script or update the `Membership` table directly.
+Assign a role by inserting into `organization_members` (Supabase → Table editor or SQL).
 
 ---
 
-## Day-to-Day Operations
+## Day-to-day operations
+- **"My ad isn't showing"** → Admin → Review Queue → Approve the pending ad.
+- **Publisher wants their money** → Admin → Finance → Payouts → Pay via PayPal.
+- **Payment didn't go through** → Admin → Finance → Top-Ups; cross-check PayPal dashboard; if PayPal shows
+  complete but Prism doesn't, check the webhook (Supabase function logs).
+- **Block a live ad** → Admin → Review Queue → Live Ads → Take Down.
 
-### Someone says "my ad isn't showing"
-1. Log into Admin portal → Review Queue
-2. Find the ad — it's probably stuck in "Pending" status
-3. Click Approve
+## If something breaks — what to give a developer
+1. Exact error message (screenshot) + which page + what you were doing.
+2. Supabase **Edge Function logs** (Dashboard → Edge Functions → `api` → Logs).
+3. Key files: `supabase/functions/api/routes/` (API logic), `server/prisma/schema.prisma` (DB structure),
+   `audit_logs` table (every admin action).
 
-### A publisher wants their money
-1. Log into Admin portal → Finance → Payouts tab
-2. Find their pending payout request
-3. Click "Pay via PayPal" (requires PayPal credentials to be configured)
-
-### An advertiser's payment didn't go through
-1. Check Admin portal → Finance → Top-Ups tab to see if it was recorded
-2. If missing, check the PayPal dashboard for the transaction
-3. If PayPal shows it as completed but Prism doesn't, tell your developer to check the webhook logs
-
-### You need to block an ad that's already live
-1. Log into Admin portal → Review Queue → Live Ads section
-2. Find the ad → click "Take Down"
-
----
-
-## What to Give a Developer if Something Breaks
-
-If you need a developer to fix something, give them:
-
-1. **The exact error message** shown on screen (take a screenshot)
-2. **Which page** you were on (`/app/advertiser`, `/app/publisher`, etc.)
-3. **What you were trying to do** (approve an ad, top up wallet, etc.)
-4. **The contents of both `.env` files** — with secrets replaced by `[REDACTED]` for safety
-5. Access to the server logs (found at `/tmp/server.log` if running locally)
-
-Key files a developer will want to look at:
-- `server/src/routes/` — all API logic
-- `server/src/audit.js` — log of every admin action
-- `server/prisma/schema.prisma` — database structure
-
----
-
-## Quick Reference
-
+## Quick reference
 | Thing | Where |
 |-------|-------|
-| Website home | `https://yourdomain.com` |
-| App login | `https://yourdomain.com/app/login` |
-| Admin portal | `https://yourdomain.com/app/admin` |
-| API health check | `https://yourdomain.com/api/health` |
-| Frontend config | `AIADS/.env` |
-| Backend config | `AIADS/server/.env` |
-| PayPal dashboard | [developer.paypal.com](https://developer.paypal.com) |
-| Supabase dashboard | [app.supabase.com](https://app.supabase.com) |
+| App login | `https://<frontend-domain>/app/login` |
+| Admin portal | `https://<frontend-domain>/app/admin` |
+| API health | `https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/health` |
+| Frontend config | `AIADS/.env` (build-time) |
+| Backend secrets | Supabase → Edge Functions → Secrets |
+| Supabase dashboard | https://supabase.com/dashboard/project/botnabfogcjrkpmdjgpr |
+| Technical handover | [HANDOVER.md](HANDOVER.md) |

@@ -1,5 +1,9 @@
 # Local Database Setup (Scalable Path)
 
+> **⚠️ LEGACY (pre-migration).** The database now lives on **Supabase Postgres** and the backend on
+> **Supabase Edge Functions**. This doc describes the old local Postgres + Prisma + Express stack, kept for
+> rollback/reference. Current: [../HANDOVER.md](../HANDOVER.md), [ARCHITECTURE.md](ARCHITECTURE.md).
+
 This project is now prepared for a local-first database stack using:
 
 - PostgreSQL (Docker) for local development
