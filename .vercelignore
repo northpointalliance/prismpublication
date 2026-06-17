@@ -1,9 +1,10 @@
 # Vercel only builds the frontend (Vite). Keep the backend / infra out of the deployment upload.
-server
-supabase
-cloudflared
-deploy
-scripts
-logs
-secrets
-.run
+# Leading slash = repo-root only, so we DON'T accidentally match src/integrations/supabase/, etc.
+/server
+/supabase
+/cloudflared
+/deploy
+/scripts
+/logs
+/secrets
+/.run
