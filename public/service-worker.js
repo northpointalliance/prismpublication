@@ -1,8 +1,10 @@
-// Self-unregistering service worker — clears caches and removes itself.
-// This file is intentionally a no-op SW that nukes any prior cached state on
-// the client. Once browsers fetch this new copy, the old SW (which intercepted
-// JS/CSS chunk requests) is replaced, all caches are cleared, and the SW
-// unregisters itself so future page loads go straight to the network.
+// Self-destroying service worker.
+//
+// The previous setup caused a production reload loop: the app re-registered this SW on every load,
+// it activated, force-navigated the page (reload), which re-registered it again — looping forever and
+// spiking Edge Function requests. The app no longer registers any SW (see src/main.tsx). This file is
+// kept ONLY to clean up browsers that still have the old worker: on activation it clears all caches and
+// unregisters itself. It does NOT navigate/reload, so it cannot drive a loop.
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
@@ -10,14 +12,16 @@ self.addEventListener("install", () => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
-      await self.clients.claim();
-      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      clients.forEach((client) => client.navigate(client.url).catch(() => undefined));
-      const registration = self.registration;
-      if (registration) {
-        await registration.unregister().catch(() => undefined);
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      } catch (_e) {
+        /* ignore */
+      }
+      try {
+        await self.registration.unregister();
+      } catch (_e) {
+        /* ignore */
       }
     })(),
   );
