@@ -75,6 +75,15 @@ supabase functions logs api                      # view logs (or the dashboard)
 - Public bucket `blog-images`. Admin blog uploads go here; `blog_posts.imageUrl` holds absolute Storage URLs.
   (Legacy `/uploads/blog/*` files were migrated here.)
 
+## Security — Row-Level Security (RLS)
+- **RLS is ENABLED (deny-all) on all `public` tables** — see `supabase/rls.sql`. This closes the PostgREST
+  hole (the public anon key would otherwise read/write every table). The Edge Functions are unaffected
+  because they connect as the table-owner `postgres` role (bypasses RLS) and Storage uses the service role.
+- **Re-run `supabase/rls.sql` after any migration that adds tables** (Prisma does not manage RLS).
+- Outstanding hardening: **enable "Leaked password protection"** in Dashboard → Authentication → Providers →
+  Password (HaveIBeenPwned check). The `pg_net in public` advisor is benign — pg_net is non-relocatable and
+  its functions live in the `net` schema; leave it.
+
 ## Frontend — deploy (cPanel or Vercel)
 Full steps in [docs/FRONTEND_DEPLOY.md](docs/FRONTEND_DEPLOY.md). In short: `npm run build` → deploy `dist/`
 (cPanel) or import to Vercel (`vercel.json` handles build + SPA routing). Set the four `VITE_` env vars.
