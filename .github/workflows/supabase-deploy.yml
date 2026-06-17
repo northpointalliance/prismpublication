@@ -1,0 +1,45 @@
+name: Deploy backend to Supabase
+
+# Auto-deploys the Edge Functions (and DB migrations, if a DB password secret is set) whenever
+# backend code is pushed to main. The frontend deploys separately via Vercel's Git integration,
+# so a single push to main updates both.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - "server/prisma/migrations/**"
+      - ".github/workflows/supabase-deploy.yml"
+  workflow_dispatch: {}
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_PROJECT_REF: botnabfogcjrkpmdjgpr
+  # Set to 'true' automatically when the DB password secret exists.
+  HAS_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD != '' && 'true' || 'false' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Deploy all Edge Functions declared under supabase/functions (verify_jwt etc. read from config.toml).
+      - name: Deploy Edge Functions
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+
+      # Apply any new migrations in server/prisma/migrations + supabase/migrations. Requires the DB password.
+      - name: Push database migrations
+        if: env.HAS_DB_PASSWORD == 'true'
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" -p "${{ secrets.SUPABASE_DB_PASSWORD }}"
+          supabase db push -p "${{ secrets.SUPABASE_DB_PASSWORD }}"
+
+      - name: Migration step skipped (no SUPABASE_DB_PASSWORD secret)
+        if: env.HAS_DB_PASSWORD != 'true'
+        run: echo "Skipping 'db push' — add the SUPABASE_DB_PASSWORD repo secret to enable migration deploys."

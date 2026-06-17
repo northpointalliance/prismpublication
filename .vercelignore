@@ -1,0 +1,9 @@
+# Vercel only builds the frontend (Vite). Keep the backend / infra out of the deployment upload.
+server
+supabase
+cloudflared
+deploy
+scripts
+logs
+secrets
+.run
