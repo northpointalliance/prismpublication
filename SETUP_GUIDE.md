@@ -3,10 +3,11 @@
 > Written for operators. For the full technical handover see [HANDOVER.md](HANDOVER.md);
 > for architecture see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 >
-> **⚠️ Architecture updated (June 2026):** the backend now runs entirely on **Supabase Edge Functions**
-> (not a self-hosted Express server), the database is **Supabase Postgres**, the job queue is **pgmq**, and
-> the frontend is a **static site** deployed to **cPanel or Vercel**. Older mentions of `server/.env`,
-> `DATABASE_URL` to Railway/Render, or `REDIS_URL` are legacy.
+> **✅ LIVE (June 2026):** the site runs at **https://prismpublication.com** — frontend on **Vercel**,
+> backend entirely on **Supabase Edge Functions**, database on **Supabase Postgres**, job queue on **pgmq**.
+> The old self-hosted server (Express + tunnel on a local machine) is **decommissioned**. Older mentions of
+> `server/.env`, `DATABASE_URL` to Railway/Render, or `REDIS_URL` are legacy.
+> For day-2 fixes see the **[Runbook](docs/RUNBOOK.md)**.
 
 ---
 
@@ -26,12 +27,14 @@ A public marketing site + a private app with the three portals above.
 ## How it's hosted now
 | Piece | Runs on | Config |
 |---|---|---|
-| Frontend (website + app) | Static host — **cPanel or Vercel** | build-time `VITE_` env vars |
+| Frontend (website + app) | **Vercel** → https://prismpublication.com (auto-deploys on git push) | build-time `VITE_` env vars in Vercel |
 | Backend (API) | **Supabase Edge Functions** | function secrets (Supabase dashboard) |
 | Database | **Supabase Postgres** | managed |
 | Payments | PayPal | set in **Admin → Settings → PayPal** |
 
-There is no server to run or `DATABASE_URL` to fill in anymore — Supabase hosts the backend and database.
+There is no server to run or `DATABASE_URL` to fill in anymore — Vercel hosts the site, Supabase hosts the
+backend + database. Deploying = `git push` (Vercel rebuilds automatically). cPanel is a supported alternative
+host if you ever move off Vercel (see [docs/FRONTEND_DEPLOY.md](docs/FRONTEND_DEPLOY.md)).
 
 ---
 

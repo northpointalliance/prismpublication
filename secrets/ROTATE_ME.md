@@ -1,27 +1,42 @@
-# Secrets backup — read this
+# Secrets — backup & rotation
 
-This directory contains a backup of the project's environment secrets, committed at the
-owner's explicit request.
+## What's in this folder
+- `root.env.gpg` / `server.env.gpg` — **AES256-encrypted** backups of `/.env` and `/server/.env`
+  (safe to keep in the repo). Decrypt: `gpg --decrypt secrets/root.env.gpg` (passphrase is stored OUTSIDE
+  the repo). The plaintext copies were **removed** from the repo and are gitignored.
 
-- `root.env` / `server.env` — **PLAINTEXT** copies of `/.env` and `/server/.env`.
-- `root.env.gpg` / `server.env.gpg` — AES256 symmetric-encrypted copies (safe to share). Decrypt with:
-  `gpg --decrypt secrets/root.env.gpg`  (you'll be prompted for the passphrase, stored OUTSIDE this repo).
+## ⚠️ Why rotation is still needed
+The plaintext secrets existed in **earlier git history** before removal. Deleting files doesn't purge
+history. The repo is **private** (`northpointalliance/test1`), so this is medium-severity — but anyone the
+client later grants repo access to (contractors, CI) could read those old values. The clean fix is to
+**rotate** the sensitive ones so the historical copies become worthless.
 
-## ⚠️ Exposure warning
-Plaintext secrets in git history are **permanent** — deleting the files later does NOT remove them from
-history, clones, or GitHub's cache. This is only acceptable while `northpointalliance/test1` stays
-**private**. If this repo is ever made public, forked publicly, or a token leaks, treat ALL of the
-following as compromised and rotate them immediately:
+## Current reality (as of handover)
+- **Supabase publishable key** — public by design; no action.
+- **DB password** (`wTEPOX5I6M2DC9dn`) — **rotate** (in history). Cascade below.
+- **`ADMIN_API_KEY` / `PRISM_API_KEY`** — currently **dev placeholders** (`dev_admin_api_key_local_only`,
+  `dev_botgrid_api_key_local_only`). Set to strong real values before serious traffic.
+- **PayPal** — `PAYPAL_CLIENT_ID/SECRET` were placeholders in env; the **real** PayPal creds live in the
+  `platform_settings` DB table (set via Admin → Settings). Rotate those in the PayPal dashboard if exposed.
+- **Upstash / Sentry / Lovable** — rotate if you actually use them.
 
-- [ ] `PAYPAL_CLIENT_SECRET` (and `PAYPAL_CLIENT_ID`) — PayPal developer dashboard
-- [ ] `PAYPAL_WEBHOOK_ID` — re-create the webhook
-- [ ] `ADMIN_API_KEY` — regenerate + redeploy
-- [ ] `PRISM_API_KEY` (master SDK key) — regenerate + re-issue to SDK consumers
-- [ ] Supabase keys (`SUPABASE_PUBLISHABLE_KEY` / service role) — Supabase dashboard → API → roll keys
-- [ ] `DATABASE_URL` / `DIRECT_URL` password — reset the Postgres password in Supabase
-- [ ] `UPSTASH_REDIS_REST_TOKEN` — Upstash console
-- [ ] `SENTRY_DSN` — Sentry project settings
-- [ ] `LOVABLE_API_KEY` — Lovable AI gateway
+## Rotate the DB password (full cascade — update ALL or the app breaks)
+1. Supabase → Database → **Reset database password** → copy `<NEW>`.
+2. `supabase secrets set DB_URL="postgresql://postgres.botnabfogcjrkpmdjgpr:<NEW>@aws-1-eu-west-2.pooler.supabase.com:6543/postgres"`
+   then `supabase functions deploy api queue-worker`.
+3. GitHub repo secret **`SUPABASE_DB_PASSWORD`** = `<NEW>` (migrations Action).
+4. `server/.env` `DATABASE_URL`/`DIRECT_URL` (legacy stack only).
+5. `docs/SUPABASE_CONNECTION.md` (documented password).
+6. Re-encrypt backups: regenerate `secrets/*.env.gpg`.
+7. Verify: `curl https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/health` → `database: connected`.
 
-## Recommendation
-Prefer the encrypted `.gpg` copies and a vault (Doppler / 1Password / Supabase secrets) over plaintext.
+## Rotate the admin / SDK keys
+1. Pick strong values (`openssl rand -hex 32`).
+2. `supabase secrets set ADMIN_API_KEY="<new>" PRISM_API_KEY="<new>"` → `supabase functions deploy api queue-worker`.
+   - ⚠️ `ADMIN_API_KEY` is also the **queue-worker secret** used by the pg_cron header — update the cron job's
+     `x-worker-secret` to match (re-create the `drain-queues` job), or the worker stops being triggered.
+3. Re-issue `PRISM_API_KEY` to any SDK consumers (it's the master ad-serving key).
+
+## If the repo is ever exposed publicly
+Treat all of the above as compromised and rotate immediately. Prefer a vault (Doppler / 1Password /
+Supabase secrets) over committing secrets at all.

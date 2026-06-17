@@ -2,12 +2,12 @@
 
 This folder holds project context, product notes, and operational setup.
 
-> **⚠️ Architecture updated (June 2026).** The backend now runs on **Supabase Edge Functions** (Deno),
-> the database is **Supabase Postgres**, the queue is **pgmq**, and the frontend is a **static site**
-> (cPanel/Vercel). The current source of truth is **[../HANDOVER.md](../HANDOVER.md)** and
-> **[ARCHITECTURE.md](ARCHITECTURE.md)**. Sections below that mention `server/.env`, the local Node API
-> (`:8080`), `prism_stack.sh`, `REDIS_URL`, or "Local DB" describe the **legacy/rollback** setup. Product,
-> portal-structure, persona, HMAC, and security sections remain accurate.
+> **✅ LIVE (June 2026).** Site at **https://prismpublication.com** — frontend on **Vercel**, backend on
+> **Supabase Edge Functions** (Deno), database on **Supabase Postgres**, queue on **pgmq**. The old
+> self-hosted stack is **decommissioned**. The current source of truth is **[../HANDOVER.md](../HANDOVER.md)**,
+> **[ARCHITECTURE.md](ARCHITECTURE.md)**, and the **[RUNBOOK.md](RUNBOOK.md)**. Sections below that mention
+> `server/.env`, the local Node API (`:8080`), `prism_stack.sh`, `REDIS_URL`, or "Local DB" describe the
+> **legacy** setup. Product, portal-structure, persona, HMAC, and security sections remain accurate.
 
 ## Current Product Snapshot
 
@@ -291,15 +291,17 @@ All data fetching and state management stays in the parent pages (`AdvertiserPor
 
 ## Documentation Map
 
-**Current (post-migration):**
-- [HANDOVER.md](../HANDOVER.md): **Master handover** — architecture, ops, deploy, rollback, pending items
-- [ARCHITECTURE.md](ARCHITECTURE.md): Current system architecture (Supabase Edge Functions)
-- [FRONTEND_DEPLOY.md](FRONTEND_DEPLOY.md): Deploy the frontend to cPanel or Vercel
-- [SUPABASE_CONNECTION.md](SUPABASE_CONNECTION.md): Supabase project, DB connection strings, credentials
-- [SETUP_GUIDE.md](../SETUP_GUIDE.md): Operator setup & handoff guide (updated)
-- [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md): SDK/integration examples (API paths now under the functions URL)
-- [BUSINESS_IDEA.md](BUSINESS_IDEA.md): Product/business framing
-- [CHANGELOG.md](../CHANGELOG.md) / [docs/CHANGELOG.md](CHANGELOG.md): Release + evolution log
+**Current (live):**
+- [HANDOVER.md](../HANDOVER.md): **Master handover** — start here. Live architecture, deploy, security, rollback, pending.
+- [RUNBOOK.md](RUNBOOK.md): **Operations & troubleshooting** — deploy/logs/secrets + every incident→fix.
+- [ARCHITECTURE.md](ARCHITECTURE.md): System architecture, hosting topology, security/RLS, data model.
+- [FRONTEND_DEPLOY.md](FRONTEND_DEPLOY.md): Deploy the frontend (Vercel live; cPanel alternative) + gotchas.
+- [CI_CD.md](CI_CD.md): How `git push` auto-deploys frontend (Vercel) + backend (Supabase).
+- [SUPABASE_CONNECTION.md](SUPABASE_CONNECTION.md): Supabase project, DB connection strings, credentials.
+- [SETUP_GUIDE.md](../SETUP_GUIDE.md): Operator setup & handoff guide (non-technical).
+- [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md): SDK/integration examples (API paths now under the functions URL).
+- [BUSINESS_IDEA.md](BUSINESS_IDEA.md): Product/business framing.
+- [CHANGELOG.md](../CHANGELOG.md) / [docs/CHANGELOG.md](CHANGELOG.md): Release + evolution log.
 
 **Legacy (pre-migration, rollback/reference only):**
 - [LOCAL_DATABASE.md](LOCAL_DATABASE.md): Local Postgres + Prisma + Express setup
