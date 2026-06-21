@@ -1,8 +1,10 @@
+import { createPortal } from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+import AdPreview from "@/components/AdPreview";
 
 interface CampaignInfoDraft {
   title: string;
@@ -33,9 +35,9 @@ interface Props {
 const EditCampaignModal = ({
   info, budget, saving, error,
   onInfoChange, onBudgetChange, onClose, onSave,
-}: Props) => (
+}: Props) => createPortal(
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <button type="button" className="absolute inset-0 bg-black/50" onClick={onClose} aria-label="Close" />
+    <button type="button" className="absolute inset-0 bg-black/70" onClick={onClose} aria-label="Close" />
     <Card className="relative z-10 max-h-[92vh] w-full max-w-2xl overflow-y-auto">
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="text-xl font-bold">Edit Campaign</CardTitle>
@@ -88,6 +90,15 @@ const EditCampaignModal = ({
           <p className="text-xs text-muted-foreground">Weight controls display frequency relative to other active ads.</p>
         </div>
 
+        {/* Live preview */}
+        <div className="rounded-xl border border-border bg-background p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-primary">Ad Preview</p>
+          <AdPreview
+            ad={{ title: info.title, description: info.description, ctaText: info.ctaText, clickUrl: info.clickUrl }}
+            format={info.format}
+          />
+        </div>
+
         {/* Budget fields */}
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Budget</p>
@@ -98,7 +109,8 @@ const EditCampaignModal = ({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ef-lifetime">Lifetime budget ($)</Label>
-              <Input id="ef-lifetime" placeholder="500" value={budget.lifetimeBudgetUsd} onChange={(e) => onBudgetChange({ lifetimeBudgetUsd: e.target.value })} />
+              <Input id="ef-lifetime" value={budget.lifetimeBudgetUsd} readOnly disabled className="opacity-70" />
+              <p className="text-[11px] text-muted-foreground">Fixed at the reserved amount. Delete the campaign to release unspent funds.</p>
             </div>
           </div>
         </div>
@@ -110,7 +122,8 @@ const EditCampaignModal = ({
         </div>
       </CardContent>
     </Card>
-  </div>
+  </div>,
+  document.body,
 );
 
 export default EditCampaignModal;

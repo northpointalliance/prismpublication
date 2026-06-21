@@ -1,9 +1,11 @@
 import { ChangeEvent, DragEvent, RefObject } from "react";
+import { createPortal } from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, ImagePlus, UploadCloud, X } from "lucide-react";
+import AdPreview from "@/components/AdPreview";
 
 type WizardStep = 1 | 2 | 3;
 const WIZARD_STEPS = ["Campaign Info", "Creative Preview", "Budget & Launch"] as const;
@@ -145,9 +147,9 @@ const CreateCampaignWizard = ({
   onInfoChange, onDailyUsdChange, onDurationDaysChange,
   onClose, onBack, onNext, onSubmit,
   onFileChange, onDrop, onDragOver, onDragLeave,
-}: Props) => (
+}: Props) => createPortal(
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <button type="button" className="absolute inset-0 bg-black/50" onClick={onClose} aria-label="Close" />
+    <button type="button" className="absolute inset-0 bg-black/70" onClick={onClose} aria-label="Close" />
     <Card className="relative z-10 max-h-[92vh] w-full max-w-2xl overflow-y-auto">
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="text-xl font-bold">Create New Ad</CardTitle>
@@ -179,29 +181,41 @@ const CreateCampaignWizard = ({
                 <UploadCloud className="h-5 w-5 text-primary" />
                 <div>
                   <p className="text-sm font-semibold">Drag image here or click to upload</p>
-                  <p className="text-xs text-muted-foreground">Preview only — not persisted in this flow.</p>
+                  <p className="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF · up to 5 MB.</p>
                 </div>
               </div>
             </button>
 
             <div className="rounded-xl border border-border bg-background p-3">
-              <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-                <ImagePlus className="h-4 w-4" />Ad Preview
-              </p>
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {uploadedPreviewUrl ? (
-                  <img src={uploadedPreviewUrl} alt="preview" className="h-40 w-full object-cover" />
-                ) : (
-                  <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">No image uploaded</div>
-                )}
-                <div className="p-3">
-                  <p className="text-sm font-semibold">{infoDraft.title || "Ad title preview"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{infoDraft.description || "Description appears here."}</p>
-                  <span className="mt-3 inline-block rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                    {infoDraft.ctaText || "Call to action"}
-                  </span>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-primary">
+                  <ImagePlus className="h-4 w-4" />Ad Preview
+                </p>
+                <div className="flex gap-1">
+                  {(["card", "banner", "text"] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => onInfoChange({ format: f })}
+                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize transition ${
+                        infoDraft.format === f ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
                 </div>
               </div>
+              <AdPreview
+                ad={{
+                  title: infoDraft.title,
+                  description: infoDraft.description,
+                  ctaText: infoDraft.ctaText,
+                  clickUrl: infoDraft.clickUrl,
+                  imageUrl: uploadedPreviewUrl,
+                }}
+                format={infoDraft.format}
+              />
             </div>
           </div>
         )}
@@ -263,7 +277,8 @@ const CreateCampaignWizard = ({
         </div>
       </CardContent>
     </Card>
-  </div>
+  </div>,
+  document.body,
 );
 
 export default CreateCampaignWizard;

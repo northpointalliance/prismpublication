@@ -22,7 +22,7 @@ const CampaignDeleteDialog = ({ campaignTitle, open, onConfirm, onCancel }: Prop
       <AlertDialogHeader>
         <AlertDialogTitle>Delete "{campaignTitle}"?</AlertDialogTitle>
         <AlertDialogDescription>
-          This will permanently remove the campaign. Any reserved budget will remain in your wallet.
+          This will permanently remove the campaign. Any unspent budget will be refunded to your wallet.
           This action cannot be undone.
         </AlertDialogDescription>
       </AlertDialogHeader>

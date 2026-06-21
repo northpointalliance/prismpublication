@@ -3,7 +3,7 @@ import PortalShell from "@/components/portal/PortalShell";
 import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { apiRequest } from "@/lib/api";
 import { getPortalHeaders } from "@/lib/portal-api";
-import { Activity, Bot, BookOpen, ServerCog, Wallet } from "lucide-react";
+import { Activity, Bot, BookOpen, Eye, ServerCog, Wallet } from "lucide-react";
 import PublisherSummaryMetrics from "@/components/portal/publisher/PublisherSummaryMetrics";
 import BotPerformanceChart from "@/components/portal/publisher/BotPerformanceChart";
 import BotRegistry, { BotListItem, BotMetrics } from "@/components/portal/publisher/BotRegistry";
@@ -11,6 +11,7 @@ import RegisterBotPanel from "@/components/portal/publisher/RegisterBotPanel";
 import PayoutsPanel from "@/components/portal/publisher/PayoutsPanel";
 import BotDeleteDialog from "@/components/portal/publisher/BotDeleteDialog";
 import SdkDocsTab from "@/components/portal/publisher/SdkDocsTab";
+import AdPreviewPanel from "@/components/portal/publisher/AdPreviewPanel";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ const formatDateTime = (value: string | null) => {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-type Tab = "dashboard" | "sdk-docs";
+type Tab = "dashboard" | "preview" | "sdk-docs";
 
 const PublisherPortal = () => {
   const { user } = usePortalAuth();
@@ -219,6 +220,7 @@ const PublisherPortal = () => {
 
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: "dashboard", label: "Dashboard", icon: Bot },
+    { key: "preview", label: "Ad Preview", icon: Eye },
     { key: "sdk-docs", label: "SDK Docs", icon: BookOpen },
   ];
 
@@ -293,6 +295,8 @@ const PublisherPortal = () => {
           />
         </>
       )}
+
+      {activeTab === "preview" && <AdPreviewPanel />}
 
       {activeTab === "sdk-docs" && <SdkDocsTab />}
     </PortalShell>

@@ -230,7 +230,10 @@ advertiser.patch("/campaigns/:id", requirePortalUser, async (c) => {
       SELECT "id" FROM ads WHERE "id" = ${c.req.param("id")} AND "advertiser" = ${advertiserKey} AND "deletedAt" IS NULL LIMIT 1`;
     if (!existing.length) return c.json({ error: "Campaign not found" }, 404);
 
-    const { durationDays, ...rest } = parsed.data;
+    // Lifetime budget is the wallet reservation made at create time and is immutable afterwards —
+    // never let a PATCH change it, or the reservation would desync from the wallet. Daily budget
+    // (pacing only) and the creative fields can still change freely.
+    const { durationDays, lifetimeBudgetCents: _ignoredLifetime, ...rest } = parsed.data;
     const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
     if (durationDays !== undefined) updateData.endsAt = new Date(Date.now() + durationDays * DAY_MS);
 
@@ -242,17 +245,64 @@ advertiser.patch("/campaigns/:id", requirePortalUser, async (c) => {
   }
 });
 
-// DELETE /api/advertiser/campaigns/:id — soft delete.
+// DELETE /api/advertiser/campaigns/:id — soft delete + refund the unspent reserved budget.
 advertiser.delete("/campaigns/:id", requirePortalUser, async (c) => {
   try {
     const workspace = await requireAdvertiserWorkspace(c.get("portalUser")!.id);
     if (!workspace) return c.json({ error: "Advertiser workspace required" }, 403);
-    const advertiserKey = `org:${workspace.organization.id}`;
+    const orgId = workspace.organization.id;
+    const advertiserKey = `org:${orgId}`;
     const existing = await sql`
-      SELECT "id","title" FROM ads WHERE "id" = ${c.req.param("id")} AND "advertiser" = ${advertiserKey} AND "deletedAt" IS NULL LIMIT 1`;
+      SELECT "id","title","lifetimeBudgetCents" FROM ads
+      WHERE "id" = ${c.req.param("id")} AND "advertiser" = ${advertiserKey} AND "deletedAt" IS NULL LIMIT 1`;
     if (!existing.length) return c.json({ error: "Campaign not found" }, 404);
-    await sql`UPDATE ads SET "deletedAt" = now(), "isActive" = false, "updatedAt" = now() WHERE "id" = ${existing[0].id}`;
-    return c.json({ success: true, deleted: { id: existing[0].id, title: existing[0].title } });
+    const ad = existing[0];
+
+    // Refund = reserved lifetime budget − what was actually spent on impressions (revenue events).
+    // Done in one transaction with the wallet locked so the soft-delete and credit are atomic.
+    const result = await sql.begin(async (tx) => {
+      const spentRows = await tx`
+        SELECT coalesce(sum("amount"), 0) AS spent FROM ad_events
+        WHERE "adId" = ${ad.id} AND "eventType" = 'revenue'`;
+      const spentCents = Number(spentRows[0]?.spent ?? 0);
+      const refundCents = Math.max(0, (ad.lifetimeBudgetCents ?? 0) - spentCents);
+
+      await tx`UPDATE ads SET "deletedAt" = now(), "isActive" = false, "updatedAt" = now() WHERE "id" = ${ad.id}`;
+
+      let walletBalanceCents: number | null = null;
+      let prevBalanceCents = 0;
+      if (refundCents > 0) {
+        const orgRows = await tx`SELECT "walletBalanceCents" FROM organizations WHERE "id" = ${orgId} FOR UPDATE`;
+        prevBalanceCents = orgRows[0]?.walletBalanceCents ?? 0;
+        await tx`
+          INSERT INTO wallet_transactions ("id","organizationId","type","amountCents","description","createdAt")
+          VALUES (${newId()}, ${orgId}, 'refund', ${refundCents}, ${`Refund — deleted campaign: ${ad.title}`}, now())`;
+        const updated = await tx`
+          UPDATE organizations SET "walletBalanceCents" = "walletBalanceCents" + ${refundCents}, "updatedAt" = now()
+          WHERE "id" = ${orgId} RETURNING "walletBalanceCents"`;
+        walletBalanceCents = updated[0].walletBalanceCents;
+      }
+      return { refundCents, walletBalanceCents, prevBalanceCents };
+    });
+
+    if (result.refundCents > 0) {
+      await logAudit({
+        action: "WALLET_REFUND",
+        actorUserId: c.get("portalUser")!.id,
+        organizationId: orgId,
+        resourceType: "ad",
+        resourceId: ad.id,
+        before: { walletBalanceCents: result.prevBalanceCents },
+        after: { walletBalanceCents: result.walletBalanceCents, refundedCents: result.refundCents },
+        ip: ipFromHeaders(c.req.raw.headers),
+      });
+    }
+    return c.json({
+      success: true,
+      deleted: { id: ad.id, title: ad.title },
+      refundedCents: result.refundCents,
+      walletBalanceCents: result.walletBalanceCents,
+    });
   } catch (err) {
     console.error("Advertiser campaign delete failed", err);
     return c.json({ error: "Failed to delete campaign" }, 500);

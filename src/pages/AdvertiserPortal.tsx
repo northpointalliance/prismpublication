@@ -53,6 +53,9 @@ interface AdvertiserCampaignRecord {
   format: "text" | "card" | "banner";
   weight: number;
   isActive: boolean;
+  dailyBudgetCents: number;
+  lifetimeBudgetCents: number;
+  endsAt?: string | null;
 }
 
 interface CampaignInfoDraft {
@@ -164,7 +167,20 @@ const AdvertiserPortal = () => {
       ]);
       if (!cancelledRef?.current) {
         setData(dashRes);
-        setCampaignRecords(Object.fromEntries((campRes.items ?? []).map((c) => [c.id, c])));
+        const items = campRes.items ?? [];
+        setCampaignRecords(Object.fromEntries(items.map((c) => [c.id, c])));
+        // Hydrate budgets from the list so daily/total/duration render after a reload (not just
+        // after creating/editing in the same session).
+        setCampaignBudgets((prev) => {
+          const next = { ...prev };
+          for (const c of items) {
+            const dailyBudgetCents = c.dailyBudgetCents ?? 0;
+            const lifetimeBudgetCents = c.lifetimeBudgetCents ?? 0;
+            const durationDays = dailyBudgetCents > 0 ? Math.max(1, Math.round(lifetimeBudgetCents / dailyBudgetCents)) : 30;
+            next[c.id] = { dailyBudgetCents, lifetimeBudgetCents, durationDays };
+          }
+          return next;
+        });
       }
     } catch (err) {
       if (!cancelledRef?.current) setError(err instanceof Error ? err.message : "Failed to load data");
@@ -301,8 +317,10 @@ const AdvertiserPortal = () => {
     const rec = campaignRecords[id];
     if (!rec) return;
     const bud = campaignBudgets[id];
+    const dailyCents = rec.dailyBudgetCents ?? bud?.dailyBudgetCents ?? 0;
+    const lifetimeCents = rec.lifetimeBudgetCents ?? bud?.lifetimeBudgetCents ?? 0;
     setEditInfo({ title: rec.title, description: rec.description, ctaText: rec.ctaText, clickUrl: rec.clickUrl, topics: rec.topics.join(", "), format: rec.format, weight: String(rec.weight) });
-    setEditBudget({ dailyBudgetUsd: bud ? String((bud.dailyBudgetCents / 100).toFixed(2)) : "50", lifetimeBudgetUsd: bud ? String((bud.lifetimeBudgetCents / 100).toFixed(2)) : "500" });
+    setEditBudget({ dailyBudgetUsd: (dailyCents / 100).toFixed(2), lifetimeBudgetUsd: (lifetimeCents / 100).toFixed(2) });
     setEditingId(id); setError(""); setNotice("");
   };
 
@@ -326,11 +344,9 @@ const AdvertiserPortal = () => {
           ctaText: editInfo.ctaText, clickUrl: editInfo.clickUrl,
           topics: editInfo.topics.split(",").map((t) => t.trim()).filter(Boolean),
           format: editInfo.format, weight: w,
-          // Budget edits update pacing caps in DB. Note: wallet deduction is locked at
-          // launch time — only daily rate and duration can be changed freely here.
-          // Lifetime budget is capped at original reservation to prevent free overruns.
+          // Only daily budget (pacing) is editable. Lifetime budget is the wallet reservation made at
+          // create time and is immutable — it is not sent, and the backend ignores it if present.
           dailyBudgetCents: daily,
-          lifetimeBudgetCents: Math.min(lifetime, campaignBudgets[editingId!]?.lifetimeBudgetCents ?? lifetime),
         }),
       }, headers);
       setCampaignBudgets((prev) => ({ ...prev, [editingId]: { dailyBudgetCents: daily, lifetimeBudgetCents: lifetime, durationDays: Math.round(lifetime / daily) || 30 } }));
@@ -358,9 +374,18 @@ const AdvertiserPortal = () => {
     setCampaignToDelete(null); setSaving(true); setError(""); setNotice("");
     try {
       const headers = await getPortalHeaders(user.email);
-      await apiRequest(`/advertiser/campaigns/${id}`, { method: "DELETE" }, headers);
-      setNotice(`Campaign "${title}" deleted.`);
+      const res = await apiRequest<{ refundedCents?: number; walletBalanceCents?: number | null }>(
+        `/advertiser/campaigns/${id}`,
+        { method: "DELETE" },
+        headers,
+      );
+      if (typeof res?.walletBalanceCents === "number") setWalletBalanceCents(res.walletBalanceCents);
+      const refunded = res?.refundedCents ?? 0;
+      setNotice(refunded > 0
+        ? `Campaign "${title}" deleted. ${formatCurrency(refunded)} refunded to your wallet.`
+        : `Campaign "${title}" deleted.`);
       await loadDashboard(user.email);
+      void loadWallet(user.email);
     } catch (err) { setError(err instanceof Error ? err.message : "Failed to delete campaign"); }
     finally { setSaving(false); }
   };
@@ -390,6 +415,7 @@ const AdvertiserPortal = () => {
         headers,
       );
       setWalletBalanceCents(res.newBalanceCents);
+      setError("");
       setNotice(`Wallet credited ${formatCurrency(res.amountCents)}. New balance: ${formatCurrency(res.newBalanceCents)}.`);
       setTopUpAmountUsd("250");
       void loadWallet(user.email);

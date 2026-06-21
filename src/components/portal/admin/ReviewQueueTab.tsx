@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, CheckCircle, ClipboardCheck, ExternalLink, X } from "lucide-react";
+import AdPreview, { AdFormat } from "@/components/AdPreview";
 
 interface Ad {
   id: string;
@@ -72,15 +73,16 @@ const ReviewQueueTab = ({
                     {ad.topics.length > 0 && <span>Topics: {ad.topics.join(", ")}</span>}
                     <span>Submitted: {formatDate(ad.createdAt)}</span>
                   </div>
-                  {ad.imageUrl && (
-                    <img src={ad.imageUrl} alt="ad preview" className="mt-3 h-28 w-full max-w-xs rounded-lg border border-border object-cover" />
-                  )}
+                  <div className="mt-3 max-w-xs">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Preview</p>
+                    <AdPreview ad={ad} format={ad.format as AdFormat} />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Button variant="primary" size="sm" disabled={actingOnId === ad.id} onClick={() => onApprove(ad.id)} className="gap-1.5">
+                  <Button variant="primary" size="sm" disabled={actingOnId !== null} onClick={() => onApprove(ad.id)} className="gap-1.5">
                     <Check className="h-3.5 w-3.5" />{actingOnId === ad.id ? "…" : "Approve"}
                   </Button>
-                  <Button variant="secondary" size="sm" disabled={actingOnId === ad.id} onClick={() => onReject(ad.id)} className="gap-1.5">
+                  <Button variant="secondary" size="sm" disabled={actingOnId !== null} onClick={() => onReject(ad.id)} className="gap-1.5">
                     <X className="h-3.5 w-3.5" />Reject
                   </Button>
                 </div>
@@ -109,7 +111,7 @@ const ReviewQueueTab = ({
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="default">Live</Badge>
-                <Button size="sm" variant="secondary" disabled={actingOnId === ad.id} onClick={() => onReject(ad.id)}>
+                <Button size="sm" variant="secondary" disabled={actingOnId !== null} onClick={() => onReject(ad.id)}>
                   Take down
                 </Button>
               </div>

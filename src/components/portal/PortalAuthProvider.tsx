@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api";
@@ -34,6 +34,9 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
   const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Tracks the currently loaded user so a focus-triggered token refresh (same user) doesn't reload
+  // the portal (which would unmount children and wipe in-progress form state).
+  const loadedEmailRef = useRef("");
 
   const currentRole = useMemo(() => {
     if (!currentWorkspaceId) return null;
@@ -44,6 +47,7 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setWorkspaces([]);
     setCurrentWorkspaceId(null);
+    loadedEmailRef.current = "";
   }, []);
 
   const applyEntryContext = useCallback((entry: EntryContextResponse | null) => {
@@ -51,12 +55,14 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setWorkspaces([]);
       setCurrentWorkspaceId(null);
+      loadedEmailRef.current = "";
       return;
     }
 
     setUser(entry.user);
     setWorkspaces(entry.workspaces || []);
     setCurrentWorkspaceId(entry.defaultWorkspaceId || entry.workspaces[0]?.id || null);
+    loadedEmailRef.current = entry.user?.email?.trim().toLowerCase() || "";
   }, []);
 
   const loadEntryContext = useCallback(
@@ -134,6 +140,12 @@ export const PortalAuthProvider = ({ children }: { children: ReactNode }) => {
 
     const handleAuthChange = async (_event: AuthChangeEvent, session: Session | null) => {
       if (!mounted) return;
+      // A token refresh fires when the tab regains focus but keeps the same user. Do NOT flip
+      // `loading` (the route guards unmount the portal while loading, wiping in-progress forms).
+      // The refreshed token is already applied to the supabase client; request headers re-read it.
+      if (_event === "TOKEN_REFRESHED") return;
+      const email = getSessionEmail(session);
+      if (session && email && email === loadedEmailRef.current) return; // same user re-emitted (e.g. on focus)
       setLoading(true);
       try {
         if (session) {

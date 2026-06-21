@@ -74,17 +74,22 @@ const BillingPanel = ({
             Recent Transactions
           </p>
           <div className="space-y-1.5">
-            {transactions.slice(0, 5).map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">
-                  {tx.type === "topup" ? "↑ Top-up" : tx.type === "spend" ? "↓ Spend" : "↺ Refund"}
-                  {tx.description ? ` · ${tx.description.slice(0, 32)}` : ""}
-                </span>
-                <span className={tx.type === "topup" ? "font-semibold text-emerald-600" : "font-semibold text-foreground"}>
-                  {tx.type === "topup" ? "+" : "-"}{formatCurrency(tx.amountCents)}
-                </span>
-              </div>
-            ))}
+            {transactions.slice(0, 5).map((tx) => {
+              // Credit = top-up, or a positive refund (e.g. unspent budget returned on delete).
+              // A PayPal capture reversal is also type 'refund' but stored negative → shown as a debit.
+              const isCredit = tx.type === "topup" || (tx.type === "refund" && tx.amountCents >= 0);
+              return (
+                <div key={tx.id} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {tx.type === "topup" ? "↑ Top-up" : tx.type === "spend" ? "↓ Spend" : "↺ Refund"}
+                    {tx.description ? ` · ${tx.description.slice(0, 32)}` : ""}
+                  </span>
+                  <span className={isCredit ? "font-semibold text-emerald-600" : "font-semibold text-foreground"}>
+                    {isCredit ? "+" : "-"}{formatCurrency(Math.abs(tx.amountCents))}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
