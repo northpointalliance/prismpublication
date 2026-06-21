@@ -24,6 +24,38 @@ export interface PrismConfig {
   adFormat?: 'text' | 'card' | 'banner';
   /** Base API URL (optional, for self-hosted) */
   baseUrl?: string;
+  /**
+   * Send HMAC request signatures (X-Prism-Timestamp + X-Prism-Signature).
+   * Default `true` — required by Prism servers (REQUIRE_SDK_HMAC defaults to on).
+   * Set `false` only during a migration window against a server that has signing disabled.
+   */
+  signRequests?: boolean;
+}
+
+/** Live Prism backend (Supabase Edge Functions). Override via `baseUrl` for self-hosted. */
+const DEFAULT_BASE_URL = 'https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api';
+
+/**
+ * HMAC-SHA256 hex digest using Web Crypto (available in browsers and Node 20+).
+ * Must match the server's `verifyHmac` which signs `<timestamp>\n<rawBody>`.
+ */
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error('Prism: Web Crypto (crypto.subtle) is unavailable; cannot sign requests');
+  }
+  const key = await subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const mac = await subtle.sign('HMAC', key, enc.encode(message));
+  return Array.from(new Uint8Array(mac))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export interface AdContext {
@@ -63,9 +95,14 @@ export interface AdRequest {
 
 export interface TrackEventRequest {
   adId: string;
-  userId?: string;
   botId: string;
-  timestamp: number;
+  userId?: string;
+  /** Revenue amount in cents (revenue events only). */
+  amount?: number;
+  /** Optional topic the ad was shown against. */
+  topic?: string;
+  /** Arbitrary structured metadata, stored as JSON server-side. */
+  metadata?: Record<string, unknown>;
 }
 
 export interface ApiResponse<T> {
@@ -83,6 +120,7 @@ export class PrismAds {
   private botId: string;
   private position: 'inline' | 'sidebar' | 'floating';
   private adFormat: 'text' | 'card' | 'banner';
+  private signRequests: boolean;
   private client: AxiosInstance;
   private messageCount: Map<string, number> = new Map();
 
@@ -102,16 +140,38 @@ export class PrismAds {
     this.botId = config.botId;
     this.position = config.position || 'inline';
     this.adFormat = config.adFormat || 'text';
-    
+    this.signRequests = config.signRequests !== false;
+
     // Initialize axios client
     this.client = axios.create({
-      baseURL: config.baseUrl || 'https://api.prism.io/v1',
+      baseURL: config.baseUrl || DEFAULT_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
         'X-Bot-ID': this.botId,
       },
       timeout: 10000,
+    });
+  }
+
+  /**
+   * POST a JSON body, signing the exact serialized bytes with HMAC when enabled.
+   * Sends the pre-serialized string so the signed payload matches what the server verifies.
+   */
+  private async postSigned<T = unknown>(path: string, body: unknown): Promise<{ data: T }> {
+    const bodyStr = JSON.stringify(body ?? {});
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.signRequests) {
+      const timestamp = String(Math.floor(Date.now() / 1000));
+      const signature = await hmacSha256Hex(this.apiKey, `${timestamp}\n${bodyStr}`);
+      headers['X-Prism-Timestamp'] = timestamp;
+      headers['X-Prism-Signature'] = `sha256=${signature}`;
+    }
+    // Pass the already-serialized string; axios leaves string bodies untouched, so the
+    // signed bytes are exactly what is transmitted.
+    return this.client.post<T>(path, bodyStr, {
+      headers,
+      transformRequest: [(d) => d],
     });
   }
 
@@ -129,8 +189,8 @@ export class PrismAds {
         format: this.adFormat,
       };
 
-      const response = await this.client.post<ApiResponse<Ad[]>>('/ads', request);
-      
+      const response = await this.postSigned<ApiResponse<Ad[]>>('/ads', request);
+
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
@@ -222,26 +282,26 @@ export class PrismAds {
   }
 
   /**
-   * Internal method to track events
+   * Internal method to track events.
+   * `amount` and `topic` are sent as top-level fields (the server schema reads them there);
+   * everything else is nested under `metadata` so it is persisted as JSON rather than dropped.
    */
   private async trackEvent(
-    eventType: string, 
-    adId: string, 
+    eventType: string,
+    adId: string,
     userId?: string,
-    metadata?: Record<string, unknown>
+    options?: { amount?: number; topic?: string; metadata?: Record<string, unknown> },
   ): Promise<void> {
     try {
-      const event: TrackEventRequest = {
-        adId,
-        userId,
-        botId: this.botId,
-        timestamp: Date.now(),
-      };
+      const event: TrackEventRequest = { adId, botId: this.botId };
+      if (userId) event.userId = userId;
+      if (options?.amount !== undefined) event.amount = options.amount;
+      if (options?.topic !== undefined) event.topic = options.topic;
+      if (options?.metadata && Object.keys(options.metadata).length > 0) {
+        event.metadata = options.metadata;
+      }
 
-      await this.client.post(`/track/${eventType}`, {
-        ...event,
-        ...metadata,
-      });
+      await this.postSigned(`/track/${eventType}`, event);
     } catch (error) {
       console.error(`Prism: Failed to track ${eventType}`, error);
     }

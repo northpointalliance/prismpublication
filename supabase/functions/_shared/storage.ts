@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { supabaseUrl, serviceRoleKey } from "./config.ts";
 
 export const BLOG_BUCKET = "blog-images";
+export const AD_BUCKET = "ad-images";
 
 export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },

@@ -33,3 +33,6 @@ supabase/functions/deno.lock
 secrets/*.env
 secrets/root.env
 secrets/server.env
+
+# Supabase CLI scratch state
+supabase/.temp/

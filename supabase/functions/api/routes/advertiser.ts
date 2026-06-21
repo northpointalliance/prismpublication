@@ -6,6 +6,8 @@ import { newId } from "../../_shared/ids.ts";
 import { advertiserCampaignCreateSchema, advertiserCampaignUpdateSchema } from "../../_shared/validation.ts";
 import { requirePortalUser, requireAdvertiserWorkspace } from "../../_shared/portal.ts";
 import { validateImageUrl } from "../../_shared/image-validation.ts";
+import { logAudit, ipFromHeaders } from "../../_shared/audit.ts";
+import { supabaseAdmin, AD_BUCKET } from "../../_shared/storage.ts";
 
 // Mounted at /api/advertiser. Ports server/src/routes/advertiser.ts.
 // Dashboard aggregation rewritten from in-memory loops to SQL GROUP BY (Edge 2s-CPU fix).
@@ -83,7 +85,7 @@ advertiser.get("/campaigns", requirePortalUser, async (c) => {
 
     let rows;
     if (cursor) {
-      const cur = await sql`SELECT "updatedAt" FROM ads WHERE "id" = ${cursor} LIMIT 1`;
+      const cur = await sql`SELECT "updatedAt" FROM ads WHERE "id" = ${cursor} AND "advertiser" = ${advertiserKey} LIMIT 1`;
       rows = cur.length
         ? await sql`
             SELECT * FROM ads
@@ -108,6 +110,34 @@ advertiser.get("/campaigns", requirePortalUser, async (c) => {
   }
 });
 
+// POST /api/advertiser/campaigns/image — multipart upload to Supabase Storage; returns a public URL.
+advertiser.post("/campaigns/image", requirePortalUser, async (c) => {
+  try {
+    const workspace = await requireAdvertiserWorkspace(c.get("portalUser")!.id);
+    if (!workspace) return c.json({ error: "Advertiser workspace required" }, 403);
+    const form = await c.req.formData();
+    const file = form.get("image");
+    if (!(file instanceof File)) return c.json({ error: "No image file provided" }, 400);
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      return c.json({ error: "Only JPEG, PNG, WebP and GIF images are allowed" }, 400);
+    }
+    if (file.size > 5 * 1024 * 1024) return c.json({ error: "Image exceeds the 5 MB size limit" }, 400);
+
+    const safe = file.name.replace(/[^a-z0-9._-]/gi, "_").toLowerCase();
+    const objectPath = `${workspace.organization.id}/${Date.now()}-${safe}`;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { error: upErr } = await supabaseAdmin.storage.from(AD_BUCKET).upload(objectPath, bytes, {
+      contentType: file.type, upsert: false,
+    });
+    if (upErr) throw upErr;
+    const { data } = supabaseAdmin.storage.from(AD_BUCKET).getPublicUrl(objectPath);
+    return c.json({ imageUrl: data.publicUrl });
+  } catch (err) {
+    console.error("Advertiser image upload failed", err);
+    return c.json({ error: "Failed to upload image" }, 500);
+  }
+});
+
 // POST /api/advertiser/campaigns
 advertiser.post("/campaigns", requirePortalUser, async (c) => {
   const parsed = advertiserCampaignCreateSchema.safeParse(await readJson(c));
@@ -122,17 +152,59 @@ advertiser.post("/campaigns", requirePortalUser, async (c) => {
     }
     const workspace = await requireAdvertiserWorkspace(c.get("portalUser")!.id);
     if (!workspace) return c.json({ error: "Advertiser workspace required" }, 403);
-    const advertiserKey = `org:${workspace.organization.id}`;
+    const orgId = workspace.organization.id;
+    const advertiserKey = `org:${orgId}`;
     const d = parsed.data;
     const endsAt = d.durationDays ? new Date(Date.now() + d.durationDays * DAY_MS) : null;
-    const rows = await sql`
-      INSERT INTO ads ("id","title","description","ctaText","clickUrl","imageUrl","advertiser","topics",
-        "format","weight","isActive","dailyBudgetCents","lifetimeBudgetCents","endsAt","updatedAt")
-      VALUES (${newId()}, ${d.title}, ${d.description}, ${d.ctaText}, ${d.clickUrl}, ${d.imageUrl ?? null},
-        ${advertiserKey}, ${d.topics}::text[], ${d.format}, ${d.weight}, ${d.isActive ?? false},
-        ${d.dailyBudgetCents}, ${d.lifetimeBudgetCents}, ${endsAt}, now())
-      RETURNING *`;
-    return c.json(rows[0], 201);
+    const reserveCents = d.lifetimeBudgetCents ?? 0;
+
+    // Create the ad and reserve its lifetime budget from the wallet in ONE transaction so we never
+    // end up with an unfunded campaign or a charge without a campaign. The wallet row is locked
+    // (FOR UPDATE) so concurrent reservations cannot overdraw.
+    const result = await sql.begin(async (tx) => {
+      let newBalanceCents: number;
+      let prevBalanceCents = 0;
+      if (reserveCents > 0) {
+        const orgRows = await tx`SELECT "walletBalanceCents" FROM organizations WHERE "id" = ${orgId} FOR UPDATE`;
+        prevBalanceCents = orgRows[0]?.walletBalanceCents ?? 0;
+        if (prevBalanceCents < reserveCents) return { ok: false as const };
+        await tx`
+          INSERT INTO wallet_transactions ("id","organizationId","type","amountCents","description","createdAt")
+          VALUES (${newId()}, ${orgId}, 'spend', ${reserveCents}, ${`Budget for campaign: ${d.title}`}, now())`;
+        const updated = await tx`
+          UPDATE organizations SET "walletBalanceCents" = "walletBalanceCents" - ${reserveCents}, "updatedAt" = now()
+          WHERE "id" = ${orgId} RETURNING "walletBalanceCents"`;
+        newBalanceCents = updated[0].walletBalanceCents;
+      } else {
+        const orgRows = await tx`SELECT "walletBalanceCents" FROM organizations WHERE "id" = ${orgId} LIMIT 1`;
+        newBalanceCents = orgRows[0]?.walletBalanceCents ?? 0;
+        prevBalanceCents = newBalanceCents;
+      }
+      const rows = await tx`
+        INSERT INTO ads ("id","title","description","ctaText","clickUrl","imageUrl","advertiser","topics",
+          "format","weight","isActive","dailyBudgetCents","lifetimeBudgetCents","endsAt","updatedAt")
+        VALUES (${newId()}, ${d.title}, ${d.description}, ${d.ctaText}, ${d.clickUrl}, ${d.imageUrl ?? null},
+          ${advertiserKey}, ${d.topics}::text[], ${d.format}, ${d.weight}, ${d.isActive ?? false},
+          ${d.dailyBudgetCents}, ${d.lifetimeBudgetCents}, ${endsAt}, now())
+        RETURNING *`;
+      return { ok: true as const, ad: rows[0], newBalanceCents, prevBalanceCents };
+    });
+
+    if (!result.ok) return c.json({ error: "Insufficient wallet balance for campaign budget" }, 400);
+
+    if (reserveCents > 0) {
+      await logAudit({
+        action: "WALLET_SPEND",
+        actorUserId: c.get("portalUser")!.id,
+        organizationId: orgId,
+        resourceType: "ad",
+        resourceId: result.ad.id,
+        before: { walletBalanceCents: result.prevBalanceCents },
+        after: { walletBalanceCents: result.newBalanceCents, amountCents: reserveCents },
+        ip: ipFromHeaders(c.req.raw.headers),
+      });
+    }
+    return c.json({ ...result.ad, walletBalanceCents: result.newBalanceCents }, 201);
   } catch (err) {
     console.error("Advertiser campaign create failed", err);
     return c.json({ error: "Failed to create campaign" }, 500);

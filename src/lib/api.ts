@@ -29,7 +29,9 @@ export const apiRequest = async <T>(
   extraHeaders?: Record<string, string>,
 ): Promise<T> => {
   const headers = new Headers(init?.headers || {});
-  if (init?.body && !headers.has("Content-Type")) {
+  // Only default to JSON for string bodies. FormData/Blob bodies must keep the browser-set
+  // Content-Type (e.g. the multipart boundary), so never override those.
+  if (typeof init?.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (extraHeaders) {

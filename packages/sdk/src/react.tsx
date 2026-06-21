@@ -55,6 +55,7 @@ export function usePrismAd(options: UsePrismAdOptions) {
     position = 'inline',
     adFormat = 'text',
     baseUrl,
+    signRequests,
     topic,
     userId,
     frequency = 5,
@@ -65,8 +66,8 @@ export function usePrismAd(options: UsePrismAdOptions) {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const sdk = useMemo(() => {
-    return new PrismAds({ apiKey, botId, position, adFormat, baseUrl });
-  }, [apiKey, botId, position, adFormat, baseUrl]);
+    return new PrismAds({ apiKey, botId, position, adFormat, baseUrl, signRequests });
+  }, [apiKey, botId, position, adFormat, baseUrl, signRequests]);
 
   useEffect(() => {
     setAd(null);
@@ -164,6 +165,8 @@ export interface PrismAdProps {
   adFormat?: 'text' | 'card' | 'banner';
   /** Base API URL */
   baseUrl?: string;
+  /** Send HMAC request signatures (default true). Set false only against a server with signing disabled. */
+  signRequests?: boolean;
   /** Topic for ad targeting */
   topic?: string;
   /** User ID for tracking */
@@ -192,6 +195,7 @@ export function PrismAdComponent({
   position = 'inline',
   adFormat = 'text',
   baseUrl,
+  signRequests,
   topic,
   userId,
   frequency = 5,
@@ -209,6 +213,7 @@ export function PrismAdComponent({
     position,
     adFormat,
     baseUrl,
+    signRequests,
     topic,
     userId,
     frequency,

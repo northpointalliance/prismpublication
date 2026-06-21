@@ -82,6 +82,7 @@ enum AuditAction {
   AD_REJECT
   AD_TAKEDOWN
   WALLET_TOPUP
+  WALLET_SPEND
   PAYOUT_REQUEST
   PAYOUT_PROCESS
   PAYOUT_STATUS_UPDATE
@@ -151,7 +152,7 @@ model WalletTransaction {
   organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   type           WalletTransactionType
   amountCents    Int
-  paypalOrderId  String?
+  paypalOrderId  String?               @unique
   description    String?
   createdAt      DateTime              @default(now())
 

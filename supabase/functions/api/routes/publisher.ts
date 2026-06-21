@@ -102,7 +102,7 @@ publisher.get("/bots", requirePortalUser, async (c) => {
 
     let bots;
     if (cursor) {
-      const cur = await sql`SELECT "updatedAt" FROM publisher_bots WHERE "id" = ${cursor} LIMIT 1`;
+      const cur = await sql`SELECT "updatedAt" FROM publisher_bots WHERE "id" = ${cursor} AND "organizationId" = ${orgId} LIMIT 1`;
       bots = cur.length
         ? await sql`SELECT * FROM publisher_bots WHERE "organizationId" = ${orgId} AND "deletedAt" IS NULL
                     AND ("updatedAt","id") < (${cur[0].updatedAt}, ${cursor})

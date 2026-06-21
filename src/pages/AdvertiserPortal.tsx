@@ -131,6 +131,7 @@ const AdvertiserPortal = () => {
   const [wizardDurationDays, setWizardDurationDays] = useState("30");
   const [dragActive, setDragActive] = useState(false);
   const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Edit state
@@ -213,6 +214,7 @@ const AdvertiserPortal = () => {
     setWizardStep(1); setInfoDraft(emptyInfo);
     setWizardDailyUsd("50"); setWizardDurationDays("30");
     setUploadedPreviewUrl((prev) => { if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev); return null; });
+    setUploadedFile(null);
   };
 
   const openWizard = () => { setError(""); setNotice(""); resetWizard(); setWizardOpen(true); };
@@ -241,13 +243,30 @@ const AdvertiserPortal = () => {
     setSaving(true); setError(""); setNotice("");
     try {
       const headers = await getPortalHeaders(user.email);
-      const created = await apiRequest<{ id: string }>(
+
+      // Upload the creative to Supabase Storage first (if one was chosen) so we can persist its URL.
+      let imageUrl: string | undefined;
+      if (uploadedFile) {
+        const form = new FormData();
+        form.append("image", uploadedFile);
+        const upload = await apiRequest<{ imageUrl: string }>(
+          "/advertiser/campaigns/image",
+          { method: "POST", body: form },
+          headers,
+        );
+        imageUrl = upload.imageUrl;
+      }
+
+      // Single call: the backend creates the ad AND reserves the lifetime budget from the wallet
+      // atomically, returning the new balance. No separate /wallet/spend (which could half-fail).
+      const created = await apiRequest<{ id: string; walletBalanceCents?: number }>(
         "/advertiser/campaigns",
         {
           method: "POST",
           body: JSON.stringify({
             title: infoDraft.title, description: infoDraft.description,
             ctaText: infoDraft.ctaText, clickUrl: infoDraft.clickUrl,
+            ...(imageUrl ? { imageUrl } : {}),
             topics: infoDraft.topics.split(",").map((t) => t.trim()).filter(Boolean),
             format: infoDraft.format, weight: Number(infoDraft.weight || "1"),
             dailyBudgetCents: wizardDailyBudgetCents,
@@ -262,16 +281,9 @@ const AdvertiserPortal = () => {
           ...prev,
           [created.id]: { dailyBudgetCents: wizardDailyBudgetCents, lifetimeBudgetCents: wizardTotalBudgetCents, durationDays: wizardDays },
         }));
-        try {
-          const spendRes = await apiRequest<{ newBalanceCents: number }>(
-            "/wallet/spend",
-            { method: "POST", body: JSON.stringify({ amountCents: wizardTotalBudgetCents, description: `Budget for campaign: ${infoDraft.title}` }) },
-            headers,
-          );
-          setWalletBalanceCents(spendRes.newBalanceCents);
-        } catch {
-          setWalletBalanceCents((prev) => Math.max(0, prev - wizardTotalBudgetCents));
-        }
+      }
+      if (typeof created?.walletBalanceCents === "number") {
+        setWalletBalanceCents(created.walletBalanceCents);
       }
       setNotice("Campaign submitted for review. Budget reserved from wallet.");
       closeWizard();
@@ -390,6 +402,8 @@ const AdvertiserPortal = () => {
 
   const applyImage = (file: File) => {
     if (!file.type.startsWith("image/")) { setError("Please upload a valid image file."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Image exceeds the 5 MB size limit."); return; }
+    setUploadedFile(file);
     setUploadedPreviewUrl((prev) => { if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
   };
 

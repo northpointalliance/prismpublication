@@ -65,8 +65,11 @@ wallet.post("/paypal/capture-order", requirePortalUser, async (c) => {
   if (!parsed.success) return c.json({ error: "Missing orderID" }, 400);
   const orgId = workspace.organization.id;
   try {
-    // Idempotency guard.
-    const existing = await sql`SELECT "amountCents" FROM wallet_transactions WHERE "paypalOrderId" = ${parsed.data.orderID} LIMIT 1`;
+    // Idempotency guard — scoped to this org so one org cannot read back another org's capture.
+    // The DB also enforces a UNIQUE constraint on "paypalOrderId" as a hard backstop against double-credit.
+    const existing = await sql`
+      SELECT "amountCents" FROM wallet_transactions
+      WHERE "paypalOrderId" = ${parsed.data.orderID} AND "organizationId" = ${orgId} LIMIT 1`;
     if (existing.length) {
       const orgRows = await sql`SELECT "walletBalanceCents" FROM organizations WHERE "id" = ${orgId} LIMIT 1`;
       return c.json({ amountCents: existing[0].amountCents, newBalanceCents: orgRows[0]?.walletBalanceCents ?? 0 });
@@ -116,11 +119,13 @@ wallet.post("/spend", requirePortalUser, async (c) => {
   if (!parsed.success) return c.json({ error: "Invalid spend amount" }, 400);
   const orgId = workspace.organization.id;
   try {
-    const orgRows = await sql`SELECT "walletBalanceCents" FROM organizations WHERE "id" = ${orgId} LIMIT 1`;
-    const spendCheck = checkWalletSpend(orgRows[0]?.walletBalanceCents ?? 0, parsed.data.amountCents);
-    if (!spendCheck.ok) return c.json({ error: "Insufficient wallet balance" }, 400);
-
-    const newBalance: number = await sql.begin(async (tx) => {
+    // Read-check-and-deduct inside a single transaction with a row lock so concurrent
+    // spends cannot both pass the balance check and overdraw the wallet.
+    const result = await sql.begin(async (tx) => {
+      const orgRows = await tx`SELECT "walletBalanceCents" FROM organizations WHERE "id" = ${orgId} FOR UPDATE`;
+      const balanceCents = orgRows[0]?.walletBalanceCents ?? 0;
+      const spendCheck = checkWalletSpend(balanceCents, parsed.data.amountCents);
+      if (!spendCheck.ok) return { ok: false as const };
       await tx`
         INSERT INTO wallet_transactions ("id","organizationId","type","amountCents","description","createdAt")
         VALUES (${newId()}, ${orgId}, 'spend', ${parsed.data.amountCents},
@@ -128,9 +133,21 @@ wallet.post("/spend", requirePortalUser, async (c) => {
       const rows = await tx`
         UPDATE organizations SET "walletBalanceCents" = "walletBalanceCents" - ${parsed.data.amountCents}, "updatedAt" = now()
         WHERE "id" = ${orgId} RETURNING "walletBalanceCents"`;
-      return rows[0].walletBalanceCents;
+      return { ok: true as const, prevBalance: balanceCents, newBalance: rows[0].walletBalanceCents as number };
     });
-    return c.json({ newBalanceCents: newBalance });
+
+    if (!result.ok) return c.json({ error: "Insufficient wallet balance" }, 400);
+
+    await logAudit({
+      action: "WALLET_SPEND",
+      actorUserId: c.get("portalUser")!.id,
+      organizationId: orgId,
+      resourceType: "wallet",
+      before: { walletBalanceCents: result.prevBalance },
+      after: { walletBalanceCents: result.newBalance, amountCents: parsed.data.amountCents },
+      ip: ipFromHeaders(c.req.raw.headers),
+    });
+    return c.json({ newBalanceCents: result.newBalance });
   } catch (err) {
     console.error("Wallet spend error", err);
     return c.json({ error: "Failed to process spend" }, 500);
