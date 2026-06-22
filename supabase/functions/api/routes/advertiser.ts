@@ -261,13 +261,20 @@ advertiser.delete("/campaigns/:id", requirePortalUser, async (c) => {
     // Refund = reserved lifetime budget − what was actually spent on impressions (revenue events).
     // Done in one transaction with the wallet locked so the soft-delete and credit are atomic.
     const result = await sql.begin(async (tx) => {
+      // The conditional soft-delete is the atomic gate: only the txn that actually flips deletedAt
+      // (one of N concurrent deletes) proceeds to refund. A second concurrent delete blocks on the
+      // row lock, then matches 0 rows after the first commits → no double-refund.
+      const deleted = await tx`
+        UPDATE ads SET "deletedAt" = now(), "isActive" = false, "updatedAt" = now()
+        WHERE "id" = ${ad.id} AND "deletedAt" IS NULL
+        RETURNING "lifetimeBudgetCents"`;
+      if (!deleted.length) return { refundCents: 0, walletBalanceCents: null as number | null, prevBalanceCents: 0 };
+
       const spentRows = await tx`
         SELECT coalesce(sum("amount"), 0) AS spent FROM ad_events
         WHERE "adId" = ${ad.id} AND "eventType" = 'revenue'`;
       const spentCents = Number(spentRows[0]?.spent ?? 0);
-      const refundCents = Math.max(0, (ad.lifetimeBudgetCents ?? 0) - spentCents);
-
-      await tx`UPDATE ads SET "deletedAt" = now(), "isActive" = false, "updatedAt" = now() WHERE "id" = ${ad.id}`;
+      const refundCents = Math.max(0, (deleted[0].lifetimeBudgetCents ?? 0) - spentCents);
 
       let walletBalanceCents: number | null = null;
       let prevBalanceCents = 0;
