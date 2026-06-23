@@ -91,6 +91,7 @@ const Publishers = () => {
           ))}
         </div>
       </section>
+      
 
       {/* ── Integration flow ──────────────────────────────────────────────── */}
       <section className="py-20">
@@ -98,10 +99,9 @@ const Publishers = () => {
           <div className="text-center">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary">Integration</p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
-              Live in four steps
-            </h2>
+Integrate in four steps            </h2>
             <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              From install to first revenue in under five minutes. No complex configuration or approval queues.
+              SDK integration takes under 10 minutes. No approval queues — your first ad can run the same day you sign up.
             </p>
           </div>
 
