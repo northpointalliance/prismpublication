@@ -6,16 +6,16 @@ const exploreLinks = [
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
   { label: "How It Works + Demo", to: "/demo" },
+  { label: "Use Cases", to: "/use-cases" },
 ];
 
 const companyLinks = [
   { label: "Company", to: "/company" },
   { label: "Product", to: "/product" },
-  { label: "Use Cases", to: "/use-cases" },
   { label: "Documentation", to: "/docs" },
-  { label: "Ad Policy", to: "/ad-policy" },
-  { label: "SDK", to: "/demo" },
   { label: "Blog", to: "/blog" },
+  { label: "Ad Policy", to: "/ad-policy" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const Footer = () => {
@@ -86,14 +86,22 @@ const Footer = () => {
               <p className="font-[Poppins] text-xs font-bold uppercase tracking-[0.16em] text-black">Start Here</p>
               <h2 className="mt-3 text-xl font-bold tracking-tight">See Prism in action</h2>
               <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-                Run the interactive conversation demo and review the integration flow in minutes.
+                Watch the scripted demo or chat with a live bot to see context-aware ad matching in real time.
               </p>
-              <Link to="/demo" className="mt-5 inline-flex">
-                <Button variant="primary" size="sm">
-                  Open Demo
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </Link>
+              <div className="mt-5 flex flex-col gap-2">
+                <Link to="/demo" className="inline-flex">
+                  <Button variant="primary" size="sm">
+                    Interactive Demo
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </Link>
+                <a href="https://prism-publication-demo.vercel.app" target="_blank" rel="noopener noreferrer" className="inline-flex">
+                  <Button variant="secondary" size="sm">
+                    Try Live Bots
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </a>
+              </div>
             </section>
           </div>
 
@@ -105,6 +113,7 @@ const Footer = () => {
               <Link to="/blog" className="transition-colors hover:text-foreground">Blog</Link>
               <Link to="/demo" className="transition-colors hover:text-foreground">Demo</Link>
               <Link to="/ad-policy" className="transition-colors hover:text-foreground">Ad Policy</Link>
+              <Link to="/contact" className="transition-colors hover:text-foreground">Contact</Link>
             </div>
           </div>
         </div>
