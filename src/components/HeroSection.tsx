@@ -28,14 +28,14 @@ const HeroSection = () => {
               startDelayMs={300}
               segments={[
                 { text: "Built an AI app?", breakAfter: true },
-                { text: "Add revenue", breakAfter: true },
-                { text: "in minutes.", className: "text-gradient-rainbow" },
+                { text: "Monetize every", breakAfter: true },
+                { text: "conversation.", className: "text-gradient-rainbow" },
               ]}
             />
           </h1>
 
           <p className="animate-fade-up-delay-2 mt-8 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Prism is the ad SDK for AI chatbot developers. Drop three lines into any bot or agent, set your own frequency rules, and earn CPM&nbsp;+&nbsp;CPC from every conversation — no banner ads, no UX damage.
+            Prism is the ad SDK for AI chatbot developers. Integrate into any bot or agent, set your own frequency rules, and earn CPM&nbsp;+&nbsp;CPC from every conversation — no banner ads, no UX damage.
           </p>
 
           <div className="animate-fade-up-delay-3 mt-10 flex flex-col sm:flex-row justify-center items-center gap-3">
@@ -61,7 +61,7 @@ const HeroSection = () => {
           <div className="animate-fade-up-delay-3 mt-10 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground" role="list" aria-label="Core value points">
             {[
               "npm install @prism/sdk",
-              "Ships in an afternoon",
+              "Context-aware placements",
               "You control pacing & categories",
             ].map((item) => (
               <div key={item} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2" role="listitem">
