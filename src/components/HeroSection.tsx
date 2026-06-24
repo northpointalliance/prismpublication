@@ -46,6 +46,12 @@ const HeroSection = () => {
                 <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
               </Button>
             </Link>
+            <a href="https://prism-publication-demo.vercel.app" target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" size="lg" className="text-base px-8 py-6">
+                Try Live Bots
+                <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
+              </Button>
+            </a>
             <Link to="/docs">
               <Button variant="secondary" size="lg" className="text-base px-8 py-6">
                 Documentation
