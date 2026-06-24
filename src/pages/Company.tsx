@@ -35,9 +35,9 @@ const Company = () => {
                 <span className="text-gradient-primary">conversational AI deserves.</span>
               </h1>
               <p className="mt-6 mx-auto lg:mx-0 max-w-xl text-lg leading-relaxed text-muted-foreground">
-                Prism is an ad network built specifically for AI chatbots. We help publishers monetize
-                conversations and help advertisers reach users in their highest-intent moments — without
-                compromising the experience that makes those conversations valuable.
+                Prism is an ad network built for AI chatbots. Publishers monetize conversations.
+                Advertisers reach users when they are actively expressing a need. The ads should not
+                compromise the experience.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">
@@ -83,11 +83,11 @@ const Company = () => {
           <div className="text-center">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary">Why We Exist</p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
-              The problem we're solving
+              The problem we are solving
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              AI chatbots are the next major platform for user interaction. But the ad infrastructure
-              for conversations doesn't exist yet. We're building it.
+              AI chatbots are becoming a primary interface for users to get things done. The ad
+              infrastructure built for those conversations does not exist yet. We are building it.
             </p>
           </div>
 
@@ -115,8 +115,8 @@ const Company = () => {
                 What we believe
               </h2>
               <p className="mt-4 text-muted-foreground leading-relaxed">
-                These aren't aspirational. They're the decisions we've already made — reflected in
-                the product, the policies, and the way we operate.
+                These are the decisions we have already made, reflected in the product, the policies,
+                and the way we operate.
               </p>
 
               <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5">
@@ -189,29 +189,28 @@ const Company = () => {
             <div>
               <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary">The Product</p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
-                Ads that feel like part of the conversation
+                Ads that fit the conversation
               </h2>
               <p className="mt-4 text-muted-foreground leading-relaxed">
-                Prism ads aren't banners or pop-ups. They appear as contextual suggestions within
-                live conversations — when a user asks about a topic your ad is relevant to.
+                Prism ads are not banners or pop-ups. They appear as contextual suggestions within
+                live conversations, when a user asks about a topic the ad is relevant to.
               </p>
               <p className="mt-3 text-muted-foreground leading-relaxed">
-                The result: higher engagement for advertisers, better UX for publishers, and a
-                genuinely useful experience for end users.
+                Native placements only. The conversation stays intact.
               </p>
 
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">3.8%</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Avg. CTR</p>
+                  <p className="text-2xl font-bold text-primary">3</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Ad formats</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">94%</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Viewability</p>
+                  <p className="text-2xl font-bold text-primary">11</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Excluded categories</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">0%</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Bot traffic</p>
+                  <p className="text-2xl font-bold text-primary">&lt;50ms</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Ad response time</p>
                 </div>
               </div>
             </div>
@@ -245,12 +244,12 @@ const Company = () => {
               </div>
               <h3 className="text-2xl font-bold">For publishers</h3>
               <p className="mt-3 text-muted-foreground leading-relaxed">
-                If you've built a chatbot with real users and want to earn revenue without
+                If you have built a chatbot with real users and want to earn revenue without
                 degrading the experience, Prism gives you the SDK, the dashboard, and the controls.
               </p>
               <ul className="mt-5 space-y-2.5 flex-1">
                 {[
-                  "5-minute SDK integration",
+                  "SDK integration",
                   "Per-bot revenue tracking",
                   "Full frequency and format controls",
                   "Monthly PayPal payouts",
@@ -277,7 +276,7 @@ const Company = () => {
               </div>
               <h3 className="text-2xl font-bold">For advertisers</h3>
               <p className="mt-3 text-muted-foreground leading-relaxed">
-                If you want to reach users when they're actively expressing intent in AI
+                If you want to reach users when they are actively expressing intent in AI
                 conversations, Prism gives you the targeting, the creative tools, and the analytics.
               </p>
               <ul className="mt-5 space-y-2.5 flex-1">
@@ -317,8 +316,8 @@ const Company = () => {
                 See Prism in action
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-                Run the interactive demo, explore the documentation, or create an account and
-                launch your first integration today.
+                Run the interactive demo, explore the documentation, or get in touch to talk through
+                how it fits your product.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
