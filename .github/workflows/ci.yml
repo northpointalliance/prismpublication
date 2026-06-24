@@ -38,10 +38,11 @@ jobs:
       - run: npx tsc --noEmit
       - name: Run tests (skip if none exist)
         run: |
-          if find test -name '*.test.ts' 2>/dev/null | grep -q .; then
-            npx tsx --test test/**/*.test.ts
+          mapfile -t FILES < <(find test -name '*.test.ts' 2>/dev/null)
+          if [ ${#FILES[@]} -gt 0 ]; then
+            npx tsx --test "${FILES[@]}"
           else
-            echo "No test files found — skipping."
+            echo "No test files found - skipping."
           fi
     env:
       PRISM_API_KEY: test-key
