@@ -139,12 +139,21 @@ const ScrollVideoSection = () => {
                 <source src="/media/hero-video-web.mp4" type="video/mp4" />
               </video>
 
+              {/* "Now Live" Badge Overlay */}
+              <div className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-500/90 to-emerald-500/90 px-4 py-2 backdrop-blur-md">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-green-400"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span className="text-sm font-semibold text-white">Now Live</span>
+              </div>
+
               <button
                 type="button"
                 onClick={toggleSound}
                 aria-label={muted ? "Unmute video" : "Mute video"}
                 aria-pressed={!muted}
-                className="absolute bottom-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="absolute bottom-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80 hover:scale-110"
               >
                 {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </button>
