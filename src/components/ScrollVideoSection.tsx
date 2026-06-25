@@ -139,6 +139,13 @@ const ScrollVideoSection = () => {
                 <source src="/media/hero-video-web.mp4" type="video/mp4" />
               </video>
 
+              {/* Cover "Launching Soon" text baked into the video */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="rounded-full bg-primary/90 px-5 py-2 text-sm font-semibold tracking-wide text-white shadow-lg backdrop-blur-sm">
+                  Now Live
+                </span>
+              </div>
+
               <button
                 type="button"
                 onClick={toggleSound}
