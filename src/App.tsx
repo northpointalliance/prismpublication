@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ChunkErrorBoundary from "@/components/ChunkErrorBoundary";
+import ScrollToTop from "@/components/ScrollToTop";
 import { PortalAuthProvider } from "@/components/portal/PortalAuthProvider";
 import {
   RequirePortalLogin,
@@ -42,6 +43,7 @@ const App = () => (
       <PortalAuthProvider>
         <BrowserRouter>
           <ChunkErrorBoundary>
+          <ScrollToTop />
           <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <Routes>
               <Route path="/" element={<Index />} />
