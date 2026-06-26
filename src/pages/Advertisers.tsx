@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { advantages, campaignFlow, features, comparisonRows } from "./advertisers/AdvertisersData";
 import { CampaignMockup } from "./advertisers/CampaignMockup";
+import PricingBlock from "./advertisers/PricingBlock";
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -223,63 +224,10 @@ const Advertisers = () => {
         </div>
       </section>
 
-      {/* ── Pricing teaser ────────────────────────────────────────────────── */}
-      <section className="py-20 bg-muted/20">
-        <div className="container mx-auto px-6">
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: MousePointerClick,
-                title: "Text ads",
-                cpm: "$10",
-                perImpression: "$0.01",
-                description: "Inline text suggestion within the conversation flow.",
-              },
-              {
-                icon: Sparkles,
-                title: "Card ads",
-                cpm: "$20",
-                perImpression: "$0.02",
-                description: "Rich card with image, copy, and CTA button.",
-                featured: true,
-              },
-              {
-                icon: BarChart3,
-                title: "Banner ads",
-                cpm: "$15",
-                perImpression: "$0.015",
-                description: "Full-width visual banner between messages.",
-              },
-            ].map(({ icon: Icon, title, cpm, perImpression, description, featured }) => (
-              <div
-                key={title}
-                className={`rounded-2xl border p-7 ${
-                  featured
-                    ? "border-primary/30 bg-card shadow-lg shadow-primary/5"
-                    : "border-border bg-card"
-                }`}
-              >
-                {featured && (
-                  <span className="mb-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                    Most popular
-                  </span>
-                )}
-                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold">{title}</h3>
-                <p className="mt-1 text-base text-muted-foreground">{description}</p>
-                <div className="mt-4 border-t border-border/60 pt-4">
-                  <p className="text-3xl font-bold tracking-tight">{cpm} <span className="text-sm font-normal text-muted-foreground">CPM</span></p>
-                  <p className="mt-1 text-sm text-muted-foreground">{perImpression} per impression</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Pricing block (inserted) ─────────────────────────────────────── */}
+      <PricingBlock />
 
-      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      {/* ── CTA ────────────────────────────────────────────────────────── */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card">
