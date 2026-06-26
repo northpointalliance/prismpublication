@@ -93,6 +93,37 @@ const BillingPanel = ({
           </div>
         </div>
       )}
+
+      {/* ── Billing Terms ─────────────────────────────────────────── */}
+      <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Billing Terms</p>
+        <div className="grid gap-2 sm:grid-cols-2 text-xs text-muted-foreground">
+          <div>
+            <span className="font-medium text-foreground">Minimum top-up:</span> $1.00 USD
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Currency:</span> USD only
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Payment method:</span> PayPal (card or PayPal balance)
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Invoices:</span> Transaction history available in this panel; formal invoices on request — email dan@prismpublication.com
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Refunds:</span> Unspent campaign budget is returned to your wallet when a campaign is deleted. Wallet balances are non-refundable to PayPal once credited.
+          </div>
+          <div>
+            <span className="font-medium text-foreground">VAT / GST:</span> Prism does not currently add VAT or GST. You are responsible for any tax obligations in your jurisdiction.
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Chargebacks:</span> Disputed PayPal transactions result in immediate wallet suspension pending resolution.
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Enterprise billing:</span> Volume invoicing and NET-30 terms available for qualifying advertisers — contact us.
+          </div>
+        </div>
+      </div>
     </CardContent>
   </Card>
 );

@@ -98,50 +98,98 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "Will ads hurt my chatbot user experience?",
+          "name": "What is Prism, and how does conversational advertising work?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Not if they are paced correctly. Prism is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely."
+            "text": "Prism is an ad marketplace built for AI chatbot conversations. Publishers integrate the Prism SDK into their chatbot or AI app; when a user's message matches an advertiser's target topics, Prism returns a native ad — a text recommendation, image card, or banner — that fits the conversation moment. Advertisers pay on a CPM basis ($10–$20 per 1,000 impressions depending on format). Publishers earn a revenue share from every matched impression. No user profile data is required — matching is contextual, based on what the conversation is about."
           }
         },
         {
           "@type": "Question",
-          "name": "How long does integration take?",
+          "name": "How do I add ads to my AI chatbot or conversational app?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Most teams can get the SDK running quickly, then iterate on placement and pacing rules over time. You can start in a test mode before enabling broader traffic."
+            "text": "Install the Prism SDK (JavaScript/TypeScript or REST API), register your bot in the publisher portal, and call the ad endpoint with the current conversation topic. A typical integration takes under an hour. Prism returns a structured ad object you render inside the chat response. You set frequency caps, topic restrictions, and format preferences per bot — and can run in demo mode before going live."
           }
         },
         {
           "@type": "Question",
-          "name": "Which chatbot stacks are supported?",
+          "name": "How much can publishers earn from chatbot advertising?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Prism can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic."
+            "text": "Publisher revenue is based on CPM. Advertisers pay $10 CPM for text ads, $15 for banner ads, and $20 for card ads. Publishers receive a share of that rate for each matched impression their bot generates. There is no minimum traffic requirement to register, and payout details are visible in the publisher portal."
           }
         },
         {
           "@type": "Question",
-          "name": "How do advertisers target campaigns?",
+          "name": "Which chatbot frameworks and stacks does Prism support?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Campaigns are matched to conversation context and topic intent instead of generic banner inventory. Teams can configure placement and category controls based on campaign goals."
+            "text": "Prism works with any stack that can make an HTTP request. It has been tested with OpenAI Assistants, LangChain agents, Rasa bots, and custom Node.js and Python chat servers. The SDK is JavaScript/TypeScript-native with React helpers included. Any other language or framework can use the plain REST API."
           }
         },
         {
           "@type": "Question",
-          "name": "Can publishers control what gets shown?",
+          "name": "How long does it take to integrate the Prism SDK?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Publishers can apply frequency limits, topic restrictions, and guardrails so sponsored content aligns with brand standards and user expectations."
+            "text": "Most integrations take under an hour. The core flow is three steps: install the npm package, call getAd({ botId, context }) in your response handler, and render the returned ad object. Prism provides React components for card and banner formats. You can run in demo mode to verify the integration before connecting a live advertiser campaign."
           }
         },
         {
           "@type": "Question",
-          "name": "What about privacy and compliance requirements?",
+          "name": "Will ads hurt my chatbot's user experience?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Prism is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment."
+            "text": "Only if over-served. Prism is built for low-frequency, contextual placements — ads are matched to conversation topic and only shown when relevant. Publishers set daily frequency caps and topic restrictions per bot, controlling how often ads appear and in which conversations. Most publishers run one ad per session during a clearly relevant moment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Prism target ads inside AI conversations?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Advertisers assign topic keywords to each campaign (for example, 'productivity', 'developer tools', 'travel'). When a publisher bot requests an ad and passes the current conversation topic, Prism scores all active campaigns against that topic and returns the best match. There is no cookie-based targeting or user profiling — matching is purely contextual. Advertisers set a campaign weight (1–100) to control how often their ads serve relative to other matched campaigns."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What ad formats does Prism support and what do they cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Prism supports three formats. Text ($10 CPM): a short sponsored message with a CTA link — minimal footprint in the conversation flow. Card ($20 CPM): an image, headline, description, and CTA button — the highest-engagement format, best for product showcases. Banner ($15 CPM): a full-width image with optional overlay text, suited for brand awareness. All formats are returned as structured JSON that publishers render using their own UI or Prism's React components."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a minimum budget to advertise on Prism?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The minimum wallet top-up is $1 USD. There is no minimum campaign budget — you can run a campaign at any daily spend level. Campaigns are funded by pre-loading a wallet via PayPal. The lifetime campaign budget is reserved at launch and returned to the wallet if the campaign is deleted before it fully spends."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Prism protect advertisers from invalid traffic?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Prism deduplicates impression and click events server-side using request fingerprinting and timestamp gating. Publisher bots are vetted during registration and must pass review before receiving live API keys. Unusually high event rates trigger automatic flagging for manual review. If invalid traffic is confirmed, the affected spend is credited back to the advertiser's wallet."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Prism work with private or enterprise AI assistants?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Publisher bots can be registered across development, staging, and production environments, with SDK keys scoped per bot. Private or internal chatbots integrate the same way as public ones — the only requirement is that the bot can make outbound HTTPS requests to the Prism API. For enterprise arrangements including volume pricing, private publisher deals, signed DPAs, or SLA commitments, contact the Prism team directly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Prism like Google AdSense for AI chatbots?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "That is a fair analogy. Like AdSense, Prism lets publishers monetize their audience through third-party ads and lets advertisers buy placement across a network of properties. The key difference is the medium: Prism is built for conversational interfaces, not web pages. Ads are matched to live conversation context rather than page keywords, and they are returned as structured objects rendered inside chat responses rather than display banners injected into a webpage."
           }
         }
       ]
@@ -178,19 +226,31 @@
           <li>Privacy-Forward Design — contextual signals, not profile-based targeting</li>
         </ul>
 
-        <h2>Frequently asked questions</h2>
-        <h3>Will ads hurt my chatbot user experience?</h3>
-        <p>Not if they are paced correctly. Prism is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely.</p>
-        <h3>How long does integration take?</h3>
-        <p>Most teams can get the SDK running quickly, then iterate on placement and pacing rules over time. You can start in a test mode before enabling broader traffic.</p>
-        <h3>Which chatbot stacks are supported?</h3>
-        <p>Prism can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic.</p>
-        <h3>How do advertisers target campaigns?</h3>
-        <p>Campaigns are matched to conversation context and topic intent instead of generic banner inventory. Teams can configure placement and category controls based on campaign goals.</p>
-        <h3>Can publishers control what gets shown?</h3>
-        <p>Yes. Publishers can apply frequency limits, topic restrictions, and guardrails so sponsored content aligns with brand standards and user expectations.</p>
-        <h3>What about privacy and compliance requirements?</h3>
-        <p>Prism is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment.</p>
+        <h2>Frequently asked questions about Prism</h2>
+        <h3>What is Prism, and how does conversational advertising work?</h3>
+        <p>Prism is an ad marketplace built for AI chatbot conversations. Publishers integrate the Prism SDK into their chatbot or AI app; when a user's message matches an advertiser's target topics, Prism returns a native ad — a text recommendation, image card, or banner — that fits the conversation moment. Advertisers pay on a CPM basis ($10–$20 per 1,000 impressions depending on format). Publishers earn a revenue share from every matched impression. No user profile data is required — matching is contextual, based on what the conversation is about.</p>
+        <h3>How do I add ads to my AI chatbot or conversational app?</h3>
+        <p>Install the Prism SDK (JavaScript/TypeScript or REST API), register your bot in the publisher portal, and call the ad endpoint with the current conversation topic. A typical integration takes under an hour. Prism returns a structured ad object you render inside the chat response. You set frequency caps, topic restrictions, and format preferences per bot — and can run in demo mode before going live.</p>
+        <h3>How much can publishers earn from chatbot advertising?</h3>
+        <p>Publisher revenue is based on CPM. Advertisers pay $10 CPM for text ads, $15 for banner ads, and $20 for card ads. Publishers receive a share of that rate for each matched impression their bot generates. There is no minimum traffic requirement to register, and payout details are visible in the publisher portal.</p>
+        <h3>Which chatbot frameworks and stacks does Prism support?</h3>
+        <p>Prism works with any stack that can make an HTTP request. It has been tested with OpenAI Assistants, LangChain agents, Rasa bots, and custom Node.js and Python chat servers. The SDK is JavaScript/TypeScript-native with React helpers included. Any other language or framework can use the plain REST API.</p>
+        <h3>How long does it take to integrate the Prism SDK?</h3>
+        <p>Most integrations take under an hour. The core flow is three steps: install the npm package, call getAd({ botId, context }) in your response handler, and render the returned ad object. Prism provides React components for card and banner formats. You can run in demo mode to verify the integration before connecting a live advertiser campaign.</p>
+        <h3>Will ads hurt my chatbot's user experience?</h3>
+        <p>Only if over-served. Prism is built for low-frequency, contextual placements — ads are matched to conversation topic and only shown when relevant. Publishers set daily frequency caps and topic restrictions per bot, controlling how often ads appear and in which conversations. Most publishers run one ad per session during a clearly relevant moment.</p>
+        <h3>How does Prism target ads inside AI conversations?</h3>
+        <p>Advertisers assign topic keywords to each campaign (for example, 'productivity', 'developer tools', 'travel'). When a publisher bot requests an ad and passes the current conversation topic, Prism scores all active campaigns against that topic and returns the best match. There is no cookie-based targeting or user profiling — matching is purely contextual. Advertisers set a campaign weight (1–100) to control how often their ads serve relative to other matched campaigns.</p>
+        <h3>What ad formats does Prism support and what do they cost?</h3>
+        <p>Prism supports three formats. Text ($10 CPM): a short sponsored message with a CTA link — minimal footprint in the conversation flow. Card ($20 CPM): an image, headline, description, and CTA button — the highest-engagement format, best for product showcases. Banner ($15 CPM): a full-width image with optional overlay text, suited for brand awareness. All formats are returned as structured JSON that publishers render using their own UI or Prism's React components.</p>
+        <h3>Is there a minimum budget to advertise on Prism?</h3>
+        <p>The minimum wallet top-up is $1 USD. There is no minimum campaign budget — you can run a campaign at any daily spend level. Campaigns are funded by pre-loading a wallet via PayPal. The lifetime campaign budget is reserved at launch and returned to the wallet if the campaign is deleted before it fully spends.</p>
+        <h3>How does Prism protect advertisers from invalid traffic?</h3>
+        <p>Prism deduplicates impression and click events server-side using request fingerprinting and timestamp gating. Publisher bots are vetted during registration and must pass review before receiving live API keys. Unusually high event rates trigger automatic flagging for manual review. If invalid traffic is confirmed, the affected spend is credited back to the advertiser's wallet.</p>
+        <h3>Does Prism work with private or enterprise AI assistants?</h3>
+        <p>Yes. Publisher bots can be registered across development, staging, and production environments, with SDK keys scoped per bot. Private or internal chatbots integrate the same way as public ones — the only requirement is that the bot can make outbound HTTPS requests to the Prism API. For enterprise arrangements including volume pricing, private publisher deals, signed DPAs, or SLA commitments, contact the Prism team directly.</p>
+        <h3>Is Prism like Google AdSense for AI chatbots?</h3>
+        <p>That is a fair analogy. Like AdSense, Prism lets publishers monetize their audience through third-party ads and lets advertisers buy placement across a network of properties. The key difference is the medium: Prism is built for conversational interfaces, not web pages. Ads are matched to live conversation context rather than page keywords, and they are returned as structured objects rendered inside chat responses rather than display banners injected into a webpage.</p>
 
         <h2>Explore</h2>
         <ul>
