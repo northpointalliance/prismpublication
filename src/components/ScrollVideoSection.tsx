@@ -166,6 +166,7 @@ const ScrollVideoSection = () => {
           </div>
         </div>
       </div>
+    </div>
     </section>
   );
 };
