@@ -92,26 +92,29 @@ const CampaignInfoFields = ({ draft, onChange }: {
   <div className="space-y-3">
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="space-y-1.5">
-        <Label htmlFor="ci-title">Ad title</Label>
-        <Input id="ci-title" placeholder="Your ad headline" value={draft.title} onChange={(e) => onChange({ title: e.target.value })} />
+        <Label htmlFor="ci-title">Ad title <span className="font-normal text-muted-foreground">(max 140 chars)</span></Label>
+        <Input id="ci-title" placeholder="Your ad headline" maxLength={140} value={draft.title} onChange={(e) => onChange({ title: e.target.value })} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="ci-cta">CTA text</Label>
-        <Input id="ci-cta" placeholder="Shop Now" value={draft.ctaText} onChange={(e) => onChange({ ctaText: e.target.value })} />
+        <Label htmlFor="ci-cta">CTA text <span className="font-normal text-muted-foreground">(max 60 chars)</span></Label>
+        <Input id="ci-cta" placeholder="Get Started" maxLength={60} value={draft.ctaText} onChange={(e) => onChange({ ctaText: e.target.value })} />
       </div>
     </div>
     <div className="space-y-1.5">
-      <Label htmlFor="ci-desc">Description</Label>
-      <Input id="ci-desc" placeholder="Short supporting copy (1–2 sentences)" value={draft.description} onChange={(e) => onChange({ description: e.target.value })} />
+      <Label htmlFor="ci-desc">Description <span className="font-normal text-muted-foreground">(max 400 chars)</span></Label>
+      <Input id="ci-desc" placeholder="1–2 sentences of supporting copy" maxLength={400} value={draft.description} onChange={(e) => onChange({ description: e.target.value })} />
     </div>
     <div className="space-y-1.5">
-      <Label htmlFor="ci-url">Destination URL</Label>
+      <Label htmlFor="ci-url">Destination URL <span className="font-normal text-muted-foreground">(HTTPS required)</span></Label>
       <Input id="ci-url" placeholder="https://example.com/campaign" value={draft.clickUrl} onChange={(e) => onChange({ clickUrl: e.target.value })} />
     </div>
     <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
       <div className="space-y-1.5">
         <Label htmlFor="ci-topics">Target topics</Label>
         <Input id="ci-topics" placeholder="ai, shopping, travel (comma separated)" value={draft.topics} onChange={(e) => onChange({ topics: e.target.value })} />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Matched against publisher bots' declared content categories. Use 3–5 specific keywords (max 60 chars each). Your ad only serves on bots whose category tags overlap with these topics.
+        </p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="ci-format">Format</Label>
@@ -121,9 +124,9 @@ const CampaignInfoFields = ({ draft, onChange }: {
           value={draft.format}
           onChange={(e) => onChange({ format: e.target.value as CampaignInfoDraft["format"] })}
         >
-          <option value="card">Card</option>
-          <option value="text">Text</option>
-          <option value="banner">Banner</option>
+          <option value="card">Card — $20 CPM</option>
+          <option value="text">Text — $10 CPM</option>
+          <option value="banner">Banner — $15 CPM</option>
         </select>
       </div>
       <div className="space-y-1.5">
@@ -133,7 +136,7 @@ const CampaignInfoFields = ({ draft, onChange }: {
         <Input id="ci-weight" className="w-24" placeholder="1–100" value={draft.weight} onChange={(e) => onChange({ weight: e.target.value })} />
       </div>
     </div>
-    <p className="text-xs text-muted-foreground">Weight controls display frequency relative to other active ads.</p>
+    <p className="text-xs text-muted-foreground">Weight (1–100): higher weight = higher probability of serving when multiple campaigns match the same topic. No bidding — set it once and adjust anytime.</p>
   </div>
 );
 

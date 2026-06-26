@@ -134,6 +134,7 @@ const navItems = [
   { label: "Restricted Categories", href: "#restricted" },
   { label: "Creative Requirements", href: "#creative" },
   { label: "Enforcement", href: "#enforcement" },
+  { label: "Review Timeline", href: "#timeline" },
   { label: "Reporting", href: "#reporting" },
 ];
 
@@ -376,6 +377,48 @@ const AdPolicy = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        <hr className="border-border/60" />
+
+        {/* ── Section: Review Timeline ──────────────────────────────────── */}
+        <section id="timeline" className="scroll-mt-28">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              <Eye className="h-3.5 w-3.5" />
+            </span>
+            <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Moderation</p>
+          </div>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Review Timeline</h2>
+          <p className="mt-2 text-base text-muted-foreground">
+            Every new campaign and every creative edit goes through a human review before serving. Here is what to expect.
+          </p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <p className="text-2xl font-bold text-primary">1 business day</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">Standard review SLA</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Most campaigns are reviewed within a few hours. During high-volume periods, allow up to 1 full business day. You will see the status update in your campaign list automatically.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <p className="text-2xl font-bold text-foreground">What we check</p>
+              <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                <li>Creative meets character and image spec requirements</li>
+                <li>Destination URL resolves and matches ad content</li>
+                <li>No prohibited or restricted category violations</li>
+                <li>No misleading claims or fake urgency language</li>
+                <li>Landing page matches the offer in the ad</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <p className="text-2xl font-bold text-foreground">If rejected</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                You will receive a written reason in the portal. Most rejections are fixable — edit the flagged field and resubmit. Resubmitted campaigns go back into the same 1-business-day queue. Repeated policy violations may result in account review.
+              </p>
+            </div>
           </div>
         </section>
 

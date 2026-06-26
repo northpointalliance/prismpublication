@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ShieldCheck, Zap, LifeBuoy } from "lucide-react";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ const campaignSteps = [
     step: "4",
     title: "Submit for review",
     description:
-      "New campaigns enter a review queue. Our team checks creative quality and ad policy compliance. Approved ads go live automatically.",
+      "New campaigns enter a review queue. Our team checks creative quality and ad policy compliance. Reviews complete within 1 business day. Approved ads go live automatically — no action needed on your end.",
   },
 ];
 
@@ -89,15 +89,152 @@ const budgetFaq = [
   },
 ];
 
+const creativeSpecs = [
+  {
+    field: "Ad title / headline",
+    formats: "Text, Card, Banner",
+    limit: "4 – 140 characters",
+    notes: "Shown prominently. Be specific — generic headlines underperform.",
+  },
+  {
+    field: "Body / description",
+    formats: "Text, Card",
+    limit: "8 – 400 characters",
+    notes: "1–2 sentences max. Users scan; keep it punchy.",
+  },
+  {
+    field: "CTA button text",
+    formats: "Text, Card, Banner",
+    limit: "2 – 60 characters",
+    notes: 'Start with a verb: "Start Free Trial", "Get Started", "Try Now".',
+  },
+  {
+    field: "Destination URL",
+    formats: "All",
+    limit: "HTTPS only, max 500 characters",
+    notes: "Must resolve to a live, policy-compliant landing page.",
+  },
+  {
+    field: "Image URL (Card)",
+    formats: "Card",
+    limit: "HTTPS URL — JPG, PNG, or WebP",
+    notes: "Min 400 × 300 px recommended. Hosted on a public CDN or your own server.",
+  },
+  {
+    field: "Image URL (Banner)",
+    formats: "Banner",
+    limit: "HTTPS URL — JPG, PNG, or WebP",
+    notes: "Min 1200 × 300 px recommended for crisp rendering across devices.",
+  },
+  {
+    field: "Topic keywords",
+    formats: "All",
+    limit: "Each keyword max 60 characters",
+    notes: "Comma-separated list. 3–5 specific terms outperform a single broad one.",
+  },
+];
+
+const deliveryFaq = [
+  {
+    q: "Is there an auction or real-time bidding?",
+    a: "No. Prism uses weight-based selection, not an auction. All campaigns that match a conversation topic are eligible; the winning ad is chosen with probability proportional to its weight (1–100). Higher weight = more likely to serve when matched.",
+  },
+  {
+    q: "How does the weight field work?",
+    a: "Weight sets your campaign's relative priority against other matched campaigns in the same topic. Weight 50 is twice as likely to win as weight 25. There is no bidding — you set weight once and it stays fixed unless you edit it.",
+  },
+  {
+    q: "What is the daily cap?",
+    a: "Your daily budget is a pacing cap. Once your campaign has spent its daily budget, it stops serving for that calendar day and automatically resumes the next day. This prevents budget from running out on day one.",
+  },
+  {
+    q: "How quickly does a campaign go live after approval?",
+    a: "Immediately. Once our team approves the campaign, it enters the active pool and will begin serving on the next eligible ad request that matches your topics. There is no additional delay.",
+  },
+  {
+    q: "Can I target or exclude specific publisher bots?",
+    a: "Not directly by name today. Targeting works through topic matching: publishers tag their bots with content categories, and your campaign topics are matched against those tags. Bot-level allowlists and blocklists are on the roadmap. Contact us if you need a specific exclusion now.",
+  },
+  {
+    q: "What counts as an impression vs. a click?",
+    a: "An impression is recorded when the ad is returned in an API response and rendered by the publisher bot. A click is recorded when a user taps the CTA link. CPM billing is based on impressions only — clicks are tracked but not charged separately.",
+  },
+];
+
+const brandSafetyItems = [
+  {
+    title: "Publisher content categories",
+    detail:
+      "Every publisher bot declares a content category (e.g., productivity, finance, entertainment) when it registers. These tags drive topic matching — your ad only serves on bots whose declared categories overlap with your campaign topics.",
+  },
+  {
+    title: "Block adjacency",
+    detail:
+      "You can flag content categories you do not want your brand adjacent to. Any bot tagged with a blocked category is excluded from your campaign's eligible inventory, even if there is a topic overlap.",
+  },
+  {
+    title: "Category filters",
+    detail:
+      "Separate from block adjacency, category filters let you restrict your campaign to a specific set of approved content categories — an allowlist rather than a blocklist. Useful for regulated industries.",
+  },
+  {
+    title: "Ad policy enforcement",
+    detail:
+      "All creatives are reviewed before going live. Ads that violate policy are rejected with a written reason. Publishers running non-compliant bots can be suspended. See the Ad Policy page for the full prohibited-categories list.",
+  },
+];
+
+const fraudFaq = [
+  {
+    q: "How do you detect invalid traffic?",
+    a: "The SDK deduplicates impression and click events server-side using request fingerprinting and timestamp gating. Suspiciously high event rates from a single bot or user ID trigger automatic flagging for manual review.",
+  },
+  {
+    q: "What happens if invalid impressions are billed?",
+    a: "If our team confirms invalid traffic was billed, we issue a wallet credit for the affected amount. Contact support with your campaign ID and the date range in question.",
+  },
+  {
+    q: "Are publisher bots vetted before they can serve ads?",
+    a: "Yes. Bots are registered through the publisher portal and require approval before they receive live API keys. Bots that generate anomalous traffic patterns are suspended pending review.",
+  },
+];
+
+const supportFaq = [
+  {
+    q: "How do I reach support?",
+    a: "Email dan@prismpublication.com. We aim to respond within 1 business day for active advertisers. Include your campaign ID for faster triage.",
+  },
+  {
+    q: "Do you sign a Data Processing Agreement (DPA)?",
+    a: "Yes. If your organization requires a DPA for GDPR or similar compliance, email us and we will send one for signature. Our standard portal terms of service cover basic data handling; a signed DPA provides additional contractual protections.",
+  },
+  {
+    q: "Can I run a pilot or negotiate a higher-volume deal?",
+    a: "Yes. Contact us before launching if you want guaranteed inventory, private publisher deals, volume pricing, or SLA commitments. We handle these on a case-by-case basis.",
+  },
+  {
+    q: "How do I get reach and inventory estimates for my topic?",
+    a: "We do not publish live inventory counts publicly yet. Email us with your target topics and budget range and we will send estimated monthly impressions available for that niche.",
+  },
+  {
+    q: "How quickly will my ads reach users after a publisher integrates the SDK?",
+    a: "Once a publisher registers their bot and it passes review, your approved campaign is eligible to serve on the next ad request from that bot. There is no additional configuration required on your end.",
+  },
+];
+
 // ── Sidebar nav ──────────────────────────────────────────────────────────────
 
 const sections = [
   { id: "setup", label: "Campaign Setup" },
   { id: "formats", label: "Ad Formats & Pricing" },
   { id: "creative", label: "Creative Guidelines" },
+  { id: "specs", label: "Creative Specs" },
   { id: "targeting", label: "Topic Targeting" },
+  { id: "delivery", label: "Delivery Mechanics" },
+  { id: "brandsafety", label: "Brand Safety" },
   { id: "billing", label: "Billing & Budget" },
-  { id: "faq", label: "FAQ" },
+  { id: "fraud", label: "Fraud & Quality" },
+  { id: "support", label: "Support & Legal" },
 ];
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -209,6 +346,35 @@ const CampaignGuideTab = () => (
         </div>
       </section>
 
+      {/* ── Creative Specs ─────────────────────────────────────────── */}
+      <section id="specs">
+        <h3 className="text-lg font-bold">Creative Specs</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Hard limits enforced by the platform. Submissions outside these ranges will be rejected at creation.</p>
+
+        <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Field</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Applies to</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Limit</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {creativeSpecs.map(({ field, formats, limit, notes }, i) => (
+                <tr key={field} className={i % 2 === 0 ? "bg-card" : "bg-muted/20"}>
+                  <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{field}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formats}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-primary whitespace-nowrap">{limit}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{notes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* ── Topic Targeting ────────────────────────────────────────── */}
       <section id="targeting">
         <h3 className="text-lg font-bold">Topic Targeting</h3>
@@ -246,6 +412,39 @@ const CampaignGuideTab = () => (
             <p className="text-2xl font-bold text-primary">Real-time</p>
             <p className="text-xs text-muted-foreground">Topic edits apply instantly</p>
           </div>
+        </div>
+      </section>
+
+      {/* ── Delivery Mechanics ─────────────────────────────────────── */}
+      <section id="delivery">
+        <h3 className="text-lg font-bold">Delivery Mechanics</h3>
+        <p className="mt-1 text-sm text-muted-foreground">How Prism decides which ad to serve — and when.</p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {deliveryFaq.map(({ q, a }) => (
+            <div key={q} className="rounded-xl border border-border bg-card p-4">
+              <p className="text-sm font-semibold text-foreground">{q}</p>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Brand Safety ───────────────────────────────────────────── */}
+      <section id="brandsafety">
+        <h3 className="text-lg font-bold">Brand Safety</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Controls that keep your ads away from content that does not fit your brand.</p>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {brandSafetyItems.map(({ title, detail }) => (
+            <div key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">{title}</p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{detail}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -290,14 +489,50 @@ const CampaignGuideTab = () => (
 
       {/* ── FAQ ────────────────────────────────────────────────────── */}
       <section id="faq">
-        <h3 className="text-lg font-bold">FAQ</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Common advertiser questions.</p>
+        <h3 className="text-lg font-bold">Billing FAQ</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Common budget and spend questions.</p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {budgetFaq.map(({ q, a }) => (
             <div key={q} className="rounded-xl border border-border bg-card p-4">
               <p className="text-sm font-semibold text-foreground">{q}</p>
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Fraud & Quality ────────────────────────────────────────── */}
+      <section id="fraud">
+        <h3 className="text-lg font-bold">Fraud & Quality Protection</h3>
+        <p className="mt-1 text-sm text-muted-foreground">How we protect your budget from invalid traffic.</p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {fraudFaq.map(({ q, a }) => (
+            <div key={q} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <Zap className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">{q}</p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{a}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Support & Legal ────────────────────────────────────────── */}
+      <section id="support">
+        <h3 className="text-lg font-bold">Support & Legal</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Getting help, compliance questions, and enterprise deals.</p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {supportFaq.map(({ q, a }) => (
+            <div key={q} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <LifeBuoy className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">{q}</p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{a}</p>
+              </div>
             </div>
           ))}
         </div>
