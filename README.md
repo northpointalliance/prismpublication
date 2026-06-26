@@ -28,6 +28,16 @@ marketing site plus a private 3-portal app, for serving ads inside AI chatbots.
 | Operate as a non-technical admin | [SETUP_GUIDE.md](SETUP_GUIDE.md) |
 | Browse all docs | [docs/README.md](docs/README.md) |
 
+## Google Ad Manager (GAM) compatibility — beta
+
+This SDK integrates with Google Ad Manager (GAM) so teams that already manage ad units through GAM can evaluate features without reworking their ad stack. We provide:
+- Example integrations for common GAM setups (web / gpt.js).
+- Test ad-unit configurations and sample pages.
+- Concise instructions for measuring results using your existing GAM reporting.
+- A privacy note: the SDK respects existing consent flows (CMP/TCF) and does not introduce cross-site tracking.
+
+If you use GAM and would like early access, example code, or to help validate integrations, request pilot access via a GitHub issue (label: `beta-request`) or email info@prismpublication.com and we’ll share an integration checklist and a sandbox repo.
+
 ## How deploys work
 A single `git push` to `main` on **`github.com/northpointalliance/test1`** deploys everything:
 - **Vercel** (Git integration) rebuilds + deploys the **frontend** automatically.

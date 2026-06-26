@@ -29,6 +29,7 @@ Prism (prismpublication.com) is a conversational advertising platform. The SDK r
 - Publisher controls: Frequency caps, category filters, topic restrictions, pacing rules
 - Advertiser controls: Placement controls, brand-safety preferences, category targeting
 - Integration: SDK-first, three-line install, supports test mode before broader rollout
+- Google Ad Manager (GAM): The SDK can be used together with Google Ad Manager so teams using GAM can test our features without changing their ad stack. We provide runnable example integrations, test ad-unit IDs and sample pages, and step‑by‑step instructions for collecting results using your GAM reports. If you’d like to try a GAM pilot, open an issue labeled `beta-request` or email info@prismpublication.com.
 
 ## Optional
 
