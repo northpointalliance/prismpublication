@@ -99,7 +99,7 @@ export const features = [
 // ── Stats ────────────────────────────────────────────────────────────────────
 
 export const stats = [
-  { value: "< 50ms", label: "Median ad response time" },
+  { value: "sub-200ms", label: "Median ad response time" },
   { value: "3", label: "Ad formats supported" },
   { value: "5 min", label: "Average integration time" },
   { value: "94%+", label: "Target fill rate" },

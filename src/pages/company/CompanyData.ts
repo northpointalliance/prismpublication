@@ -84,7 +84,7 @@ export const stats = [
   { value: "2026", label: "Founded" },
   { value: "3", label: "Ad formats" },
   { value: "11", label: "Excluded ad categories" },
-  { value: "< 50ms", label: "Ad response time" },
+  { value: "sub-200ms", label: "Ad response time" },
 ];
 
 // ── Approach items ───────────────────────────────────────────────────────────
