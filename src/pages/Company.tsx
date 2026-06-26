@@ -209,7 +209,7 @@ const Company = () => {
                   <p className="mt-1 text-xs text-muted-foreground">Excluded categories</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">&lt;50ms</p>
+                  <p className="text-2xl font-bold text-primary">sub-200ms</p>
                   <p className="mt-1 text-xs text-muted-foreground">Ad response time</p>
                 </div>
               </div>
