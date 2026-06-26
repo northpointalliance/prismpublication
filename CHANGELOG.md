@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.0 — 2026-06-26
+
+### Advertiser portal — clarity pass
+- **CampaignGuideTab:** added Creative Specs table (exact character limits from validation schema), Delivery Mechanics section (weight-based selection, no auction), Brand Safety section (block adjacency, category filters explained), Fraud & Quality section (dedup, bot vetting, credit recourse), Support & Legal section (contact, DPA on request, pilot/enterprise path, reach estimates, SDK go-live timing). Step 4 now states 1-business-day review SLA. Sidebar nav updated.
+- **BillingPanel:** added Billing Terms block — minimum top-up ($1), USD only, PayPal only, refund policy, VAT/GST note, chargeback policy, enterprise billing path.
+- **AdPolicy:** added Review Timeline section (1-business-day SLA, what gets checked, what happens on rejection). Added to sticky nav.
+- **CreateCampaignWizard:** inline character limits on every field (enforced via maxLength), HTTPS label on URL field, CPM prices shown in format dropdown, targeting help text explaining how topics map to publisher bots, weight field description clarified (no bidding).
+
+### SEO / AEO / GEO — FAQ rewrite
+- Replaced 6 vague FAQ items with 12 specific, self-contained questions covering: what Prism is, how to integrate, publisher earnings, supported stacks, integration time, UX impact, ad targeting, format pricing, minimum budget, fraud protection, enterprise/private bots, and the AdSense analogy.
+- All three FAQ surfaces updated in sync: `FAQSection.tsx` (rendered UI), `FAQPage` JSON-LD block in `index.html`, and the hidden `#static-seo` static HTML section.
+
+### Build pipeline fix
+- **Root cause:** `packages/sdk/dist/` is gitignored, so Vercel's clean build environment never had the compiled SDK. `vite.config.ts` aliases point to `packages/sdk/dist/index.mjs` and `packages/sdk/dist/react.mjs`, causing every Vercel build to fail at the Vite step. The site had been running on the last deployment from when the developer was active locally.
+- **Fix:** added `prebuild:sdk` script to root `package.json` (`npm --prefix packages/sdk ci && npm --prefix packages/sdk run build`). Updated `build` script to run `prebuild:sdk` before `vite build`. SDK source code untouched.
+
+### ScrollVideoSection — "Now Live" overlay (and JSX breakage)
+- The original hero video had "Launching Soon" text baked into the video file itself. To update this without re-editing the video, a "Now Live" text overlay div was added in `ScrollVideoSection.tsx` to visually cover the baked-in text. A separate animated "Now Live" badge (green dot + label) was also added as a second overlay.
+- During this manual edit a closing `</div>` tag was accidentally dropped, creating a JSX tag mismatch that failed the Vite build (`Unexpected closing "section" tag does not match opening "div" tag`). Fixed by restoring the missing `</div>` after the button element.
+- Note for future: the cleanest long-term fix is to replace the video file itself with one that has no baked-in text, removing the need for CSS overlays entirely.
+
 ## 0.3.1 — 2026-03-20
 
 ### Changed
