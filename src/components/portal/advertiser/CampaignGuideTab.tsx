@@ -202,7 +202,7 @@ const fraudFaq = [
 const supportFaq = [
   {
     q: "How do I reach support?",
-    a: "Email dan@prismpublication.com. We aim to respond within 1 business day for active advertisers. Include your campaign ID for faster triage.",
+    a: "Email info@prismpublication.com. We aim to respond within 1 business day for active advertisers. Include your campaign ID for faster triage.",
   },
   {
     q: "Do you sign a Data Processing Agreement (DPA)?",

@@ -108,7 +108,7 @@ const BillingPanel = ({
             <span className="font-medium text-foreground">Payment method:</span> PayPal (card or PayPal balance)
           </div>
           <div>
-            <span className="font-medium text-foreground">Invoices:</span> Transaction history available in this panel; formal invoices on request — email dan@prismpublication.com
+            <span className="font-medium text-foreground">Invoices:</span> Transaction history available in this panel; formal invoices on request — email info@prismpublication.com
           </div>
           <div>
             <span className="font-medium text-foreground">Refunds:</span> Unspent campaign budget is returned to your wallet when a campaign is deleted. Wallet balances are non-refundable to PayPal once credited.
