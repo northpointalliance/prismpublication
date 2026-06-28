@@ -12,6 +12,7 @@ import {
   selectBestMembershipPerOrganization,
 } from "../../_shared/portal.ts";
 import { mapMembershipRoleToPortalRole } from "../../_shared/portal-roles.ts";
+import { sendEmail } from "../../_shared/email.ts";
 
 // Mounted at /api/me. Ports server/src/routes/me.ts.
 const me = new Hono<Env>();
@@ -57,6 +58,24 @@ me.post("/create-workspace", requirePortalUser, async (c) => {
       await tx`UPDATE users SET "defaultOrganizationId" = ${orgId}, "updatedAt" = now() WHERE "id" = ${portalUser.id}`;
     });
     // NOTE: seedWorkspaceMockData (demo ads/bots) is not yet ported — new workspaces start empty.
+
+    // Notify Dan when a new publisher signs up. Fire and forget — don't block the response.
+    if (type === "publisher") {
+      sendEmail({
+        to: ["dan72ros@gmail.com", "info@prismpublication.com"],
+        subject: `New publisher signup: ${portalUser.name}`,
+        html: `
+          <h2 style="color:#6C47FF">New publisher signed up on Prism</h2>
+          <p><strong>Name:</strong> ${portalUser.name}</p>
+          <p><strong>Email:</strong> ${portalUser.email}</p>
+          <p><strong>Workspace:</strong> ${name || defaultName}</p>
+          <p><strong>Time:</strong> ${new Date().toUTCString()}</p>
+          <hr>
+          <p style="font-size:12px;color:#888">Sent automatically by Prism Publication</p>
+        `,
+      }).catch((e) => console.error("Publisher signup notification failed", e));
+    }
+
     const entry = await buildEntryContextByUserId(portalUser.id);
     return c.json(entry, 201);
   } catch (err) {
