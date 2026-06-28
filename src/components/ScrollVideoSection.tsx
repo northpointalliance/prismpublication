@@ -158,7 +158,7 @@ const ScrollVideoSection = () => {
                 onClick={toggleSound}
                 aria-label={muted ? "Unmute video" : "Mute video"}
                 aria-pressed={!muted}
-                className="absolute bottom-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80 hover:scale-110"
+                className="absolute bottom-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80"
               >
                 {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </button>
