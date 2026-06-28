@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BookOpen,
+  Building2,
   CheckCircle2,
   Code2,
   Layers,
@@ -259,6 +260,38 @@ const Docs = () => {
                 <div className="mt-4">{mock}</div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ── Google Ad Manager Integration ───────────────────────────── */}
+        <section>
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-8">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center">
+              <div className="flex-shrink-0 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background px-3 py-1 text-xs font-mono uppercase tracking-[0.16em] text-primary mb-3">
+                  Google Ad Manager
+                </div>
+                <h3 className="text-xl font-bold">Already running GAM?</h3>
+                <p className="mt-2 text-base text-muted-foreground leading-relaxed">
+                  You don't need to touch your existing setup. Register a bot, grab an SDK key, and paste a custom creative snippet into any GAM line item. Your bot's ad slot runs as a standard display placement — no certification, no approval queue, no code changes to your app.
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Full integration guide available in your Publisher Portal after signup.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Link
+                  to="/app/login"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+                >
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 

@@ -78,9 +78,13 @@ Deep dive: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Full backend ops (secrets, logs, typecheck): [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## Function secrets (Supabase → Edge Functions → Secrets)
-Custom: `ADMIN_API_KEY`, `PRISM_API_KEY`, `DB_URL` (pooled 6543), `API_CORS_ORIGIN`.
+Custom: `ADMIN_API_KEY`, `PRISM_API_KEY`, `DB_URL` (pooled 6543), `API_CORS_ORIGIN`, `REQUIRE_SDK_HMAC`.
 Auto-injected by Supabase: `SUPABASE_URL`, `SUPABASE_DB_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`.
 PayPal creds are read from the `platform_settings` table (Admin → Settings), not secrets.
+
+**`REQUIRE_SDK_HMAC` — set to `false` (June 2026)**
+Controls whether `POST /api/ads` and `POST /api/track/:eventType` enforce HMAC-SHA256 request signing.
+Default behaviour (when absent or any value other than `"false"`) is to **require** the `X-Prism-Timestamp` and `X-Prism-Signature` headers. Set to `"false"` to allow calls with a Bearer SDK key only — no signature headers needed. This is required for Google Ad Manager custom creatives, which run in a sandboxed iframe and cannot compute HMAC signatures. Re-enable by setting to `"true"` or deleting the secret — but note this will break any GAM creatives that don't send signature headers.
 
 ## Database & schema changes
 Schema is Prisma-managed (`server/prisma/schema.prisma`). To change it:

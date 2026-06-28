@@ -60,7 +60,7 @@ const Publishers = () => {
               </div>
 
               <div className="mt-8 flex flex-wrap gap-2" role="list">
-                {["No minimum traffic", "Free tier available", "Full TypeScript SDK"].map((item) => (
+                {["No minimum traffic", "Free tier available", "Full TypeScript SDK", "Google Ad Manager compatible"].map((item) => (
                   <div key={item} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground" role="listitem">
                     <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                     {item}

@@ -1,0 +1,115 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Contextual Ads Inside AI Chatbots — Prism Publication blog header</title>
+  <desc>A clean illustration of a chat interface with a contextual partner recommendation card appearing mid-conversation, on a light background with Prism purple accents.</desc>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#F8F7FF"/>
+
+  <!-- Subtle grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#6C47FF" stroke-width="0.3" opacity="0.18"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#6C47FF" flood-opacity="0.10"/>
+    </filter>
+    <filter id="cardshadow" x="-5%" y="-5%" width="115%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Left decorative accent bar -->
+  <rect x="0" y="0" width="6" height="630" fill="#6C47FF"/>
+
+  <!-- Chat window card -->
+  <rect x="110" y="70" width="520" height="490" rx="18" fill="#FFFFFF" filter="url(#shadow)"/>
+
+  <!-- Chat window top bar -->
+  <rect x="110" y="70" width="520" height="52" rx="18" fill="#6C47FF"/>
+  <rect x="110" y="96" width="520" height="26" fill="#6C47FF"/>
+  <!-- Window dots -->
+  <circle cx="142" cy="96" r="7" fill="#ffffff" opacity="0.3"/>
+  <circle cx="166" cy="96" r="7" fill="#ffffff" opacity="0.3"/>
+  <circle cx="190" cy="96" r="7" fill="#ffffff" opacity="0.3"/>
+  <!-- Bot name -->
+  <text x="350" y="102" font-family="Inter, Helvetica, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle" opacity="0.9">TravelBot</text>
+
+  <!-- User message bubble -->
+  <rect x="240" y="145" width="370" height="56" rx="14" fill="#EEE9FF"/>
+  <text x="425" y="167" font-family="Inter, Helvetica, sans-serif" font-size="13" fill="#2D2044" text-anchor="middle">What should I pack for a hot,</text>
+  <text x="425" y="187" font-family="Inter, Helvetica, sans-serif" font-size="13" fill="#2D2044" text-anchor="middle">humid tropical trip?</text>
+
+  <!-- Bot response bubble -->
+  <rect x="130" y="222" width="360" height="74" rx="14" fill="#F4F4F6"/>
+  <text x="150" y="244" font-family="Inter, Helvetica, sans-serif" font-size="12.5" fill="#444">Light, moisture-wicking fabrics are key.</text>
+  <text x="150" y="262" font-family="Inter, Helvetica, sans-serif" font-size="12.5" fill="#444">Pack reef-safe sunscreen, a compact</text>
+  <text x="150" y="280" font-family="Inter, Helvetica, sans-serif" font-size="12.5" fill="#444">rain jacket, and a good water bottle.</text>
+
+  <!-- Sponsored card -->
+  <rect x="130" y="315" width="360" height="118" rx="14" fill="#FFFFFF" filter="url(#cardshadow)" stroke="#E8E0FF" stroke-width="1.5"/>
+  <!-- Sponsored label -->
+  <rect x="143" y="328" width="90" height="18" rx="4" fill="#EEE9FF"/>
+  <text x="188" y="341" font-family="Inter, Helvetica, sans-serif" font-size="10" font-weight="600" fill="#6C47FF" text-anchor="middle" letter-spacing="0.05em">SPONSORED</text>
+  <!-- Product name -->
+  <text x="150" y="367" font-family="Inter, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#1A1A2E">TropicGear Travel Kit</text>
+  <text x="150" y="386" font-family="Inter, Helvetica, sans-serif" font-size="12" fill="#666">Lightweight. UV-rated. Built for humidity.</text>
+  <!-- CTA -->
+  <rect x="150" y="399" width="100" height="24" rx="6" fill="#6C47FF"/>
+  <text x="200" y="415" font-family="Inter, Helvetica, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">Shop now</text>
+  <!-- Rating stars -->
+  <text x="264" y="415" font-family="Inter, Helvetica, sans-serif" font-size="12" fill="#F5A623">★★★★★</text>
+  <text x="334" y="415" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#999">4.9</text>
+
+  <!-- Bot follow-up -->
+  <rect x="130" y="450" width="300" height="40" rx="14" fill="#F4F4F6"/>
+  <text x="150" y="466" font-family="Inter, Helvetica, sans-serif" font-size="12.5" fill="#444">Want a full packing checklist</text>
+  <text x="150" y="484" font-family="Inter, Helvetica, sans-serif" font-size="12.5" fill="#444">for 7 days?</text>
+
+  <!-- Input bar -->
+  <rect x="130" y="510" width="480" height="36" rx="10" fill="#F0EEF8" stroke="#DDD8F5" stroke-width="1"/>
+  <text x="152" y="533" font-family="Inter, Helvetica, sans-serif" font-size="12.5" fill="#AAA">Ask anything…</text>
+  <circle cx="590" cy="528" r="13" fill="#6C47FF"/>
+  <text x="590" y="533" font-family="Inter, Helvetica, sans-serif" font-size="14" fill="#fff" text-anchor="middle">↑</text>
+
+  <!-- Right side: text content -->
+  <!-- Eyebrow -->
+  <rect x="690" y="95" width="130" height="22" rx="5" fill="#EEE9FF"/>
+  <text x="755" y="111" font-family="Inter, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#6C47FF" text-anchor="middle" letter-spacing="0.08em">STRATEGY</text>
+
+  <!-- Headline -->
+  <text x="690" y="158" font-family="Inter, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#1A1A2E">Why Contextual</text>
+  <text x="690" y="204" font-family="Inter, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#1A1A2E">Ads Inside</text>
+  <text x="690" y="250" font-family="Inter, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#6C47FF">AI Chatbots</text>
+  <text x="690" y="296" font-family="Inter, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#1A1A2E">Are Different</text>
+
+  <!-- Divider -->
+  <rect x="690" y="316" width="60" height="4" rx="2" fill="#6C47FF"/>
+
+  <!-- Subtext -->
+  <text x="690" y="353" font-family="Inter, Helvetica, sans-serif" font-size="16" fill="#555" font-weight="400">Intent captured. Context matched.</text>
+  <text x="690" y="377" font-family="Inter, Helvetica, sans-serif" font-size="16" fill="#555">The ad surfaces when a decision</text>
+  <text x="690" y="401" font-family="Inter, Helvetica, sans-serif" font-size="16" fill="#555">is already forming.</text>
+
+  <!-- Stats row -->
+  <rect x="690" y="430" width="150" height="80" rx="12" fill="#fff" stroke="#E8E0FF" stroke-width="1.5"/>
+  <text x="765" y="463" font-family="Inter, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#6C47FF" text-anchor="middle">0¢</text>
+  <text x="765" y="483" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="middle">banner blindness</text>
+  <text x="765" y="498" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="middle">risk</text>
+
+  <rect x="858" y="430" width="150" height="80" rx="12" fill="#fff" stroke="#E8E0FF" stroke-width="1.5"/>
+  <text x="933" y="463" font-family="Inter, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#6C47FF" text-anchor="middle">100%</text>
+  <text x="933" y="483" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="middle">signal-based</text>
+  <text x="933" y="498" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="middle">targeting</text>
+
+  <rect x="1026" y="430" width="150" height="80" rx="12" fill="#fff" stroke="#E8E0FF" stroke-width="1.5"/>
+  <text x="1101" y="463" font-family="Inter, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#6C47FF" text-anchor="middle">2026</text>
+  <text x="1101" y="483" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="middle">window closes</text>
+  <text x="1101" y="498" font-family="Inter, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="middle">for early movers</text>
+
+  <!-- Prism logo / byline -->
+  <text x="690" y="580" font-family="Inter, Helvetica, sans-serif" font-size="13" fill="#999">prismpublication.com</text>
+  <circle cx="1170" cy="575" r="20" fill="#6C47FF" opacity="0.12"/>
+  <circle cx="1170" cy="575" r="12" fill="#6C47FF" opacity="0.25"/>
+  <circle cx="1170" cy="575" r="6" fill="#6C47FF"/>
+</svg>

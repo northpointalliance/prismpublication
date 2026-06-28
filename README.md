@@ -39,6 +39,39 @@ A single `git push` to `main` on **`github.com/northpointalliance/test1`** deplo
 
 ## Changelog
 
+### Google Ad Manager (GAM) integration — June 2026
+
+**What changed and why**
+
+GAM custom creatives run inside a sandboxed iframe. They can hold a Bearer SDK key but cannot compute HMAC-SHA256 signatures at request time. By default the `POST /api/ads` endpoint enforces HMAC (`REQUIRE_SDK_HMAC` defaults to `true` in `supabase/functions/_shared/config.ts`). With HMAC enforced, any GAM creative gets a 401 and no ad is served.
+
+**Changes made:**
+
+**Supabase Edge Function secrets (Supabase dashboard → Edge Functions → Secrets)**
+- Added `REQUIRE_SDK_HMAC = false`. This tells the `requireSdkSignature` middleware to skip signature verification when the `X-Prism-Timestamp` and `X-Prism-Signature` headers are absent. Bearer SDK key auth is still enforced — only the HMAC check is relaxed. The risk is low: SDK keys are already visible in GAM creative code, so removing the HMAC requirement doesn't meaningfully change the trust surface for GAM use cases.
+
+**`src/pages/Publishers.tsx`**
+- Added `"Google Ad Manager compatible"` as a fourth trust badge in the hero section alongside "No minimum traffic", "Free tier available", and "Full TypeScript SDK".
+
+**`src/pages/publishers/PublishersData.ts`**
+- Updated the "Developer-first SDK" feature card highlights: changed `"HMAC request signing"` to `"Flexible auth — Bearer token standard, optional HMAC signing"`. HMAC is now optional rather than mandatory, so the old bullet was misleading.
+
+**`src/pages/Docs.tsx`**
+- Added a `Building2` icon import from lucide-react.
+- Added a "Google Ad Manager" integration banner section between the ad formats preview and the portal cards. It explains that publishers already running GAM can register a bot, get an SDK key, and paste a custom creative snippet into a GAM line item — no ad server certification or approval queue required.
+
+**How GAM integration works (for a developer picking this up)**
+
+A GAM publisher creates a Custom creative in their GAM account, pastes a snippet that calls `POST /api/ads` with their SDK key in the `Authorization: Bearer` header and a JSON body `{ "botId": "<their bot public ID>", "format": "text" }`, then renders the response fields (`title`, `description`, `ctaText`, `clickUrl`, `imageUrl`) however they like. The endpoint returns:
+```json
+{ "success": true, "data": [{ "id", "title", "description", "ctaText", "clickUrl", "imageUrl", "advertiser", "tags" }] }
+```
+Or `{ "success": true, "data": [] }` if no eligible ad is available.
+
+To re-enable HMAC enforcement later (e.g. for SDK-only publishers where stricter security is wanted), set `REQUIRE_SDK_HMAC = true` in Supabase secrets. This will break any GAM creatives that don't send the signature headers.
+
+---
+
 ### Advertiser experience improvements — June 2026
 
 Addressed a set of gaps in what the advertiser-facing UI and portal communicated. The platform had the underlying functionality but didn't explain it clearly enough for an advertiser to understand what they were buying or how it worked. Changes made across four files:
@@ -69,68 +102,6 @@ Addressed a set of gaps in what the advertiser-facing UI and portal communicated
 - **CPM prices in format picker** — Format dropdown options now include the CPM rate (Card $20, Text $10, Banner $15) so advertisers see pricing at the point of selection.
 - **Targeting help text** — Added a sub-label under the topics field explaining that topics are matched against publisher bots' declared content categories, with guidance on specificity (3–5 keywords, each max 60 chars).
 - **Weight field description** — Updated to clarify there is no auction — higher weight means higher probability of serving when multiple campaigns match, not a bid price.
-
-## Develop
-```bash
-npm install
-npm run dev      # frontend (Vite) on http://localhost:5173
-npm run build    # production build -> dist/
-
-# Backend (Supabase Edge Functions)
-~/.deno/bin/deno check --config supabase/functions/deno.json supabase/functions/api/index.ts   # typecheck
-supabase functions deploy api                                                                  # deploy
-```
-
-> `server/` is the **legacy Express backend** (pre-migration), kept for reference only — it is **no longer
-> running**. All backend work happens in `supabase/functions/`. See [HANDOVER.md](HANDOVER.md).
-# Prism (AIADS)
-
-An ad marketplace connecting **advertisers**, **publishers / bot-developers**, and **admins** — a public
-marketing site plus a private 3-portal app, for serving ads inside AI chatbots.
-
-> **Status: LIVE.** Frontend on **Vercel** at **https://prismpublication.com**, backend fully on **Supabase**.
-
-## Stack
-| Layer | Tech | Where |
-|---|---|---|
-| Frontend | Vite + React + Tailwind/shadcn, Supabase Auth | static SPA on **Vercel** (`prismpublication.com`) |
-| Backend API | Deno + Hono + postgres.js | **Supabase Edge Functions** (`supabase/functions/api`) |
-| Database | Supabase Postgres 17 | project `botnabfogcjrkpmdjgpr` (eu-west-2) |
-| Queue | pgmq + pg_cron | same project (`supabase/functions/queue-worker`) |
-| Storage | Supabase Storage (`blog-images`) | same project |
-| Auth | Supabase Auth | — |
-| Payments | PayPal (REST) | creds in `platform_settings` table |
-
-## Start here
-| You want to… | Read |
-|---|---|
-| **Operate / understand the whole system** | **[HANDOVER.md](HANDOVER.md)** ← start here |
-| Fix something / day-2 operations | **[docs/RUNBOOK.md](docs/RUNBOOK.md)** |
-| See the architecture in depth | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| Deploy / redeploy the frontend | [docs/FRONTEND_DEPLOY.md](docs/FRONTEND_DEPLOY.md) |
-| How auto-deploy (CI/CD) works | [docs/CI_CD.md](docs/CI_CD.md) |
-| Supabase project & credentials | [docs/SUPABASE_CONNECTION.md](docs/SUPABASE_CONNECTION.md) |
-| Operate as a non-technical admin | [SETUP_GUIDE.md](SETUP_GUIDE.md) |
-| Browse all docs | [docs/README.md](docs/README.md) |
-
-## Google Ad Manager (GAM) compatibility — beta
-
-This SDK integrates with Google Ad Manager (GAM) so teams that already manage ad units through GAM can evaluate features without reworking their ad stack. We provide:
-- Example integrations for common GAM setups (web / gpt.js).
-- Test ad-unit configurations and sample pages.
-- Concise instructions for measuring results using your existing GAM reporting.
-- A privacy note: the SDK respects existing consent flows (CMP/TCF) and does not introduce cross-site tracking.
-
-If you use GAM and would like early access, example code, or to help validate integrations, request pilot access via a GitHub issue (label: `beta-request`) or email info@prismpublication.com and we’ll share an integration checklist and a sandbox repo.
-
-## How deploys work
-A single `git push` to `main` on **`github.com/northpointalliance/test1`** deploys everything:
-- **Vercel** (Git integration) rebuilds + deploys the **frontend** automatically.
-- A **GitHub Action** deploys the **Supabase Edge Functions** (once the `SUPABASE_ACCESS_TOKEN` repo secret is set).
-
-> ⚠️ Vercel is on the **Hobby** plan, which only deploys commits whose author is the account owner. This
-> repo is therefore configured to author commits as **`northpointalliance`** — keep it that way (see
-> [docs/CI_CD.md](docs/CI_CD.md)) or upgrade Vercel to Pro.
 
 ## Develop
 ```bash

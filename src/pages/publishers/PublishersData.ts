@@ -92,7 +92,7 @@ export const features = [
     title: "Developer-first SDK",
     description:
       "Full TypeScript support, React hooks, HMAC-signed requests, and a pre-built component library. Integration takes minutes, not days.",
-    highlights: ["TypeScript + React hooks", "HMAC request signing", "Pre-built ad components"],
+    highlights: ["TypeScript + React hooks", "Flexible auth — Bearer token standard, optional HMAC signing", "Pre-built ad components"],
   },
 ];
 
