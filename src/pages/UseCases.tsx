@@ -22,11 +22,11 @@ const UseCases = () => {
         <div className="container mx-auto px-6 grid gap-5 lg:grid-cols-2">
           <article className="rounded-3xl glow-border bg-card p-8">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-primary mb-3">For Publishers</p>
-            <h2 className="text-3xl font-bold tracking-tight">Chatbot teams and AI products</h2>
+            <h2 className="text-3xl font-bold tracking-tight">App developers and AI product teams</h2>
             <ul className="mt-5 space-y-3 text-base text-muted-foreground">
-              <li>Monetize high-volume support and assistant conversations.</li>
-              <li>Insert sponsored placements at natural points in chat flow.</li>
-              <li>Keep full control over pacing and ad display rules.</li>
+              <li>Add a revenue stream to the AI chat interface inside your app.</li>
+              <li>Partner integrations surface at the right moment — contextual, not disruptive.</li>
+              <li>Works alongside your existing ad stack. Full control over pacing and placement rules.</li>
             </ul>
             <Link
               to="/publishers"
