@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -91,4 +92,13 @@ const App = () => (
   </QueryClientProvider>
 );
 
-export default App;
+// Analytics is placed outside the router so it captures all page views
+// including SPA navigations via React Router.
+const AppWithAnalytics = () => (
+  <>
+    <App />
+    <Analytics />
+  </>
+);
+
+export default AppWithAnalytics;
