@@ -101,7 +101,7 @@ const Publishers = () => {
             <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
 Integrate in four steps            </h2>
             <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              SDK integration takes under 10 minutes. No approval queues — your first ad can run the same day you sign up.
+              SDK integration takes under 10 minutes. Ads are reviewed to ensure they meet Prism policies, so your first campaign can still go live quickly.
             </p>
           </div>
 
