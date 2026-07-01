@@ -153,7 +153,21 @@ const Demo = () => {
     return ad;
   };
 
-  const requestDemoAd = async (_topic: string, _userId: string) => {
+  const requestDemoAd = async (topic: string, _userId: string): Promise<DemoAd> => {
+    try {
+      const res = await fetch("https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/demo/ads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format: "card", context: { topic } }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const ad = data?.data?.[0];
+        if (ad?.title) return ad as DemoAd;
+      }
+    } catch (_err) {
+      // Fall through to fallback
+    }
     return getFallbackDemoAd();
   };
 
@@ -373,7 +387,12 @@ const Demo = () => {
             </div>
 
             {/* ── Right: chat window ────────────────────────────────────── */}
-            <div className="order-1 overflow-hidden rounded-2xl border border-border bg-card shadow-xl lg:order-2 lg:sticky lg:top-24">
+            <div className="order-1 lg:order-2 lg:sticky lg:top-24 space-y-2">
+              <div className="flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                LIVE DEMO · Ads are real affiliate links operated by Prism Publication
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
               {/* Chat header */}
               <div className="flex items-center gap-3 border-b border-border bg-muted/50 px-4 py-3">
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-primary/15">
@@ -486,6 +505,10 @@ const Demo = () => {
                   </button>
                 </div>
               </div>
+              </div>
+              <p className="text-center text-xs text-muted-foreground px-2 pt-0.5">
+                Ads shown in this demo are live affiliate links managed by Prism Publication. We may earn a commission on clicks.
+              </p>
             </div>
           </div>
         </div>
