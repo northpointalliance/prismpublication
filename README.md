@@ -29,7 +29,7 @@ marketing site plus a private 3-portal app, for serving ads inside AI chatbots.
 | Browse all docs | [docs/README.md](docs/README.md) |
 
 ## How deploys work
-A single `git push` to `main` on **`github.com/northpointalliance/test1`** deploys everything:
+A single `git push` to `main` on **`github.com/northpointalliance/prismpublication`** deploys everything:
 - **Vercel** (Git integration) rebuilds + deploys the **frontend** automatically.
 - A **GitHub Action** deploys the **Supabase Edge Functions** (once the `SUPABASE_ACCESS_TOKEN` repo secret is set).
 
@@ -38,6 +38,38 @@ A single `git push` to `main` on **`github.com/northpointalliance/test1`** deplo
 > [docs/CI_CD.md](docs/CI_CD.md)) or upgrade Vercel to Pro.
 
 ## Changelog
+
+### Live /demo page + 3-bot demo site — July 2026
+
+**Main site demo (`prismpublication.com/demo`)**
+
+The scripted demo at `/demo` previously served only hardcoded fake ads (sneakers, sushi, flowers) no matter what. Now each ad slot calls `POST /api/demo/ads` with the conversation topic, falls back to the fake ads only if the API is unreachable or returns nothing.
+
+Affiliate disclosure added above and below the chat window. Dan is an Amazon affiliate and real ads in the library may generate commissions — the disclosure is a legal requirement.
+
+Files changed: `src/pages/Demo.tsx` — `requestDemoAd` function rewritten.
+
+**3-bot demo site (`prism-publication-demo.vercel.app`)**
+
+Three standalone Next.js demo apps live in a separate repo (`github.com/northpointalliance/prism-demo`, local at `C:\Users\dan72\Desktop\Prismpublication June 2026\prism-demos\prism-demo\`). FitTrack (`/health-fitness`), Calmly (`/wellness`), Confidant (`/persona-app`). These are built for showing advertisers and publishers a working chatbot with contextual ads.
+
+Three root causes fixed:
+
+1. **Env vars never set** — `pages/api/ad/[niche].js` required `PRISM_SDK_KEY_*` and `PRISM_BOT_ID_*` Vercel env vars that were never configured. Every ad request 500'd silently. Fixed by dropping the SDK auth approach entirely and calling the public `/api/demo/ads` endpoint directly.
+2. **Wrong response field names** — `lib/DemoChat.js` checked `ad.copy` and `ad.cta` (old field names). The endpoint returns `ad.title`, `ad.description`, `ad.ctaText`, `ad.clickUrl`. Fixed.
+3. **CTA link field** — code read `ad.ctaUrl`; actual field is `ad.clickUrl`. Fixed.
+
+Bot replies upgraded from a single hardcoded string to per-niche arrays (6 replies each) picked randomly per turn.
+
+Files changed in `prism-demo` repo: `pages/api/ad/[niche].js`, `pages/api/click/[niche].js`, `lib/DemoChat.js`.
+
+**How demo ad matching works**
+
+Both demos call `POST /api/demo/ads` — no API key required. The endpoint runs `selectAdForRequest` in `supabase/functions/_shared/ads.ts`: normalizes the user's message text as a topic, checks it against each active ad's `topics` string array, then falls back to weighted-random from all active ads if nothing matches. For contextual relevance, ads need topic tags that map to what users type (e.g. `["fitness","workout","protein"]`). Current ad library (Notion AI, Shipper.now) has generic tags — fitness-specific ads with correct tags still pending.
+
+**Required for ads to appear:** `isActive = true` on each row in the `ads` table. All 4 ads were found with `isActive = false` during testing. Fixed by running: `UPDATE ads SET "isActive" = true;`
+
+---
 
 ### Google Ad Manager (GAM) integration — June 2026
 

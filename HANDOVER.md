@@ -16,7 +16,7 @@
 | Thing | Value |
 |---|---|
 | Live site | https://prismpublication.com (also `prismpublication.vercel.app`) |
-| Repo (canonical) | `github.com/northpointalliance/test1` (client's GitHub) — commits authored as `northpointalliance` |
+| Repo (canonical) | `github.com/northpointalliance/prismpublication` — commits authored as `northpointalliance` |
 | Frontend host | Vercel (client's account, **Hobby** plan) |
 | Supabase project | `botnabfogcjrkpmdjgpr` · region `eu-west-2` · Postgres 17 · paid plan |
 | Supabase dashboard | https://supabase.com/dashboard/project/botnabfogcjrkpmdjgpr |
@@ -46,6 +46,43 @@ Supabase Postgres 17 (13 tables, RLS deny-all)  ·  pgmq queues  ·  Storage (bl
 External: PayPal (payments, creds in platform_settings) · Upstash (optional rate-limit) · Sentry (optional)
 ```
 Deep dive: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Demo infrastructure
+
+Two separate demo surfaces exist. Both pull live ads from the same `ads` table via the public demo endpoint — no auth required.
+
+### 1. Main site demo (`prismpublication.com/demo`)
+`src/pages/Demo.tsx` — scripted playback conversation (sneakers/dinner/flowers scenario). Each ad slot calls:
+```
+POST https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/demo/ads
+Body: { format: "card", context: { topic: "lifestyle" } }
+```
+Falls back to hardcoded fake ads (sneakers, sushi, flowers) if the API is unreachable or returns nothing. Includes an affiliate disclosure chip and footer text (Dan is an Amazon affiliate; real ads may earn commissions).
+
+### 2. 3-bot demo site (`prism-publication-demo.vercel.app`)
+Separate Next.js repo: `github.com/northpointalliance/prism-demo`
+Local path: `C:\Users\dan72\Desktop\Prismpublication June 2026\prism-demos\prism-demo\`
+
+Three bots:
+| Route | Bot | Niche |
+|---|---|---|
+| `/health-fitness` | FitTrack | Fitness & nutrition |
+| `/wellness` | Calmly | Mental wellness |
+| `/persona-app` | Confidant | Social confidence |
+
+Each user message triggers `POST /api/ad/[niche]` (a Next.js API route in the demo repo), which calls `/api/demo/ads` passing the user's message text as the topic. Clicks tracked via `POST /api/click/[niche]` → `/api/demo/track/click`.
+
+Key files in the demo repo:
+- `lib/DemoChat.js` — chat UI component; renders `ad.title`, `ad.description`, `ad.ctaText`, `ad.clickUrl`
+- `pages/api/ad/[niche].js` — calls `/api/demo/ads`, returns `{ ad }` to the frontend
+- `pages/api/click/[niche].js` — calls `/api/demo/track/click`
+
+### Demo endpoint (backend)
+`supabase/functions/api` handles both demo routes — no auth needed:
+- `POST /api/demo/ads` — runs `selectAdForRequest` in `_shared/ads.ts`; topic-matches against `ad.topics` tags, falls back to weighted-random
+- `POST /api/demo/track/click` — records to `ad_events` with `botId = 'demo-public'`
+
+**Ad visibility requirements:** `isActive = true` and `deletedAt IS NULL` on the row in `ads`. If the demo shows no ads, check these fields first. Also check that `ad.topics` contains tags that match the user's message — generic tags produce random fallback picks, not contextual ones.
 
 ## Repository map
 | Path | What it is | Status |
@@ -115,15 +152,22 @@ Functions read the **same Supabase DB**, so data stays consistent either way. Fo
 use **Vercel → Deployments → Promote** a previous good deployment.
 
 ## ⚠️ Pending / to finish
-1. **Supabase Auth redirect URLs** — add `https://prismpublication.com` (Site URL) + `https://prismpublication.com/**`
-   and `https://www.prismpublication.com/**` (Redirect URLs). **Login fails on the live domain until this is set.**
-2. **`SUPABASE_ACCESS_TOKEN` GitHub repo secret** — add it to activate backend auto-deploy (frontend already auto-deploys).
-3. **Rotate secrets** that exist in git history — DB password + dev `ADMIN_API_KEY`/`PRISM_API_KEY`. See `secrets/ROTATE_ME.md` (it lists the full update cascade).
-4. **Enable leaked-password protection** (one dashboard toggle).
-5. **`seedWorkspaceMockData` not ported** — new advertiser/publisher workspaces start empty (no demo ads/bots). Port from `server/src/seed.ts` if wanted.
-6. **`/sitemap.xml`** isn't served anymore (was Express). Add a sitemap route to `api` + a host rewrite if SEO needs it.
-7. **Vercel Hobby is non-commercial** per ToS — consider Pro for this commercial app (also re-enables team members).
-8. **Local Docker Postgres** (`aiads-postgres`) still runs as the pre-migration data snapshot; stop/remove when you no longer want the backup.
+
+### Infrastructure
+1. **Supabase Auth redirect URLs** — add `https://prismpublication.com` (Site URL) + `https://prismpublication.com/**` and `https://www.prismpublication.com/**` (Redirect URLs). **Login fails on the live domain until this is set.**
+2. **`SUPABASE_ACCESS_TOKEN` GitHub repo secret** — add it to activate backend auto-deploy (frontend already auto-deploys). Until then, deploy backend manually: `supabase functions deploy api`.
+3. **Rotate secrets** that exist in git history — DB password + dev `ADMIN_API_KEY`/`PRISM_API_KEY`. See `secrets/ROTATE_ME.md`.
+4. **Enable leaked-password protection** — one dashboard toggle (Authentication → Attack Protection).
+5. **Vercel Hobby is non-commercial** per ToS — upgrade to Pro for a commercial app (also re-enables team member deploys).
+6. **`/sitemap.xml`** isn't served (was Express). Add a sitemap route to `api` if SEO matters.
+7. **Local Docker Postgres** (`aiads-postgres`) still runs as the pre-migration data snapshot; stop/remove when no longer needed.
+8. **GitHub has 81 dependency vulnerabilities** (1 critical, 38 high) flagged by Dependabot — address when time permits.
+
+### Demo / content
+9. **Fitness affiliate ads missing** — current ad library (Notion AI, Shipper.now) doesn't have fitness topic tags so contextual matching fails for FitTrack and similar queries. Need to add Amazon affiliate ads for fitness products with tags like `["fitness","workout","protein","supplements","health"]`. Set `isActive = true` after inserting.
+10. **Blog post pending** — `public/demo-ads/blog-ad-matching.md` was written but not yet published to the site. Publish via the admin panel at `/app/admin`.
+11. **VS Code git merge conflict markers** — Source Control shows 4 unresolved items in the `prism-demo` repo (cosmetic; the actual deployment is clean). Resolve or `git checkout HEAD -- <file>` on the affected files.
+12. **`seedWorkspaceMockData` not ported** — new advertiser/publisher workspaces start empty. Port from `server/src/seed.ts` if a seeded onboarding experience is needed.
 
 ## Legacy (don't use for new work)
 `server/src/*` (Express), `docs/LOCAL_DATABASE.md`, `docs/DEEP_DIVE.md` describe the pre-migration setup,
