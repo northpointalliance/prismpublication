@@ -12,36 +12,36 @@ const createMessageId = () => {
 };
 
 const conversationScript = [
-  { role: "user", content: "I need sneakers I can run in but still look good when I go out. Any ideas?" },
+  { role: "user", content: "I'm buried in client notes across emails, sticky notes, and random docs. How do I actually get organized?" },
   {
     role: "bot",
     content:
-      "For that combo, go with a clean low-profile pair and neutral colors. They work for short runs and still look sharp with jeans after.",
+      "Pick one tool and move everything there. The context-switching between apps is where the time disappears. One place for notes, tasks, and client info changes things fast.",
   },
-  { role: "ad", position: "inline", shouldShow: true },
-  { role: "user", content: "Perfect. I usually run 3-5k, then meet friends for sushi or dinner." },
+  { role: "ad", position: "inline", shouldShow: true, topic: "notes" },
+  { role: "user", content: "I also have to write a project summary for a client by end of week. Always takes me way too long to draft." },
   {
     role: "bot",
     content:
-      "That's easy then. Keep the outfit minimal and let the shoes stay clean. You'll be comfortable for the run and still look put together at a restaurant.",
+      "If your notes are already in one tool, use the AI layer to draft it. Feed it your bullet points and let it write the first version — you edit, not write from scratch. Cuts the time significantly.",
   },
-  { role: "ad", position: "inline", shouldShow: true },
-  { role: "user", content: "Also, I'm visiting someone after dinner and want to bring flowers. Any quick gift idea?" },
+  { role: "ad", position: "inline", shouldShow: true, topic: "ai" },
+  { role: "user", content: "I also need to ship product samples to two clients this week. First time doing this." },
   {
     role: "bot",
     content:
-      "A compact bouquet is always a safe win. Go for seasonal flowers in simple wrapping so it feels thoughtful without overdoing it.",
+      "For low-volume shipping, look for a platform that gives you prepaid labels and real tracking without a monthly contract. Most first-timers overpay by defaulting to retail rates.",
   },
-  { role: "ad", position: "inline", shouldShow: true },
-  { role: "user", content: "Nice. Can you give me one final plan for the whole evening?" },
+  { role: "ad", position: "inline", shouldShow: true, topic: "shipping" },
+  { role: "user", content: "Can you put that into a quick plan for the week?" },
   {
     role: "bot",
     content:
-      "Sure: clean sneakers, quick 5k, sushi spot with friends, then swing by a flower shop for a fresh bouquet. Stylish and effortless.",
+      "Sure: consolidate your notes today, use AI to draft the client summary tomorrow, and get the shipping sorted before the samples need to go out. Three things, two days.",
   },
-  { role: "ad", position: "inline", shouldShow: true },
-  { role: "user", content: "That sounds perfect. Thanks!" },
-  { role: "bot", content: "Anytime. If you want, I can also suggest a full outfit color palette." },
+  { role: "ad", position: "inline", shouldShow: true, topic: "productivity" },
+  { role: "user", content: "That's actually manageable. Thanks." },
+  { role: "bot", content: "Start with the notes. Everything else gets easier once that's in one place." },
 ] as const;
 
 interface Message {
@@ -257,7 +257,8 @@ const Demo = () => {
         if (!playbackRef.current) break;
         const item = conversationScript[i];
         if (item.role === "ad") {
-          const ad = await requestDemoAd("lifestyle", demoUserId);
+          const topic = (item as Record<string, unknown>).topic as string | undefined;
+          const ad = await requestDemoAd(topic ?? "general", demoUserId);
           if (ad && playbackRef.current) {
             void trackDemoEvent("impression", ad.id, demoUserId);
             setMessages((prev) => [...prev, { id: createMessageId(), role: "ad", ad }]);
@@ -324,12 +325,13 @@ const Demo = () => {
               <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">The scenario</p>
                 <p className="mt-2 text-sm leading-relaxed text-foreground">
-                  Alex is planning his Saturday evening — he needs sneakers for a 5k run, a dinner spot to meet
-                  friends, and a gift for a visit afterward. His AI assistant helps him plan it all.
+                  Jordan is a freelancer with three active clients. She needs to organize scattered notes,
+                  draft a project summary, and ship product samples — all this week. Her AI assistant helps
+                  her get it done.
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Watch how Prism inserts contextually matched sponsored cards inline — no banners, no popups,
-                  just natural placements at the right moment.
+                  Watch how Prism inserts contextually matched partner tools inline — no banners, no popups,
+                  just relevant products at the right moment in the conversation.
                 </p>
               </div>
 
@@ -399,9 +401,9 @@ const Demo = () => {
                   <Bot className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">AI Lifestyle Assistant</p>
+                  <p className="text-sm font-semibold text-foreground">AI Work Assistant</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    Scenario: Planning a city evening
+                    Scenario: Freelancer planning the week
                   </p>
                 </div>
                 <span className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
@@ -424,8 +426,8 @@ const Demo = () => {
                     <div>
                       <p className="font-semibold text-foreground">Ready when you are.</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Press <span className="font-medium text-foreground">Start Demo</span> to watch Alex's
-                        conversation with sponsored placements appearing inline.
+                        Press <span className="font-medium text-foreground">Start Demo</span> to watch Jordan's
+                        conversation with contextually matched partner ads appearing inline.
                       </p>
                     </div>
                   </div>
@@ -438,9 +440,8 @@ const Demo = () => {
                       <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900 p-3.5 shadow-lg">
                         <div className="mb-2.5 flex items-center gap-2">
                           <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white/70">
-                            Sponsored
+                            Sponsored · via Prism
                           </span>
-                          <span className="text-xs font-medium text-white/60">{message.ad.advertiser}</span>
                         </div>
                         {message.ad.imageUrl && (
                           <img
