@@ -196,7 +196,7 @@ const Docs = () => {
         </section>
 
         {/* ── Integration Flow ────────────────────────────────────────── */}
-        <section>
+        <section id="integration-flow">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-mono uppercase tracking-[0.16em] text-primary">
               <Rocket className="h-3.5 w-3.5" />
