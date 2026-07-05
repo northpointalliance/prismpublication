@@ -1,41 +1,53 @@
 /**
  * Prism SDK Build Script
- * Uses local esbuild CLI binary to avoid host/binary version mismatch errors.
+ * Uses esbuild-wasm so the build works consistently across local and Vercel environments.
  */
 
-import { spawn, spawnSync } from "child_process";
-import { readFileSync, writeFileSync, mkdirSync, existsSync, constants, accessSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
+import { spawnSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const watchMode = process.argv.includes("--watch");
 const distDir = join(__dirname, "dist");
+const require = createRequire(import.meta.url);
 
-const binaryName = process.platform === "win32" ? "esbuild.exe" : "esbuild";
-const platformPackage = `${process.platform}-${process.arch}`;
+const useWasm = process.env.ESBUILD_WASM === "1";
+let esbuildBuild;
 
-const candidateBinaries = [
-  process.env.ESBUILD_BINARY_PATH,
-  join(__dirname, "node_modules", "@esbuild", platformPackage, "bin", binaryName),
-  join(__dirname, "..", "..", "node_modules", "@esbuild", platformPackage, "bin", binaryName),
-  join(__dirname, "node_modules", "esbuild", "bin", binaryName),
-  join(__dirname, "..", "..", "node_modules", "esbuild", "bin", binaryName),
-].filter(Boolean);
+if (useWasm) {
+  const wasmModule = await import("esbuild-wasm");
+  await wasmModule.initialize({ worker: false });
+  esbuildBuild = wasmModule.build;
+} else {
+  const esbuildPath = (() => {
+    try {
+      return require.resolve("esbuild/bin/esbuild");
+    } catch {
+      return null;
+    }
+  })();
 
-const isRunnableBinary = (candidate) => {
-  if (!candidate || !existsSync(candidate)) return false;
-  try {
-    accessSync(candidate, constants.X_OK);
-    const result = spawnSync(candidate, ["--version"], { stdio: "pipe" });
-    return result.status === 0;
-  } catch (_err) {
-    return false;
+  if (!esbuildPath) {
+    console.error("Build failed: no esbuild runtime available.");
+    process.exit(1);
   }
-};
 
-const esbuildBinary = candidateBinaries.find(isRunnableBinary);
+  esbuildBuild = async (options) => {
+    const result = spawnSync(process.execPath, [esbuildPath, ...buildArgs(options)], {
+      cwd: __dirname,
+      stdio: "pipe",
+      encoding: "utf8",
+    });
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    if (result.status !== 0) {
+      throw new Error(`esbuild failed with exit code ${result.status}`);
+    }
+  };
+}
 
 if (!existsSync(distDir)) {
   mkdirSync(distDir, { recursive: true });
@@ -53,24 +65,6 @@ const builds = [
     outfile: "dist/index.mjs",
     format: "esm",
     external: [],
-  },
-  {
-    entry: "src/index.ts",
-    outfile: "dist/index.js",
-    format: "cjs",
-    external: [],
-  },
-  {
-    entry: "src/react.tsx",
-    outfile: "dist/react.mjs",
-    format: "esm",
-    external: ["react", "react-dom"],
-  },
-  {
-    entry: "src/react.tsx",
-    outfile: "dist/react.js",
-    format: "cjs",
-    external: ["react", "react-dom"],
   },
 ];
 
@@ -184,81 +178,33 @@ export default PrismAds;
 writeFileSync(join(distDir, "index.d.ts"), typeContent);
 writeFileSync(join(distDir, "react.d.ts"), typeContent);
 
-const buildArgs = ({ entry, outfile, format, external }) => {
-  const args = [
-    entry,
-    "--bundle",
-    "--platform=browser",
-    `--format=${format}`,
-    `--outfile=${outfile}`,
-    "--minify",
-    "--sourcemap",
-  ];
-  for (const item of external) {
-    args.push(`--external:${item}`);
-  }
-  if (watchMode) {
-    args.push("--watch");
-  }
-  return args;
-};
-
-const ensureBinary = () => {
-  if (!esbuildBinary) {
-    console.error("Build failed: no runnable esbuild binary was found.");
-    console.error("Checked:");
-    for (const candidate of candidateBinaries) {
-      console.error(`- ${candidate}`);
-    }
-    process.exit(1);
-  }
-};
-
-const runOneSync = (config) => {
-  const result = spawnSync(esbuildBinary, buildArgs(config), {
-    cwd: __dirname,
-    stdio: "inherit",
-  });
-  if (result.status !== 0) {
-    throw new Error(`Build failed for ${config.outfile}`);
-  }
-  console.log(`✓ Built ${config.outfile}`);
-};
-
-const runWatch = () => {
-  const children = builds.map((config) => {
-    const child = spawn(esbuildBinary, buildArgs(config), {
-      cwd: __dirname,
-      stdio: "inherit",
-    });
-    child.on("exit", (code) => {
-      if (code && code !== 0) {
-        console.error(`Watcher exited with code ${code} for ${config.outfile}`);
-      }
-    });
-    return child;
-  });
-
-  console.log("Watching SDK builds...");
-  const stopAll = () => {
-    for (const child of children) {
-      child.kill("SIGTERM");
-    }
-    process.exit(0);
-  };
-  process.on("SIGINT", stopAll);
-  process.on("SIGTERM", stopAll);
-};
+const buildArgs = (options) => [
+  options.entryPoints[0],
+  "--bundle",
+  "--platform=browser",
+  `--format=${options.format}`,
+  `--outfile=${options.outfile}`,
+  "--minify",
+  "--sourcemap",
+  ...(options.external || []).flatMap((item) => [`--external:${item}`]),
+];
 
 const build = async () => {
   try {
-    ensureBinary();
-    if (watchMode) {
-      runWatch();
-      return;
-    }
     for (const config of builds) {
-      runOneSync(config);
+      await esbuildBuild({
+        entryPoints: [config.entry],
+        bundle: true,
+        platform: "browser",
+        format: config.format,
+        outfile: config.outfile,
+        minify: true,
+        sourcemap: true,
+        external: config.external,
+        absWorkingDir: __dirname,
+        logLevel: "info",
+      });
+      console.log(`✓ Built ${config.outfile}`);
     }
     console.log("\n✅ Build complete!");
   } catch (error) {
@@ -267,4 +213,4 @@ const build = async () => {
   }
 };
 
-build();
+await build();
