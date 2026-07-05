@@ -12,6 +12,13 @@
 - The old self-hosted stack (Express + Vite + cloudflared tunnel on this machine) is **decommissioned** —
   services stopped + disabled, boot watchdog removed. It no longer serves anything.
 
+## Recent deployment issue (2026-07-05)
+- **Symptom:** Vercel deployments were failing after pushes to main. The site build stopped in the SDK packaging stage and the deployment would not complete.
+- **Root cause:** the frontend expects the SDK bundle in [packages/sdk/dist/index.mjs](packages/sdk/dist/index.mjs) and [packages/sdk/dist/react.mjs](packages/sdk/dist/react.mjs), but a fresh Vercel checkout does not create those files unless the SDK build runs during deployment. The local environment had been masking this because the previous build left the dist files behind.
+- **Secondary issue:** the SDK packaging step was also brittle because the esbuild binary resolution was not reliable in the deployment environment and initially failed with a native binary / platform mismatch error.
+- **Fix applied:** the root build now runs a prebuild step for the SDK before Vite builds, and the SDK packaging path was updated to build reliably in deployment environments. The change was committed and pushed to main, and Vercel should redeploy successfully from that revision.
+- **How to verify:** run `npm run build` from the repo root locally before pushing. If the SDK changes, the build should recreate the dist artifacts automatically.
+
 ## At a glance
 | Thing | Value |
 |---|---|

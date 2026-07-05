@@ -20,6 +20,7 @@ VITE_SUPABASE_PROJECT_ID=botnabfogcjrkpmdjgpr
 2. Framework **Vite**, Root Directory = repo root. `vercel.json` sets build=`npm run build`, output=`dist`,
    and the SPA rewrite (all routes → `index.html`). `.vercelignore` keeps `server/`/`supabase/` out of the build.
 3. Add the env vars above → Deploy. Future pushes auto-deploy.
+- **Build note:** the repo's root build runs a prebuild step for the SDK package before Vite builds, so the generated SDK dist files are created automatically in a clean Vercel environment. If the SDK package changes, test with `npm run build` from the repo root before pushing.
 - **Hobby-plan gotcha:** Hobby only deploys commits authored by the account owner. This repo authors commits
   as `northpointalliance`; keep it that way or upgrade to Pro. (See [CI_CD.md](CI_CD.md).)
 

@@ -7,6 +7,11 @@ git push (main)
    └── GitHub Action (this repo)   → supabase functions deploy (+ db push)    (backend)   ⏳ needs token secret
 ```
 
+## Recent deployment issue (2026-07-05)
+- **What failed:** Vercel builds were failing after pushes to main because the frontend build expects the SDK bundle under the generated dist folder, but a fresh deployment environment was not building that package first.
+- **Root cause:** the build pipeline relied on the SDK dist output already being present, which worked only when a previous local build had left it on disk. The clean Vercel environment had no such artifacts.
+- **Fix:** the root build now runs a prebuild step for the SDK before Vite builds, and the SDK build script was made more robust for deployment environments. Re-run the build locally with `npm run build` before pushing if you change the SDK package.
+
 ## A. Frontend → Vercel  ✅ connected & live
 The repo is imported into the client's Vercel (Hobby) and serves `prismpublication.com`. Pushes auto-deploy.
 Setup reference (already done): [FRONTEND_DEPLOY.md](FRONTEND_DEPLOY.md).

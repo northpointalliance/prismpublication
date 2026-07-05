@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-07-05 — Vercel deployment fix for SDK build pipeline
+
+### What was failing
+- Vercel deployments were failing during the build step after pushes to main.
+- The frontend depends on the SDK bundle at [packages/sdk/dist/index.mjs](packages/sdk/dist/index.mjs) and [packages/sdk/dist/react.mjs](packages/sdk/dist/react.mjs), but a fresh Vercel clone does not have that dist folder unless it is generated during the build.
+- Earlier deployments had been succeeding only because the last local build had left the SDK artifacts on disk; the clean build environment did not.
+- The first SDK build failure was a native esbuild binary issue in the packaging step, which surfaced as "no runnable esbuild binary was found" and later as an esbuild platform mismatch during local verification.
+
+### What was fixed
+- Added a root build step so Vercel runs the SDK build before the Vite frontend build: `npm --prefix packages/sdk ci && npm --prefix packages/sdk run build`.
+- Updated the root build script to run that prebuild step automatically before `vite build`.
+- Added the required build dependency at the repo root and adjusted the SDK build script so the package can be built reliably in the Vercel environment.
+- Verified the SDK package builds locally before pushing the fix to main.
+
+### Deployment note for handoff
+- If the SDK source changes, the deployment pipeline now rebuilds the SDK automatically on Vercel. Do not assume the dist files are already present in the repo checkout.
+
 ## 0.4.0 — 2026-06-26
 
 ### Advertiser portal — clarity pass

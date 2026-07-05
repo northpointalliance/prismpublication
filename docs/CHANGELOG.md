@@ -2,6 +2,20 @@
 
 This file tracks the website evolution from the first major redesign pass to the current state.
 
+## 2026-07-05 — Vercel deployment fix for SDK build pipeline
+
+### What was failing
+- Vercel builds were failing after pushes to main because the frontend imports the SDK bundle from the generated dist folder, but a fresh deployment environment did not create that folder automatically.
+- The build error surfaced during the SDK packaging step and was initially reported as an esbuild binary problem. The package had been relying on a fragile local binary resolution path.
+
+### What was fixed
+- Added a prebuild step to the frontend build so the SDK package is compiled before Vite runs.
+- Updated the SDK build path to be more robust for deployment environments, including the dependency updates needed for the build to succeed.
+- Verified the SDK package built successfully locally before publishing the fix.
+
+### Handoff note
+- The deployment pipeline now builds the SDK automatically on Vercel. If you change SDK source or packaging, test with `npm run build` from the repo root.
+
 ## 2026-03-20 — v0.3.1 (ad policy update, sitemap fix, typography pass)
 
 ### Ad policy — gambling moved to restricted
