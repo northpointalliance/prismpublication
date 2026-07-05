@@ -409,4 +409,9 @@ const SdkDocsTab = () => (
             </p>
           </div>
         </div>
-      </
+      </section>
+    </div>
+  </div>
+);
+
+export default SdkDocsTab;
