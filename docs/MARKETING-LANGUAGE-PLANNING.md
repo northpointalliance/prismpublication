@@ -122,9 +122,9 @@ Prism needs an equivalent. Draft options:
 
 1. "The monetization layer for AI chat publishers."
 2. "Contextual partner integrations for AI conversations — served at the moment of stated intent."
-3. "The only ad infrastructure built for the inside of a conversation."
+3. ~~"The only ad infrastructure built for the inside of a conversation."~~ **Retired 2026-07-03 — false.** Kontext (SSP partner, named publisher case study) is a direct competitor already ahead on proof points. OpenAI launched ChatGPT ads Feb 9, 2026. Amazon is exploring third-party chatbot ad infrastructure. Do not claim "only" or "nobody else" anywhere.
 
-**#3 is the strongest.** It's specific, defensible, and nobody else can claim it today.
+**Working replacement:** something that claims the long-tail publisher niche honestly instead of category uniqueness — e.g. "Built for the AI apps too small for the platforms and too specific for the generic ad networks." Needs testing before it goes anywhere external; not yet validated the way #3 falsely was.
 
 ---
 

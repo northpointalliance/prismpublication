@@ -153,6 +153,8 @@ use **Vercel → Deployments → Promote** a previous good deployment.
 
 ## ⚠️ Pending / to finish
 
+_Timestamped per entry going forward — add `(as of YYYY-MM-DD HH:MM TZ)` when you touch this list._
+
 ### Infrastructure
 1. **Supabase Auth redirect URLs** — add `https://prismpublication.com` (Site URL) + `https://prismpublication.com/**` and `https://www.prismpublication.com/**` (Redirect URLs). **Login fails on the live domain until this is set.**
 2. **`SUPABASE_ACCESS_TOKEN` GitHub repo secret** — add it to activate backend auto-deploy (frontend already auto-deploys). Until then, deploy backend manually: `supabase functions deploy api`.
@@ -162,13 +164,11 @@ use **Vercel → Deployments → Promote** a previous good deployment.
 6. **`/sitemap.xml`** isn't served (was Express). Add a sitemap route to `api` if SEO matters.
 7. **Local Docker Postgres** (`aiads-postgres`) still runs as the pre-migration data snapshot; stop/remove when no longer needed.
 8. **GitHub has 81 dependency vulnerabilities** (1 critical, 38 high) flagged by Dependabot — address when time permits.
+9. **Publisher/advertiser signup was throwing "Error sending confirmation email"** — root cause was an unverified Resend domain (`prismpublication.com`), fixed and now verified. Admin new-signup alerts run through a pre-existing trigger (`on_publisher_signup` on `public.organizations`, not the `notify-signup` Edge Function in this repo) — its hardcoded Resend API key has been moved into Supabase Vault. Confirmed working via a live test send (2026-07-03). **Still needs a real signup/password-reset test from the actual login page** to confirm Supabase Auth's own SMTP is fixed post-verification — see `docs/SESSION-2026-07-03-signup-email-debug.md`.
+10. **Rotate the Resend API key** that was found hardcoded in plaintext in the `notify_publisher_signup` SQL function (now moved to Vault, but the key itself was exposed for an unknown period — rotate it in the Resend dashboard as a precaution).
+11. _(as of 2026-07-03 19:10 IDT)_ **SDK was never actually publishable — real onboarding was broken for any third-party developer.** `@prism/sdk` had never been published to npm (confirmed 404 on registry); renamed in code to `@prismpublication/sdk` to match the npm org Dan created. Also fixed a placeholder API domain (`api.prism.so`, doesn't resolve) in the SDK Docs tab and `docs/FREQUENCY_CAPPING.md`. **npm publish is mid-flight**: hit a PowerShell script-execution block (worked around via cmd.exe), then npm's 2FA-required-to-publish policy (now enabled), then a burned `1.0.0` version tag from an inconclusive first attempt — bumped to `1.0.1`, not yet confirmed live on the registry.
+12. _(as of 2026-07-03 19:10 IDT)_ **Tonight's code changes are not yet in git.** A stale `.git/index.lock` blocks all commits — `rm`/`del` both failed with permission errors on both the Cowork sandbox and Dan's own Windows machine. Likely cause: a sync client (OneDrive/Dropbox) or antivirus holding the file open, or a stray git/VS Code process — check Task Manager, or restart the machine if needed, then re-run the commit. Until resolved, the SDK rename, docs fixes, and this file's own edits exist only on disk, not on GitHub/Vercel.
+13. _(as of 2026-07-03 19:10 IDT)_ **Known, unfixed product bugs found during a real onboarding attempt:** (a) duplicate-workspace-creation bug — the Create Workspace flow let the same user end up with two identical publisher workspaces (confirmed via direct DB query, root cause likely a non-idempotent submit); (b) the Publisher Portal dashboard shows zero step-by-step guidance for first-time users — just an empty metrics wall and a bare form, disconnected from the "Four steps to your first ad" on the marketing site.
 
 ### Demo / content
-9. **Fitness affiliate ads missing** — current ad library (Notion AI, Shipper.now) doesn't have fitness topic tags so contextual matching fails for FitTrack and similar queries. Need to add Amazon affiliate ads for fitness products with tags like `["fitness","workout","protein","supplements","health"]`. Set `isActive = true` after inserting.
-10. **Blog post pending** — `public/demo-ads/blog-ad-matching.md` was written but not yet published to the site. Publish via the admin panel at `/app/admin`.
-11. **VS Code git merge conflict markers** — Source Control shows 4 unresolved items in the `prism-demo` repo (cosmetic; the actual deployment is clean). Resolve or `git checkout HEAD -- <file>` on the affected files.
-12. **`seedWorkspaceMockData` not ported** — new advertiser/publisher workspaces start empty. Port from `server/src/seed.ts` if a seeded onboarding experience is needed.
-
-## Legacy (don't use for new work)
-`server/src/*` (Express), `docs/LOCAL_DATABASE.md`, `docs/DEEP_DIVE.md` describe the pre-migration setup,
-kept for reference only.
+9. **Fitness affiliate ads missing** — current ad library (Notion AI, Shipper.now) doesn't have fitness topic tags so contextual matching fails for FitTrack and 

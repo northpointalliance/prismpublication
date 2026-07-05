@@ -3,7 +3,7 @@
  * 
  * A JavaScript SDK for integrating ads into AI chatbots
  * 
- * @package @prism/sdk
+ * @package @prismpublication/sdk
  * @version 1.0.0
  */
 

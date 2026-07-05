@@ -2,9 +2,9 @@ import SiteShell from "@/components/SiteShell";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
-const installSnippet = `npm install @prism/sdk`;
+const installSnippet = `npm install @prismpublication/sdk`;
 
-const usageSnippet = `import { PrismAds } from "@prism/sdk";
+const usageSnippet = `import { PrismAds } from "@prismpublication/sdk";
 
 // Keep API keys on your server; never bundle them in frontend env vars.
 const prism = new PrismAds({

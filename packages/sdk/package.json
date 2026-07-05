@@ -1,6 +1,6 @@
 {
-  "name": "@prism/sdk",
-  "version": "1.0.0",
+  "name": "@prismpublication/sdk",
+  "version": "1.0.1",
   "description": "Prism Ad Network SDK for AI Chatbots",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

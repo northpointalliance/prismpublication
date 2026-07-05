@@ -22,7 +22,7 @@ const capabilities = [
   {
     icon: Code2,
     title: "TypeScript SDK",
-    description: "Install @prism/sdk via npm. Typed API, React hooks, and a drop-in ad component — all in one package.",
+    description: "Install @prismpublication/sdk via npm. Typed API, React hooks, and a drop-in ad component — all in one package.",
   },
   {
     icon: Terminal,
@@ -56,7 +56,7 @@ const integrationSteps = [
     step: "1",
     title: "Install the SDK",
     description: "One npm install. Ships ESM, CJS, TypeScript definitions, and React hooks.",
-    badge: "npm install @prism/sdk",
+    badge: "npm install @prismpublication/sdk",
   },
   {
     step: "2",

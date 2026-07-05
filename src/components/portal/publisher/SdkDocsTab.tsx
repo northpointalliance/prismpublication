@@ -2,9 +2,9 @@ import { CheckCircle2, Shield } from "lucide-react";
 
 // ── Code snippets ────────────────────────────────────────────────────────────
 
-const installSnippet = `npm install @prism/sdk`;
+const installSnippet = `npm install @prismpublication/sdk`;
 
-const quickStartSnippet = `import { PrismAds } from "@prism/sdk";
+const quickStartSnippet = `import { PrismAds } from "@prismpublication/sdk";
 
 const prism = new PrismAds({
   apiKey: process.env.PRISM_SDK_KEY,   // your bot's SDK key — keep server-side
@@ -23,7 +23,7 @@ if (ad) {
   await prism.trackImpression(ad.id, "user-123");
 }`;
 
-const reactSnippet = `import { usePrismAd, PrismAdComponent } from "@prism/sdk/react";
+const reactSnippet = `import { usePrismAd, PrismAdComponent } from "@prismpublication/sdk/react";
 
 function ChatWindow() {
   const { ad, loading, refresh } = usePrismAd({
@@ -44,7 +44,7 @@ function ChatWindow() {
 }`;
 
 const curlSnippet = `# Request an ad
-curl -X POST https://api.prism.so/api/ads \\
+curl -X POST https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/ads \\
   -H "Authorization: Bearer YOUR_SDK_KEY" \\
   -H "Content-Type: application/json" \\
   -H "X-Prism-Timestamp: $(date +%s)" \\
@@ -75,7 +75,7 @@ const responseSnippet = `{
 }`;
 
 const trackSnippet = `# Track an impression
-curl -X POST https://api.prism.so/api/track/impression \\
+curl -X POST https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/track/impression \\
   -H "Authorization: Bearer YOUR_SDK_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -155,7 +155,7 @@ const SdkDocsTab = () => (
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
           The package ships ESM, CJS, and TypeScript definitions. React hooks are available at{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono text-primary">@prism/sdk/react</code>.
+          <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono text-primary">@prismpublication/sdk/react</code>.
         </p>
       </section>
 
@@ -404,14 +404,9 @@ const SdkDocsTab = () => (
             <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
             <p className="text-sm text-emerald-800">
               <strong>The SDK handles signing automatically.</strong> If you use{" "}
-              <code className="rounded bg-emerald-100 px-1 py-0.5 text-xs font-mono">@prism/sdk</code>,
+              <code className="rounded bg-emerald-100 px-1 py-0.5 text-xs font-mono">@prismpublication/sdk</code>,
               you don't need to implement HMAC manually.
             </p>
           </div>
         </div>
-      </section>
-    </div>
-  </div>
-);
-
-export default SdkDocsTab;
+      </

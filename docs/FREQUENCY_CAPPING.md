@@ -73,7 +73,7 @@ interface AdContext {
 **Basic (default 5-impression window)**:
 
 ```typescript
-import { PrismAds } from "@prism/sdk";
+import { PrismAds } from "@prismpublication/sdk";
 
 const prism = new PrismAds({
   apiKey: "your-key",
@@ -111,7 +111,7 @@ const ad = await prism.displayAd({
 ### React hook usage
 
 ```typescript
-import { usePrismAd } from "@prism/sdk/react";
+import { usePrismAd } from "@prismpublication/sdk/react";
 
 function ChatWindow() {
   const { ad, loading, error, refresh } = usePrismAd({
@@ -280,7 +280,7 @@ const result = await checkFrequencyCap("bot-1", "user-1", 5);
 
 ```bash
 # Create a test bot and user
-curl -X POST https://api.prism.so/api/ads \
+curl -X POST https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/ads \
   -H "Authorization: Bearer <sdk-key>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -300,4 +300,4 @@ curl -X POST https://api.prism.so/api/ads \
 
 - [ARCHITECTURE.md](ARCHITECTURE.md): System design, endpoints, auth
 - [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md): Full SDK integration walkthrough
-- [HANDOVER.md](../HANDOVER.md): Production deployment, security baseline
+- [HANDOVER.md](../HANDOVER.md): Productio

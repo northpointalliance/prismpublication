@@ -60,7 +60,7 @@ const HeroSection = () => {
 
           <div className="animate-fade-up-delay-3 mt-10 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground" role="list" aria-label="Core value points">
             {[
-              "npm install @prism/sdk",
+              "npm install @prismpublication/sdk",
               "Context-aware placements",
               "You control pacing & categories",
             ].map((item) => (

@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const NOTIFY_TO = "dan72ros@gmail.com";
+// prismpublication.com verified in Resend 2026-07-03 — using the branded sender.
 const NOTIFY_FROM = "Prism Alerts <alerts@prismpublication.com>";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("NOTIFY_WEBHOOK_SECRET") ?? "";

@@ -64,9 +64,9 @@ interface DemoAd {
   tags?: string[];
 }
 
-const installSnippet = `npm install @prism/sdk`;
+const installSnippet = `npm install @prismpublication/sdk`;
 
-const usageSnippet = `import { PrismAds } from "@prism/sdk";
+const usageSnippet = `import { PrismAds } from "@prismpublication/sdk";
 
 const prism = new PrismAds({
   apiKey: process.env.PRISM_API_KEY!,

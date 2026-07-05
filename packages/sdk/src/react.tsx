@@ -136,7 +136,7 @@ export function usePrismAd(options: UsePrismAdOptions) {
  * 
  * @example
  * ```tsx
- * import { PrismAd } from '@prism/sdk';
+ * import { PrismAd } from '@prismpublication/sdk';
  * 
  * function ChatApp() {
  *   return (

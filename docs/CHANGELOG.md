@@ -655,7 +655,7 @@ Previously, advertiser spend and publisher earnings were completely disconnected
 
 ## 2026-02-26 (SDK + Admin runtime completion)
 
-- Replaced demo page mock ad provider with real SDK runtime calls (`@prism/sdk`) against local API routes.
+- Replaced demo page mock ad provider with real SDK runtime calls (`@prismpublication/sdk`) against local API routes.
 - Added local ad-serving endpoints to backend:
   - `POST /api/ads`
   - `POST /api/track/:eventType`
@@ -670,7 +670,7 @@ Previously, advertiser spend and publisher earnings were completely disconnected
   - recent SDK events + recent leads
 - Updated Vite config:
   - `/api` proxy to local API (`localhost:8787`)
-  - local alias mapping for `@prism/sdk` and `@prism/sdk/react`
+  - local alias mapping for `@prismpublication/sdk` and `@prismpublication/sdk/react`
 - Updated stack script `scripts/prism_stack.sh`:
   - starts/stops API + Vite + tunnel together
   - includes API status and logs

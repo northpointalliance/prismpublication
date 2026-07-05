@@ -47,8 +47,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@prism/sdk/react": path.resolve(__dirname, "./packages/sdk/dist/react.mjs"),
-      "@prism/sdk": path.resolve(__dirname, "./packages/sdk/dist/index.mjs"),
+      "@prismpublication/sdk/react": path.resolve(__dirname, "./packages/sdk/dist/react.mjs"),
+      "@prismpublication/sdk": path.resolve(__dirname, "./packages/sdk/dist/index.mjs"),
     },
   },
 }));

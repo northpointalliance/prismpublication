@@ -5,8 +5,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@prism/sdk/react": ["./packages/sdk/dist/react.d.ts"],
-      "@prism/sdk": ["./packages/sdk/dist/index.d.ts"]
+      "@prismpublication/sdk/react": ["./packages/sdk/dist/react.d.ts"],
+      "@prismpublication/sdk": ["./packages/sdk/dist/index.d.ts"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

@@ -1,11 +1,11 @@
-# @prism/sdk
+# @prismpublication/sdk
 
 Prism Ad Network SDK for AI Chatbots - Integrate ads into your AI and start monetizing!
 
 ## Installation
 
 ```bash
-npm install @prism/sdk
+npm install @prismpublication/sdk
 ```
 
 ## Getting Credentials
@@ -23,7 +23,7 @@ From the Bot Developer portal (`/app/publisher`):
 ## Quick Start
 
 ```javascript
-import { PrismAds } from '@prism/sdk';
+import { PrismAds } from '@prismpublication/sdk';
 
 // Initialize the SDK
 const prismAds = new PrismAds({
@@ -58,7 +58,7 @@ async function handleUserMessage(userMessage) {
 ## React Integration
 
 ```tsx
-import { PrismAdComponent, usePrismAd } from '@prism/sdk/react';
+import { PrismAdComponent, usePrismAd } from '@prismpublication/sdk/react';
 
 // Using the hook
 function ChatMessage() {

@@ -11,7 +11,7 @@ import {
 
 // ── SDK snippet ──────────────────────────────────────────────────────────────
 
-export const sdkSnippet = `import { PrismAds } from "@prism/sdk";
+export const sdkSnippet = `import { PrismAds } from "@prismpublication/sdk";
 
 const prism = new PrismAds({
   apiKey: process.env.PRISM_API_KEY,
