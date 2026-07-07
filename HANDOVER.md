@@ -19,6 +19,12 @@
 - **Fix applied:** the root build now runs a prebuild step for the SDK before Vite builds, and the SDK packaging path was updated to build reliably in deployment environments. The change was committed and pushed to main, and Vercel should redeploy successfully from that revision.
 - **How to verify:** run `npm run build` from the repo root locally before pushing. If the SDK changes, the build should recreate the dist artifacts automatically.
 
+## Recent handoff update (2026-07-07)
+- Added a new lightweight Skylar demo experience at `/skylar` with a conversational planner UI.
+- Added a simple chat endpoint at `/api/chat` that returns guided planning replies for the demo flow.
+- Wired the page and endpoint into the existing React router and Express entrypoint so the demo is runnable without extra setup.
+- Added a small server-side regression test for the chat response logic.
+
 ## At a glance
 | Thing | Value |
 |---|---|

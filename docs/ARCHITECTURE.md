@@ -55,7 +55,7 @@ Browser → (Supabase Auth for login)
 
 ## Endpoint map (function path = `/api/...`)
 - **Public**: `GET /api/health`, `GET /api/blog`, `GET /api/blog/:slug`, `POST /api/leads`,
-  `POST /api/demo/ads`, `POST /api/demo/track/:eventType`, `GET /api/wallet/paypal/config`.
+  `POST /api/demo/ads`, `POST /api/demo/track/:eventType`, `POST /api/chat`, `GET /api/wallet/paypal/config`.
 - **Portal (JWT)**: `POST /api/auth/sync-user`, `/api/me/*`, `/api/advertiser/*`, `/api/wallet/*`,
   `/api/publisher/*`, `/api/payouts/*`, `/api/admin/portal/*` + platform-settings + payout-requests + blog CRUD.
 - **Admin key**: `GET /api/admin/overview|ads|events|leads`, `POST/PATCH /api/admin/ads`, `GET /api/leads`.
@@ -75,6 +75,7 @@ Prisma remains the **schema** source of truth (`server/prisma/schema.prisma` + `
 - Security headers + per-request `X-Request-Id` set by `baseMiddleware`. CORS allowlist via `API_CORS_ORIGIN`.
 
 ## Frontend specifics
+- **Skylar demo route**: the SPA now exposes `/skylar`, a lightweight conversational planning experience backed by the `/api/chat` endpoint.
 - **No service worker.** A previous SW caused a production reload loop (build-id mismatch → forced reloads,
   which also spiked Edge requests). `src/main.tsx` now registers nothing and actively unregisters any old SW;
   `public/service-worker.js` is a self-destruct-only cleanup worker. Re-introduce a real PWA (vite-plugin-pwa)
