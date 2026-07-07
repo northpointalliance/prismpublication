@@ -24,6 +24,7 @@ From the Bot Developer portal (`/app/publisher`):
 
 ```javascript
 import { PrismAds } from '@prismpublication/sdk';
+import OpenAI from 'openai';
 
 // Initialize the SDK
 const prismAds = new PrismAds({
@@ -32,6 +33,20 @@ const prismAds = new PrismAds({
   position: 'inline',
   adFormat: 'text'
 });
+
+// Initialize your LLM — gpt-4o-mini is the recommended default: cheap
+// (fractions of a cent per reply) and plenty capable for chatbot conversation.
+// Server-side only — never put an OpenAI key in browser/client code.
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function generateAIResponse(userMessage) {
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: userMessage }],
+    max_tokens: 300, // caps cost per reply — raise only if you need longer answers
+  });
+  return completion.choices[0].message.content;
+}
 
 // Fetch and display an ad
 async function handleUserMessage(userMessage) {
@@ -54,6 +69,12 @@ async function handleUserMessage(userMessage) {
   return [response];
 }
 ```
+
+**Cost control — do this before you go live:** an LLM call with no ceiling can rack up an unexpectedly large bill if traffic spikes or a loop misfires. Two settings prevent that, and take a couple minutes:
+1. Fund your OpenAI account with prepaid credit instead of an open-ended card. Once the balance hits zero, calls stop — they can't overspend.
+2. In the OpenAI dashboard, set a hard usage limit (Settings → Billing → Limits), not just an email alert.
+
+`max_tokens: 300` above also bounds the size (and cost) of every single reply.
 
 ## React Integration
 

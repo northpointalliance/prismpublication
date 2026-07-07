@@ -24,6 +24,7 @@ import payoutsRouter from "./routes/payouts.js";
 import adminRouter from "./routes/admin.js";
 import sdkRouter from "./routes/sdk.js";
 import demoRouter from "./routes/demo.js";
+import chatRouter from "./routes/chat.js";
 import leadsRouter from "./routes/leads.js";
 import webhooksRouter from "./routes/webhooks.js";
 import blogRouter from "./routes/blog.js";
@@ -120,6 +121,7 @@ app.use("/api/leads", leadRateLimiter, leadsRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api", sdkRouter); // /api/ads and /api/track/:eventType
 app.use("/api/demo", demoRateLimiter, demoRouter);
+app.use("/api/chat", chatRouter);
 app.use("/api/webhooks", webhooksRouter);
 
 // Dynamic sitemap — includes all published blog posts

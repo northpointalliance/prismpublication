@@ -17,6 +17,7 @@ import {
 
 const Index = lazy(() => import("./pages/Index"));
 const Demo = lazy(() => import("./pages/Demo"));
+const Skylar = lazy(() => import("./pages/Skylar"));
 const Product = lazy(() => import("./pages/Product"));
 const UseCases = lazy(() => import("./pages/UseCases"));
 const Publishers = lazy(() => import("./pages/Publishers"));
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/demo" element={<Demo />} />
+              <Route path="/skylar" element={<Skylar />} />
               <Route path="/app/login" element={<AppLogin />} />
               <Route path="/app" element={<Navigate to="/app/login" replace />} />
 
