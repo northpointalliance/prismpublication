@@ -36,7 +36,11 @@ if (useWasm) {
   }
 
   esbuildBuild = async (options) => {
-    const result = spawnSync(process.execPath, [esbuildPath, ...buildArgs(options)], {
+    // esbuild's postinstall replaces bin/esbuild with the actual native binary
+    // (ELF/Mach-O/PE) for the current platform, not a JS wrapper. It must be
+    // executed directly — running it via `node <path>` tries to parse the raw
+    // binary as JavaScript and fails with "SyntaxError: Invalid or unexpected token".
+    const result = spawnSync(esbuildPath, buildArgs(options), {
       cwd: __dirname,
       stdio: "pipe",
       encoding: "utf8",
