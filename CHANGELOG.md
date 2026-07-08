@@ -6,6 +6,7 @@
 - New public demo page at [src/pages/Skylar.tsx](src/pages/Skylar.tsx) for a lightweight conversational planning experience.
 - New chat endpoint at [server/src/routes/chat.ts](server/src/routes/chat.ts) backed by [server/src/chat.ts](server/src/chat.ts) for simple reply generation.
 - Route wiring in [src/App.tsx](src/App.tsx) and [server/src/index.ts](server/src/index.ts) so the experience is reachable at `/skylar` and `/api/chat`.
+- Visible navigation entry for the Skylar demo in the main navbar at [src/components/Navbar.tsx](src/components/Navbar.tsx), making the route discoverable from the public site.
 - Regression coverage in [server/test/skylar-chat.test.ts](server/test/skylar-chat.test.ts).
 
 ### Notes for handoff

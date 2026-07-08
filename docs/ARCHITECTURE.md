@@ -76,6 +76,7 @@ Prisma remains the **schema** source of truth (`server/prisma/schema.prisma` + `
 
 ## Frontend specifics
 - **Skylar demo route**: the SPA now exposes `/skylar`, a lightweight conversational planning experience backed by the `/api/chat` endpoint.
+- **Public discoverability**: the main navbar includes a visible “Skylar Demo” link so the page is easily reachable from the public marketing site.
 - **No service worker.** A previous SW caused a production reload loop (build-id mismatch → forced reloads,
   which also spiked Edge requests). `src/main.tsx` now registers nothing and actively unregisters any old SW;
   `public/service-worker.js` is a self-destruct-only cleanup worker. Re-introduce a real PWA (vite-plugin-pwa)

@@ -23,6 +23,7 @@
 - Added a new lightweight Skylar demo experience at `/skylar` with a conversational planner UI.
 - Added a simple chat endpoint at `/api/chat` that returns guided planning replies for the demo flow.
 - Wired the page and endpoint into the existing React router and Express entrypoint so the demo is runnable without extra setup.
+- Added a visible “Skylar Demo” link to the public navbar so the experience is discoverable from the marketing site.
 - Added a small server-side regression test for the chat response logic.
 
 ## At a glance
