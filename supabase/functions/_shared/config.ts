@@ -13,6 +13,7 @@ export const serviceRoleKey: string = env("SUPABASE_SERVICE_ROLE_KEY");
 export const dbUrl: string = env("DB_URL") || env("DATABASE_URL") || env("SUPABASE_DB_URL");
 
 export const sdkApiKey: string = env("PRISM_API_KEY") || env("BOTGRID_API_KEY");
+export const openaiApiKey: string = env("OPENAI_API_KEY");
 export const adminApiKey: string = env("ADMIN_API_KEY");
 export const corsOrigin: string = env("API_CORS_ORIGIN") || "*";
 export const requireSdkHmac: boolean = env("REQUIRE_SDK_HMAC") !== "false";
