@@ -9,6 +9,7 @@ const primaryLinks = [
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
   { label: "How It Works", to: "/demo" },
+  { label: "Skylar Demo", to: "/skylar" },
   { label: "Company", to: "/company" },
 ];
 
@@ -36,7 +37,7 @@ const Navbar = () => {
           <span className="text-lg font-bold tracking-tight">Prism</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           {primaryLinks.map((link) => (
             <Link key={link.label} to={link.to} className="hover:text-foreground transition-colors font-medium">
               {link.label}
