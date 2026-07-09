@@ -1,3 +1,5 @@
+cursor git push works
+
 # Prism (AIADS)
 
 An ad marketplace connecting **advertisers**, **publishers / bot-developers**, and **admins** — a public
