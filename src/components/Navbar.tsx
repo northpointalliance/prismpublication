@@ -9,7 +9,6 @@ const primaryLinks = [
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
   { label: "How It Works", to: "/demo" },
-  { label: "Skylar Demo", to: "/skylar" },
   { label: "Company", to: "/company" },
 ];
 

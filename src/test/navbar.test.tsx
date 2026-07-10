@@ -17,13 +17,13 @@ describe("Navbar", () => {
     });
   });
 
-  it("renders a visible Skylar demo navigation link", () => {
+  it("renders a visible How It Works navigation link", () => {
     render(
       <MemoryRouter>
         <Navbar />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: /skylar demo/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /how it works/i })).toBeInTheDocument();
   });
 });
