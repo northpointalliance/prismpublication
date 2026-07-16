@@ -4,6 +4,7 @@ project_id = "botnabfogcjrkpmdjgpr"
 # keys), so the platform JWT gate must be OFF for it.
 [functions.api]
 verify_jwt = false
+import_map = "./functions/deno.json"
 
 # query-fan-out is already public (open CORS, no Supabase JWT).
 [functions.query-fan-out]
