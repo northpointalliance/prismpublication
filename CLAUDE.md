@@ -164,6 +164,7 @@ _This section is timestamped per entry going forward — add `(as of YYYY-MM-DD 
 
 - No em dashes. No buzzwords ("unlock", "synergy", "future-proof").
 - Prefer "partner integrations surfaced at the right moment" over "contextual ads" in B2B outreach.
-- Brand color `#6C47FF`, typography Space Grotesk/Inter.
+- **Visual brand:** white/off-white backgrounds; primary accent is **sky blue** (`#38bdf8`, `--primary` in `src/index.css`, HSL 200 96% 61%); secondary accents **teal/cyan** and **soft orange/peach** (dot grid on homepage); headline gradient blue → teal → green → yellow → orange → red (see homepage "conversation"). Logo P mark uses yellow, teal, small magenta.
+- Typography Space Grotesk/Inter.
 - Light backgrounds only in any HTML/visual output.
 - Every suggestion should connect back to: does this help land the first client?

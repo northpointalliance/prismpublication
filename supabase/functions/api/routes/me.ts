@@ -65,7 +65,7 @@ me.post("/create-workspace", requirePortalUser, async (c) => {
         to: ["dan72ros@gmail.com", "info@prismpublication.com"],
         subject: `New publisher signup: ${portalUser.name}`,
         html: `
-          <h2 style="color:#6C47FF">New publisher signed up on Prism</h2>
+          <h2 style="color:#38bdf8">New publisher signed up on Prism</h2>
           <p><strong>Name:</strong> ${portalUser.name}</p>
           <p><strong>Email:</strong> ${portalUser.email}</p>
           <p><strong>Workspace:</strong> ${name || defaultName}</p>

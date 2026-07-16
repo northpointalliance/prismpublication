@@ -21,7 +21,7 @@ const Publishers = () => {
       <section className="relative overflow-hidden pt-32 pb-20">
         <div className="absolute inset-0 grid-pattern opacity-50" aria-hidden="true" />
         <div className="absolute top-1/3 left-1/4 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" aria-hidden="true" />
-        <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-violet-500/5 blur-[100px]" aria-hidden="true" />
+        <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-sky-400/5 blur-[100px]" aria-hidden="true" />
 
         <div className="container relative z-10 mx-auto px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -71,7 +71,7 @@ const Publishers = () => {
 
             {/* Dashboard mockup */}
             <div className="relative">
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-violet-500/10 blur-2xl" aria-hidden="true" />
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-400/10 blur-2xl" aria-hidden="true" />
               <div className="relative">
                 <DashboardMockup />
               </div>
@@ -264,7 +264,7 @@ Integrate in four steps            </h2>
               </div>
               <div className="rounded-xl bg-muted/50 p-4">
                 <div className="overflow-hidden rounded-lg border border-border bg-background">
-                  <div className="h-24 bg-gradient-to-br from-violet-500/20 via-primary/10 to-emerald-500/20 flex items-center justify-center">
+                  <div className="h-24 bg-gradient-to-br from-sky-400/20 via-primary/10 to-emerald-500/20 flex items-center justify-center">
                     <Sparkles className="h-8 w-8 text-primary/40" />
                   </div>
                   <div className="p-3">
@@ -288,7 +288,7 @@ Integrate in four steps            </h2>
               <div className="rounded-xl bg-muted/50 p-4">
                 <div className="overflow-hidden rounded-lg border border-border">
                   <div className="h-36 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-violet-500/10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-sky-400/10" />
                     <div className="relative text-center px-4">
                       <p className="text-sm font-bold text-white">Ship faster with Vercel</p>
                       <p className="mt-1 text-[10px] text-white/60">Zero-config deployments for modern frameworks</p>

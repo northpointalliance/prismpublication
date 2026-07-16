@@ -96,7 +96,7 @@ const formatCards = [
     popular: true,
     mock: (
       <div className="overflow-hidden rounded-lg border border-border bg-background">
-        <div className="h-16 bg-gradient-to-br from-violet-500/20 via-primary/10 to-emerald-500/20" />
+        <div className="h-16 bg-gradient-to-br from-sky-400/20 via-primary/10 to-emerald-500/20" />
         <div className="p-2.5">
           <p className="text-[10px] text-muted-foreground">Sponsored</p>
           <p className="text-xs font-semibold">Notion AI — Your Second Brain</p>

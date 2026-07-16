@@ -45,7 +45,7 @@ export const integrationSteps = [
     icon: Bot,
     title: "Register your bot",
     description: "Create a bot in the Publisher Portal, grab an SDK key, and configure placement policy.",
-    gradient: "from-violet-500/20 to-violet-500/5",
+    gradient: "from-sky-400/20 to-sky-400/5",
   },
   {
     step: "03",

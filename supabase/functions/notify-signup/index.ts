@@ -58,7 +58,7 @@ serve(async (req) => {
       </table>
       <p style="margin-top:16px">
         <a href="https://supabase.com/dashboard/project/botnabfogcjrkpmdjgpr/auth/users"
-           style="background:#6C47FF;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:13px;">
+           style="background:#38bdf8;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:13px;">
           View in Supabase
         </a>
       </p>

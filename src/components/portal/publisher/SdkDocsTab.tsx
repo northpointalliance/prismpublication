@@ -335,7 +335,7 @@ const SdkDocsTab = () => (
               Image, headline, description, and CTA button. Highest engagement.
             </p>
             <div className="mt-3 overflow-hidden rounded-lg border border-border bg-background">
-              <div className="h-12 bg-gradient-to-br from-violet-500/20 via-primary/10 to-emerald-500/20" />
+              <div className="h-12 bg-gradient-to-br from-sky-400/20 via-primary/10 to-emerald-500/20" />
               <div className="p-2">
                 <p className="text-[10px] text-muted-foreground">Sponsored</p>
                 <p className="text-xs font-semibold">Notion AI — Your Second Brain</p>

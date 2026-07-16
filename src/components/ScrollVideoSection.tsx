@@ -121,7 +121,7 @@ const ScrollVideoSection = () => {
         >
           <div className="relative">
             {/* Soft glow behind */}
-            <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-violet-500/10 blur-2xl" aria-hidden="true" />
+            <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-400/10 blur-2xl" aria-hidden="true" />
 
             <div className="relative overflow-hidden rounded-2xl border border-border bg-slate-950 shadow-2xl">
               <video
