@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const exploreLinks = [
+  { label: "Signals", to: "/signals" },
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
   { label: "How It Works + Demo", to: "/demo" },
@@ -46,7 +47,7 @@ const Footer = () => {
               </Link>
 
               <p className="mt-4 max-w-sm text-base leading-relaxed text-muted-foreground">
-                Conversational ad infrastructure for publishers and advertisers who care about relevance, trust, and measurable outcomes.
+                Conversation signals for LLM apps, plus optional partner offers when the moment is right.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2 text-xs">
@@ -108,6 +109,7 @@ const Footer = () => {
           <div className="flex flex-col gap-3 border-t border-border/70 py-5 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
             <p>© {year} Prism Publication. All rights reserved.</p>
             <div className="flex items-center gap-5">
+              <Link to="/signals" className="transition-colors hover:text-foreground">Signals</Link>
               <Link to="/company" className="transition-colors hover:text-foreground">About</Link>
               <Link to="/docs" className="transition-colors hover:text-foreground">Docs</Link>
               <Link to="/blog" className="transition-colors hover:text-foreground">Blog</Link>

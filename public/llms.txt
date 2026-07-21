@@ -1,17 +1,18 @@
 # Prism
 
-> The ad network purpose-built for AI chatbot conversations. Publishers monetize chat sessions with context-aware native ads; advertisers reach high-intent users in real chatbot dialog.
+> Conversation signals for LLM apps. Score every turn, recommend the next action, and optionally monetize when the moment is right.
 
-Prism (prismpublication.com) is a conversational advertising platform. The SDK reads live chatbot conversation context and serves native sponsored recommendations that fit the moment, rather than g[...]
+Prism (prismpublication.com) helps teams that already run chatbots and AI assistants decide what to do next in a conversation: clarify, retrieve docs, escalate to a human, change tone, recommend a product, or show a partner offer.
 
 ## Core Pages
 
-- [Homepage](https://prismpublication.com/): Product overview, how it works, FAQ.
-- [Product](https://prismpublication.com/product): Full platform overview — SDK, context matching, controls.
+- [Homepage](https://prismpublication.com/): Prism Signals overview.
+- [Signals](https://prismpublication.com/signals): Turn scoring API for intent, confidence, emotion, stage, topic, and safety.
+- [Product](https://prismpublication.com/product): Full platform overview.
 - [Use cases](https://prismpublication.com/use-cases): Supported chatbot types and integration patterns.
-- [For Publishers](https://prismpublication.com/publishers): SDK install, pacing controls, revenue model.
-- [For Advertisers](https://prismpublication.com/advertisers): Intent-level targeting inside live chatbot conversations, brand-safety controls.
-- [Interactive Demo](https://prismpublication.com/demo): Two-minute simulated chatbot ad flow, no signup.
+- [For Publishers](https://prismpublication.com/publishers): Ad monetization for chatbot operators.
+- [For Advertisers](https://prismpublication.com/advertisers): Intent-level targeting inside live chatbot conversations.
+- [Interactive Demo](https://prismpublication.com/demo): Simulated chatbot flow.
 - [Documentation](https://prismpublication.com/docs): SDK reference and integration guides.
 - [Blog](https://prismpublication.com/blog): Strategy, monetization, and product updates.
 - [Ad Policy](https://prismpublication.com/ad-policy): Content and category restrictions.
@@ -20,16 +21,13 @@ Prism (prismpublication.com) is a conversational advertising platform. The SDK r
 
 ## Key Facts
 
-- Category: Conversational advertising / chatbot monetization SDK
-- Supported stacks: OpenAI / GPT, LangChain, Rasa, custom AI agents, GPT wrappers, customer support bots, e-commerce assistants
-- Ad formats: Native sponsored recommendations rendered inside the chatbot response
+- Primary product: Prism Signals (conversation decisioning for LLM apps)
+- Secondary product: Contextual ad marketplace for AI chat
+- Supported stacks: OpenAI / GPT, LangChain, Rasa, custom AI agents, customer support bots, e-commerce assistants
+- Signals: intent, confidence, emotion, stage, topics, safety flags, recommended action
 - Targeting: Real-time conversation context (no profile-based tracking)
 - Privacy: Contextual signals only; GDPR / CCPA aligned
-- Pricing model: CPM + CPC, monthly payouts to publishers
-- Publisher controls: Frequency caps, category filters, topic restrictions, pacing rules
-- Advertiser controls: Placement controls, brand-safety preferences, category targeting
-- Integration: SDK-first, three-line install, supports test mode before broader rollout
-- Google Ad Manager (GAM): The SDK can be used together with Google Ad Manager so teams using GAM can test our features without changing their ad stack. We provide runnable example integrations, test ad-unit IDs and sample pages, and step‑by‑step instructions for collecting results using your GAM reports. If you’d like to try a GAM pilot, open an issue labeled `beta-request` or email info@prismpublication.com.
+- Integration: SDK-first, REST `/api/signals/score`, same auth as ads
 
 ## Optional
 

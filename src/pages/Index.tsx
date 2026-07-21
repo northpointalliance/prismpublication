@@ -1,24 +1,6 @@
-import HeroSection from "@/components/HeroSection";
-import ScrollVideoSection from "@/components/ScrollVideoSection";
-import HowItWorksSection from "@/components/HowItWorksSection";
-import AudienceSection from "@/components/AudienceSection";
-import StatsSection from "@/components/StatsSection";
-import FAQSection from "@/components/FAQSection";
-import CTASection from "@/components/CTASection";
-import SiteShell from "@/components/SiteShell";
+import Signals from "@/pages/Signals";
 
-const Index = () => {
-  return (
-    <SiteShell>
-      <HeroSection />
-      <ScrollVideoSection />
-      <HowItWorksSection />
-      <AudienceSection />
-      <StatsSection />
-      <FAQSection />
-      <CTASection />
-    </SiteShell>
-  );
-};
+/** Homepage: Prism Signals is the primary offer. */
+const Index = () => <Signals />;
 
 export default Index;

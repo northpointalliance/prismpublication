@@ -38,6 +38,8 @@ supabase functions deploy api --project-ref botnabfogcjrkpmdjgpr
 
 4. Rebuild/publish SDK when ready (`packages/sdk`) so `scoreTurn` is on npm. Until then, publishers can call REST `/api/signals/score` with the same HMAC auth as `/api/ads`.
 
+5. **Public pages:** homepage `/` and `/signals` share the Signals landing. `/preview/signals` redirects to `/`. Nav + footer link to Signals. Sitemap, `llms.txt`, and `index.html` SEO lead with Signals.
+
 ## Smoke test
 
 ```bash

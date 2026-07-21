@@ -1,62 +1,64 @@
 # Prism — Full LLM Reference
 
-> The ad network purpose-built for AI chatbot conversations.
+> Conversation signals for LLM apps, plus optional partner offers when the moment is right.
 
 ## What Prism is
 
-Prism is a conversational advertising platform that turns AI chatbot conversations into a monetization channel. The Prism SDK reads the live conversation context (topic, intent, recent turns) and serves a native sponsored recommendation that fits the moment, rendered inline in the chatbot's response. This avoids interruptive banners while reaching users at the point of high purchase intent.
+Prism helps teams that already run AI chatbots decide what to do on each turn. **Prism Signals** scores conversations for intent, confidence, emotion, decision stage, topic relevance, and safety, then returns a recommended action: clarify, retrieve documents, escalate to a human, change tone, recommend a product, or show a contextual offer.
 
-The platform serves two sides:
+The optional **marketplace** layer can return a partner suggestion when Signals says the moment is right. Ads are not the front door; judgment is.
 
-- **Publishers**: chatbot operators (consumer assistants, support bots, e-commerce agents, vertical AI tools) who want a non-disruptive revenue stream.
-- **Advertisers**: brands and performance marketers who want to reach users mid-conversation, when they are actively asking questions about a category.
+Primary buyers:
 
-## How it works
+- **LLM app operators**: customer support bots, in-product assistants, coaching and lifestyle bots that need turn-level decisioning.
+- **Publishers** (optional): chatbot operators who want a non-disruptive revenue stream when action is `offer`.
+- **Advertisers** (optional): brands who want high-intent conversational inventory.
 
-1. **Integrate the SDK** — Drop Prism into any chatbot framework with a small code addition. Compatible with OpenAI / GPT, LangChain, Rasa, and any custom agent that emits text turns.
-2. **Context-aware ad matching** — On each turn, Prism analyzes the topic and intent in real-time and selects an ad that matches the moment. No user profile tracking — context only.
-3. **Render in the response** — The ad is rendered as a native card or text recommendation inside the bot's reply, clearly labeled as Sponsored.
-4. **Earn on impressions and engagement** — Publishers receive CPM + CPC revenue, paid out monthly. Advertisers only pay for genuine engagement.
+## How Signals works
 
-## Publisher details
+1. **Send recent turns** — Call `POST /api/signals/score` with the last 1–12 messages.
+2. **Receive signals + action** — Heuristics always run; optional LLM upgrade per bot for hybrid scoring.
+3. **Act in your stack** — Wire clarify / retrieve / escalate / tone_shift / recommend / offer into your existing bot logic.
+4. **Optional monetization** — When `includeOffer` is true and action is `offer`, Prism may return a matched native recommendation.
+
+## Signals schema
+
+- intent: research | compare | buy | support | other
+- confidence: 0..1
+- emotion: neutral | curious | anxious | frustrated | positive
+- stage: explore | consider | decide | post_purchase
+- topics: string[]
+- safety: { ok, flags[] }
+- action: clarify | retrieve | escalate | tone_shift | recommend | offer | none
+
+## Publisher marketplace details
 
 - Install the SDK with a small code change in the chatbot's response pipeline.
 - Set ad frequency caps per session, category filters, and pacing rules per chatbot.
 - Restrict topics or block categories to align with brand and audience expectations.
-- Test mode before enabling broader traffic.
 - Track impressions, clicks, and quality signals in the publisher dashboard.
 - Monthly payouts via PayPal once minimum threshold is reached.
 
-## Advertiser details
-
-- Campaigns target conversation context and topic intent, not demographic profiles.
-- Configure placement and category controls per campaign.
-- Brand-safety preferences: block adjacency to sensitive topics, restrict creative types.
-- Operational visibility into delivery and engagement signals.
-
 ## Privacy and compliance
 
-Prism is designed around contextual ad matching. The platform does not require persistent user profiles or cross-site identifiers. Publishers retain control over what conversation signals (if any) are persisted. The design supports privacy-first workflows appropriate to the publisher's regulatory environment (GDPR, CCPA, and similar).
+Prism is designed around contextual matching. The platform does not require persistent user profiles or cross-site identifiers. Safety flags help suppress monetization and escalate sensitive turns. The design supports privacy-first workflows (GDPR, CCPA, and similar).
 
 ## FAQ
 
-### Will ads hurt my chatbot user experience?
-Not if they are paced correctly. Prism is built for contextual placements with frequency controls so teams can keep the conversation quality high while testing monetization safely.
+### What is Prism Signals?
+A turn-scoring API for LLM apps. It returns conversation signals and a recommended next action so your bot can clarify, retrieve, escalate, change tone, recommend, or optionally show an offer.
+
+### Who is Signals for?
+Teams that already run LLMs in customer support, in-product assistants, coaching bots, and similar conversational products.
+
+### Do I have to run ads?
+No. Ads are optional. When action is `offer` and you opt in with `includeOffer`, Prism can return a partner suggestion.
 
 ### How long does integration take?
-Most teams can get the SDK running quickly, then iterate on placement and pacing rules over time. You can start in a test mode before enabling broader traffic.
+Most teams can call `/api/signals/score` from an existing response handler quickly, then wire actions into clarify / escalate / RAG paths.
 
-### Which chatbot stacks are supported?
-Prism can be used with GPT-based assistants, support bots, custom agents, and API-driven chat systems. The implementation model is SDK-first with flexible serving logic.
-
-### How do advertisers target campaigns?
-Campaigns are matched to conversation context and topic intent instead of generic banner inventory. Teams can configure placement and category controls based on campaign goals.
-
-### Can publishers control what gets shown?
-Yes. Publishers can apply frequency limits, topic restrictions, and guardrails so sponsored content aligns with brand standards and user expectations.
-
-### What about privacy and compliance requirements?
-Prism is designed around contextual ad matching and operational controls so teams can implement privacy-first workflows appropriate to their regulatory environment.
+### Which stacks are supported?
+Any stack that can make an HTTPS request: GPT-based assistants, support bots, custom agents, LangChain, Rasa, and similar.
 
 ## Brand identity
 
@@ -68,6 +70,7 @@ Prism is designed around contextual ad matching and operational controls so team
 ## Index
 
 - Homepage: https://prismpublication.com/
+- Signals: https://prismpublication.com/signals
 - Product: https://prismpublication.com/product
 - Use cases: https://prismpublication.com/use-cases
 - Publishers: https://prismpublication.com/publishers

@@ -10,14 +10,6 @@ import {
   UserRound,
 } from "lucide-react";
 
-const PreviewBanner = () => (
-  <div className="sticky top-0 z-50 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-950">
-    <strong className="font-semibold">Preview only.</strong>{" "}
-    This page is not linked from the main site. Open it to review copy and layout before going live.{" "}
-    <span className="font-mono text-sm text-amber-800">/preview/signals</span>
-  </div>
-);
-
 const signalRows = [
   { label: "Intent", value: "support", tone: "bg-sky-100 text-sky-800" },
   { label: "Confidence", value: "0.41", tone: "bg-slate-100 text-slate-700" },
@@ -75,11 +67,10 @@ const audiences = [
   },
 ];
 
-const SignalsPreview = () => {
+/** Public Prism Signals landing — homepage and /signals. */
+const Signals = () => {
   return (
     <SiteShell>
-      <PreviewBanner />
-
       {/* Hero */}
       <section className="relative overflow-hidden pt-28 pb-20">
         <div className="absolute inset-0 grid-pattern opacity-50" aria-hidden="true" />
@@ -115,12 +106,11 @@ const SignalsPreview = () => {
               </Link>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Preview positioning. Ads are optional. Judgment is the product.
+              Ads are optional. Judgment is the product.
             </p>
           </div>
 
-          {/* Live-looking score panel */}
-          <div className="mx-auto mt-14 max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="mx-auto mt-14 max-w-xl">
             <div className="rounded-2xl border border-border bg-card/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
                 <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -152,7 +142,6 @@ const SignalsPreview = () => {
         </div>
       </section>
 
-      {/* Who it's for */}
       <section className="border-t border-border bg-secondary/30 py-20">
         <div className="container mx-auto px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -172,7 +161,6 @@ const SignalsPreview = () => {
         </div>
       </section>
 
-      {/* What the bot can do */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -195,7 +183,6 @@ const SignalsPreview = () => {
         </div>
       </section>
 
-      {/* How it works */}
       <section className="border-t border-border bg-secondary/20 py-20">
         <div className="container mx-auto px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -233,7 +220,6 @@ const SignalsPreview = () => {
         </div>
       </section>
 
-      {/* Contrast with ads */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="mx-auto max-w-3xl">
@@ -242,14 +228,14 @@ const SignalsPreview = () => {
             </h2>
             <div className="mt-10 grid gap-8 md:grid-cols-2">
               <div className="space-y-2 border-l-2 border-primary pl-5">
-                <h3 className="font-semibold">Signals (this offer)</h3>
+                <h3 className="font-semibold">Signals</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   Sold to companies that already run LLMs. Value is better conversations: fewer bad handoffs,
                   clearer next steps, safer moments.
                 </p>
               </div>
               <div className="space-y-2 border-l-2 border-border pl-5">
-                <h3 className="font-semibold">Marketplace (existing)</h3>
+                <h3 className="font-semibold">Marketplace</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   When action is offer and you opt in, Prism can still return a contextual partner suggestion.
                   Same pipe. Different buyer story.
@@ -260,29 +246,27 @@ const SignalsPreview = () => {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="border-t border-border bg-gradient-to-b from-primary/5 to-transparent py-20">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Review this pitch, then we go live.
+            Add judgment to the bots you already run.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            This route is a private preview. When you approve the story and layout, we can promote it to a public
-            URL and link it from the nav.
+            Start with Signals. Add partner offers when the conversation is ready. One SDK, two layers.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               to="/contact"
               className="btn-sweep inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
             >
-              Contact
+              Get started
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/publishers"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold"
             >
-              Compare to Publishers (ads) page
+              Explore ad monetization
             </Link>
           </div>
         </div>
@@ -291,4 +275,4 @@ const SignalsPreview = () => {
   );
 };
 
-export default SignalsPreview;
+export default Signals;

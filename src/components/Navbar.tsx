@@ -6,9 +6,9 @@ import { usePortalAuth } from "@/components/portal/PortalAuthProvider";
 import { routeForRole } from "@/lib/portal-auth";
 
 const primaryLinks = [
+  { label: "Signals", to: "/signals" },
   { label: "Publishers", to: "/publishers" },
   { label: "Advertisers", to: "/advertisers" },
-  { label: "How It Works", to: "/demo" },
   { label: "Company", to: "/company" },
 ];
 
