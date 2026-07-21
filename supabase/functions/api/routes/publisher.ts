@@ -130,6 +130,7 @@ publisher.get("/bots", requirePortalUser, async (c) => {
         fillRateHint: bot.fillRateHint,
         sdkErrorsHint: bot.sdkErrorsHint,
         sdkKeys: (keysByBot.get(bot.id) || []).map(toPublicSdkKey),
+        placementPolicy: bot.placementPolicy ?? null,
         createdAt: bot.createdAt,
         updatedAt: bot.updatedAt,
       })),
@@ -258,6 +259,48 @@ publisher.get("/bots/:id/metrics", requirePortalUser, async (c) => {
   } catch (err) {
     console.error("Publisher bot metrics failed", err);
     return c.json({ error: "Failed to fetch bot metrics" }, 500);
+  }
+});
+
+// GET /api/publisher/signals/usage?days=30 — Signals score call metering for the org.
+publisher.get("/signals/usage", requirePortalUser, async (c) => {
+  try {
+    const workspace = await requirePublisherWorkspace(c.get("portalUser")!.id);
+    if (!workspace) return c.json({ error: "Bot developer workspace required" }, 403);
+    const days = Math.min(Math.max(Number(c.req.query("days")) || 30, 1), 90);
+    const since = new Date(Date.now() - days * DAY_MS);
+    const orgId = workspace.organization.id;
+
+    const [totals, byDay, byAction] = await Promise.all([
+      sql`
+        SELECT count(*)::int AS total,
+               coalesce(sum(CASE WHEN "createdAt" >= ${new Date(Date.now() - 7 * DAY_MS)} THEN 1 ELSE 0 END), 0)::int AS last7d,
+               coalesce(sum(CASE WHEN "usedLlm" THEN 1 ELSE 0 END), 0)::int AS llmCalls
+        FROM signal_events
+        WHERE "organizationId" = ${orgId} AND "createdAt" >= ${since}`,
+      sql`
+        SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS day, count(*)::int AS count
+        FROM signal_events
+        WHERE "organizationId" = ${orgId} AND "createdAt" >= ${since}
+        GROUP BY 1 ORDER BY 1 ASC`,
+      sql`
+        SELECT "action", count(*)::int AS count
+        FROM signal_events
+        WHERE "organizationId" = ${orgId} AND "createdAt" >= ${since}
+        GROUP BY 1 ORDER BY count DESC`,
+    ]);
+
+    return c.json({
+      days,
+      total: totals[0]?.total ?? 0,
+      last7d: totals[0]?.last7d ?? 0,
+      llmCalls: totals[0]?.llmCalls ?? 0,
+      byDay,
+      byAction,
+    });
+  } catch (err) {
+    console.error("Publisher signals usage failed", err);
+    return c.json({ error: "Failed to load signals usage" }, 500);
   }
 });
 

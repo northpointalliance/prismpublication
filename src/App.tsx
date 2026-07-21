@@ -33,6 +33,7 @@ const AdvertiserPortal = lazy(() => import("./pages/AdvertiserPortal"));
 const PublisherPortal = lazy(() => import("./pages/PublisherPortal"));
 const AdminPortal = lazy(() => import("./pages/AdminPortal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const SignalsPreview = lazy(() => import("./pages/SignalsPreview"));
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/demo" element={<Demo />} />
+              <Route path="/preview/signals" element={<SignalsPreview />} />
               <Route path="/app/login" element={<AppLogin />} />
               <Route path="/app" element={<Navigate to="/app/login" replace />} />
 

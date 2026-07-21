@@ -119,11 +119,23 @@ export const advertiserCampaignUpdateSchema = advertiserCampaignCreateSchema
   .partial()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
 
+export const placementPolicySchema = z
+  .object({
+    signals: z
+      .object({
+        useLlm: z.boolean().optional(),
+      })
+      .optional(),
+    signalsUseLlm: z.boolean().optional(),
+  })
+  .catchall(metadataValueSchema)
+  .optional();
+
 export const publisherBotCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   environment: z.enum(["development", "staging", "production"]).default("production"),
   health: z.enum(["healthy", "warning", "degraded"]).default("healthy"),
-  placementPolicy: z.record(z.string().max(120), metadataValueSchema).optional(),
+  placementPolicy: placementPolicySchema,
 });
 
 export const publisherBotUpdateSchema = z
@@ -132,10 +144,25 @@ export const publisherBotUpdateSchema = z
     environment: z.enum(["development", "staging", "production"]).optional(),
     health: z.enum(["healthy", "warning", "degraded"]).optional(),
     isActive: z.boolean().optional(),
-    placementPolicy: z.record(z.string().max(120), metadataValueSchema).optional(),
+    placementPolicy: placementPolicySchema,
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
 
 export const publisherCreateSdkKeySchema = z.object({
   label: z.string().trim().min(2).max(60).default("Primary"),
+});
+
+export const signalsScoreSchema = z.object({
+  botId: z.string().trim().min(2).max(120),
+  messages: z
+    .array(
+      z.object({
+        role: z.string().trim().min(1).max(40),
+        content: z.string().max(8000),
+      }),
+    )
+    .min(1)
+    .max(12),
+  includeOffer: z.boolean().optional().default(false),
+  format: z.enum(["text", "card", "banner"]).optional().default("card"),
 });

@@ -129,12 +129,14 @@ Key files in the demo repo:
 Full backend ops (secrets, logs, typecheck): [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## Function secrets (Supabase → Edge Functions → Secrets)
-Custom: `ADMIN_API_KEY`, `PRISM_API_KEY`, `DB_URL` (pooled 6543), `API_CORS_ORIGIN`, `REQUIRE_SDK_HMAC`.
+Custom: `ADMIN_API_KEY`, `PRISM_API_KEY`, `DB_URL` (pooled 6543), `API_CORS_ORIGIN`, `REQUIRE_SDK_HMAC`, optional `LOVABLE_API_KEY` (Signals hybrid LLM scoring).
 Auto-injected by Supabase: `SUPABASE_URL`, `SUPABASE_DB_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`.
 PayPal creds are read from the `platform_settings` table (Admin → Settings), not secrets.
 
+**Publisher Signals (July 2026)** — `POST /api/signals/score` scores turns (heuristic always; optional LLM). Metered in `signal_events`. Docs: [docs/SIGNALS.md](docs/SIGNALS.md).
+
 **`REQUIRE_SDK_HMAC` — set to `false` (June 2026)**
-Controls whether `POST /api/ads` and `POST /api/track/:eventType` enforce HMAC-SHA256 request signing.
+Controls whether `POST /api/ads`, `POST /api/track/:eventType`, and `POST /api/signals/score` enforce HMAC-SHA256 request signing.
 Default behaviour (when absent or any value other than `"false"`) is to **require** the `X-Prism-Timestamp` and `X-Prism-Signature` headers. Set to `"false"` to allow calls with a Bearer SDK key only — no signature headers needed. This is required for Google Ad Manager custom creatives, which run in a sandboxed iframe and cannot compute HMAC signatures. Re-enable by setting to `"true"` or deleting the secret — but note this will break any GAM creatives that don't send signature headers.
 
 ## Database & schema changes

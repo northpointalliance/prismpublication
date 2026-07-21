@@ -111,6 +111,46 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+export type SignalIntent = 'research' | 'compare' | 'buy' | 'support' | 'other';
+export type SignalEmotion = 'neutral' | 'curious' | 'anxious' | 'frustrated' | 'positive';
+export type SignalStage = 'explore' | 'consider' | 'decide' | 'post_purchase';
+export type SignalAction =
+  | 'clarify'
+  | 'retrieve'
+  | 'escalate'
+  | 'tone_shift'
+  | 'recommend'
+  | 'offer'
+  | 'none';
+
+export interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+export interface ConversationSignals {
+  intent: SignalIntent;
+  confidence: number;
+  emotion: SignalEmotion;
+  stage: SignalStage;
+  topics: string[];
+  safety: { ok: boolean; flags: string[] };
+}
+
+export interface ScoreTurnRequest {
+  messages: ChatMessage[];
+  includeOffer?: boolean;
+  format?: 'text' | 'card' | 'banner';
+}
+
+export interface ScoreTurnResult {
+  signals: ConversationSignals;
+  action: SignalAction;
+  actionReason: string;
+  engine: 'heuristic' | 'hybrid';
+  offer?: Ad;
+}
+
 // ============================================
 // Main SDK Class
 // ============================================
@@ -219,6 +259,38 @@ export class PrismAds {
   async displayAd(context: AdContext = {}): Promise<Ad | null> {
     const ads = await this.fetchAds(context);
     return ads.length > 0 ? ads[0] : null;
+  }
+
+  /**
+   * Score the latest conversation turns and get a recommended next action.
+   * When includeOffer is true and action is "offer", may also return a matched ad.
+   */
+  async scoreTurn(input: ScoreTurnRequest): Promise<ScoreTurnResult | null> {
+    try {
+      const body = {
+        botId: this.botId,
+        messages: input.messages,
+        includeOffer: input.includeOffer ?? false,
+        format: input.format || this.adFormat,
+      };
+      const response = await this.postSigned<ApiResponse<ScoreTurnResult>>('/signals/score', body);
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      console.warn('Prism: Signals score returned no data', response.data.error);
+      return null;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          throw new Error('Prism: Invalid API key');
+        }
+        if (error.response?.status === 429) {
+          throw new Error('Prism: Rate limit exceeded');
+        }
+      }
+      console.error('Prism: Failed to score turn', error);
+      return null;
+    }
   }
 
   /**

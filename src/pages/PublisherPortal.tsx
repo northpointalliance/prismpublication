@@ -12,6 +12,7 @@ import PayoutsPanel from "@/components/portal/publisher/PayoutsPanel";
 import BotDeleteDialog from "@/components/portal/publisher/BotDeleteDialog";
 import SdkDocsTab from "@/components/portal/publisher/SdkDocsTab";
 import AdPreviewPanel from "@/components/portal/publisher/AdPreviewPanel";
+import SignalsUsageCard, { SignalsUsageData } from "@/components/portal/publisher/SignalsUsageCard";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,7 @@ const PublisherPortal = () => {
   const [paypalEmailDraft, setPaypalEmailDraft] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [signalsUsage, setSignalsUsage] = useState<SignalsUsageData | null>(null);
 
   // ── loaders ────────────────────────────────────────────────────────────────
 
@@ -78,6 +80,16 @@ const PublisherPortal = () => {
       if (res?.paypalEmail) setPaypalEmailDraft(res.paypalEmail);
     } catch {
       // non-fatal
+    }
+  }, []);
+
+  const loadSignalsUsage = useCallback(async (email: string) => {
+    try {
+      const headers = await getPortalHeaders(email);
+      const res = await apiRequest<SignalsUsageData>("/publisher/signals/usage?days=30", undefined, headers);
+      setSignalsUsage(res);
+    } catch {
+      // non-fatal until table is live everywhere
     }
   }, []);
 
@@ -102,8 +114,9 @@ const PublisherPortal = () => {
     const ref = { current: false };
     void loadPortalData(user.email, ref);
     void loadPayoutBalance(user.email);
+    void loadSignalsUsage(user.email);
     return () => { ref.current = true; };
-  }, [user?.email, loadPayoutBalance]);
+  }, [user?.email, loadPayoutBalance, loadSignalsUsage]);
 
   // ── bot actions ────────────────────────────────────────────────────────────
 
@@ -153,6 +166,29 @@ const PublisherPortal = () => {
       await loadPortalData(user.email);
     } catch (err) { setError(err instanceof Error ? err.message : "Failed to delete bot"); }
     finally { setSaving(false); }
+  };
+
+  const toggleLlmScoring = async (bot: BotListItem, useLlm: boolean) => {
+    if (!user?.email) return;
+    setSaving(true); setError(""); setNotice("");
+    try {
+      const headers = await getPortalHeaders(user.email);
+      const nextPolicy = {
+        ...(bot.placementPolicy && typeof bot.placementPolicy === "object" ? bot.placementPolicy : {}),
+        signals: { useLlm },
+      };
+      await apiRequest(
+        `/publisher/bots/${bot.id}`,
+        { method: "PATCH", body: JSON.stringify({ placementPolicy: nextPolicy }) },
+        headers,
+      );
+      setBots((prev) => prev.map((b) => (b.id === bot.id ? { ...b, placementPolicy: nextPolicy } : b)));
+      setNotice(useLlm ? `LLM scoring enabled for ${bot.name}.` : `LLM scoring disabled for ${bot.name}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update Signals policy");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const savePaypalEmail = async () => {
@@ -262,8 +298,10 @@ const PublisherPortal = () => {
               onCopyToken={(token, label) => void copyToken(token, label)}
               onCreateKey={(bot) => void createKey(bot)}
               onDeleteBot={setBotToDelete}
+              onToggleLlmScoring={(bot, useLlm) => void toggleLlmScoring(bot, useLlm)}
             />
             <div className="space-y-4">
+              <SignalsUsageCard usage={signalsUsage} loading={loading} />
               <RegisterBotPanel
                 botName={botName}
                 botEnvironment={botEnvironment}

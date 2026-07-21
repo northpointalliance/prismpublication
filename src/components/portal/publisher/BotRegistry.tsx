@@ -20,6 +20,11 @@ export interface BotListItem {
   health: "healthy" | "warning" | "degraded";
   isActive: boolean;
   sdkKeys: SdkKey[];
+  placementPolicy?: {
+    signals?: { useLlm?: boolean };
+    signalsUseLlm?: boolean;
+    [key: string]: unknown;
+  } | null;
 }
 
 export interface BotMetrics {
@@ -40,6 +45,7 @@ interface Props {
   onCopyToken: (token: string, label: string) => void;
   onCreateKey: (bot: BotListItem) => void;
   onDeleteBot: (bot: BotListItem) => void;
+  onToggleLlmScoring: (bot: BotListItem, useLlm: boolean) => void;
 }
 
 const environmentTone: Record<BotListItem["environment"], string> = {
@@ -56,7 +62,7 @@ const healthColor: Record<BotListItem["health"], string> = {
 
 const BotRegistry = ({
   bots, loading, metricsByBotId, latestToken, saving,
-  formatCurrency, formatDateTime, onCopyToken, onCreateKey, onDeleteBot,
+  formatCurrency, formatDateTime, onCopyToken, onCreateKey, onDeleteBot, onToggleLlmScoring,
 }: Props) => (
   <Card className="border-border/80 bg-card/95">
     <CardHeader>
@@ -70,6 +76,7 @@ const BotRegistry = ({
         const activeKeys = bot.sdkKeys.filter((k) => !k.revokedAt);
         const currentKey = activeKeys[0] || null;
         const hasNewToken = latestToken?.botId === bot.botId;
+        const useLlm = Boolean(bot.placementPolicy?.signals?.useLlm ?? bot.placementPolicy?.signalsUseLlm);
         return (
           <div key={bot.id} className="rounded-2xl border border-border bg-background/80 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -115,6 +122,23 @@ const BotRegistry = ({
                   <p className="mt-0.5 font-medium text-foreground">{value}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+              <div>
+                <p className="text-xs font-semibold text-foreground">Use LLM scoring (Signals)</p>
+                <p className="text-[11px] text-muted-foreground">Heuristics always run. LLM upgrade when enabled.</p>
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-foreground">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-border"
+                  checked={useLlm}
+                  disabled={saving}
+                  onChange={(e) => onToggleLlmScoring(bot, e.target.checked)}
+                />
+                {useLlm ? "On" : "Off"}
+              </label>
             </div>
 
             <div className="mt-3 rounded-xl border border-border bg-card">

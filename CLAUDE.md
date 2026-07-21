@@ -122,9 +122,9 @@ cd server && npx prisma migrate dev --name <migration-name>
 
 ---
 
-## Database (13 tables)
+## Database (14 tables)
 
-`leads`, `users`, `organizations`, `organization_members`, `ads`, `ad_events`, `publisher_bots`, `bot_sdk_keys`, `wallet_transactions`, `payout_requests`, `platform_settings`, `audit_logs`, `blog_posts`
+`leads`, `users`, `organizations`, `organization_members`, `ads`, `ad_events`, `publisher_bots`, `bot_sdk_keys`, `wallet_transactions`, `payout_requests`, `platform_settings`, `audit_logs`, `blog_posts`, `signal_events`
 
 Schema in `server/prisma/schema.prisma`. Runtime queries are raw parameterized SQL in `supabase/functions/_shared/db.ts` and route files — Prisma client is **not** used at runtime.
 
@@ -157,6 +157,7 @@ _This section is timestamped per entry going forward — add `(as of YYYY-MM-DD 
 5. `server/src/` (Express) is legacy and not running — don't modify it.
 6. Publisher/advertiser signup was failing with "Error sending confirmation email" — root cause was an unverified Resend sending domain (`prismpublication.com`), now verified and resolved. Admin new-signup alerts are handled by a pre-existing Postgres trigger `on_publisher_signup` on `public.organizations` (not the `notify-signup` Edge Function — that's currently deployed but unused). That trigger's Resend key was hardcoded in plaintext and has been moved to Supabase Vault. **Still to confirm:** a real signup/password-reset attempt from the live login page, to verify Supabase Auth's own SMTP now works post-verification. Full writeup: `docs/SESSION-2026-07-03-signup-email-debug.md`.
 7. _(as of 2026-07-03 19:10 IDT)_ **Publisher onboarding was badly broken for real developers.** The SDK npm package (`@prism/sdk`) had never been published — `npm install` failed for everyone. Renamed to `@prismpublication/sdk` (matches Dan's npm org) and Dan is mid-publish (hit PowerShell script-policy block, then npm's 2FA requirement, then a burned `1.0.0` version — now on `1.0.1`, not yet confirmed live). Also fixed: SDK Docs tab REST examples pointed at a non-existent domain (`api.prism.so` → real Supabase URL). Still open: duplicate-workspace-creation bug (confirmed via DB query, not yet fixed), no in-portal step-by-step onboarding guidance on the Publisher Portal dashboard. **Also: tonight's code changes (rename + doc fixes) are saved to disk but not committed to git** — a stuck `.git/index.lock` blocked commits from both the Cowork sandbox and Dan's own machine; needs manual resolution (check for a stray process, OneDrive/Dropbox sync, or antivirus holding the file). Full writeup: `docs/SESSION-2026-07-03-signup-email-debug.md` (Part 2).
+8. _(as of 2026-07-21)_ **Publisher Signals MVP** added: `POST /api/signals/score`, `signal_events` metering, SDK `scoreTurn`, portal LLM toggle + usage card. Hybrid scoring (heuristics always; optional Lovable/Gemini when `placementPolicy.signals.useLlm`). No paywall yet. Deploy `api` function + see [docs/SIGNALS.md](docs/SIGNALS.md).
 
 ---
 

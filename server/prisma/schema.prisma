@@ -321,3 +321,22 @@ model BotSdkKey {
   @@index([botId, revokedAt])
   @@map("bot_sdk_keys")
 }
+
+/// Usage metering for publisher Signals (POST /api/signals/score). No paywall in MVP.
+model SignalEvent {
+  id             String   @id @default(cuid())
+  botId          String
+  organizationId String?
+  engine         String
+  action         String
+  intent         String?
+  stage          String?
+  safetyOk       Boolean  @default(true)
+  usedLlm        Boolean  @default(false)
+  latencyMs      Int?
+  createdAt      DateTime @default(now())
+
+  @@index([botId, createdAt])
+  @@index([organizationId, createdAt])
+  @@map("signal_events")
+}

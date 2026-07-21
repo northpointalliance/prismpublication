@@ -85,6 +85,57 @@ curl -X POST https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/track/imp
     "topic": "productivity"
   }'`;
 
+const signalsJsSnippet = `import { PrismAds } from "@prismpublication/sdk";
+
+const prism = new PrismAds({
+  apiKey: process.env.PRISM_SDK_KEY,
+  botId: "your-bot-public-id",
+});
+
+const result = await prism.scoreTurn({
+  messages: [
+    { role: "user", content: "I'm comparing options and ready to buy a plan today." },
+  ],
+  includeOffer: true, // optional: return an ad when action is "offer"
+});
+
+// result.signals → intent, confidence, emotion, stage, topics, safety
+// result.action  → clarify | retrieve | escalate | tone_shift | recommend | offer | none
+if (result?.action === "offer" && result.offer) {
+  await prism.trackImpression(result.offer.id);
+}`;
+
+const signalsCurlSnippet = `# Score a conversation turn
+curl -X POST https://botnabfogcjrkpmdjgpr.supabase.co/functions/v1/api/signals/score \\
+  -H "Authorization: Bearer YOUR_SDK_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Prism-Timestamp: $(date +%s)" \\
+  -H "X-Prism-Signature: sha256=HMAC_HEX" \\
+  -d '{
+    "botId": "your-bot-public-id",
+    "messages": [
+      { "role": "user", "content": "What should I look for before I buy?" }
+    ],
+    "includeOffer": false
+  }'`;
+
+const signalsResponseSnippet = `{
+  "success": true,
+  "data": {
+    "signals": {
+      "intent": "research",
+      "confidence": 0.72,
+      "emotion": "curious",
+      "stage": "explore",
+      "topics": ["buy", "look"],
+      "safety": { "ok": true, "flags": [] }
+    },
+    "action": "retrieve",
+    "actionReason": "Early exploration. Retrieve helpful documents or explain concepts.",
+    "engine": "heuristic"
+  }
+}`;
+
 // ── Reusable components ──────────────────────────────────────────────────────
 
 const CodeBlock = ({ title, children }: { title?: string; children: string }) => (
@@ -120,6 +171,7 @@ const sections = [
   { id: "quick-start", label: "Quick Start" },
   { id: "react", label: "React Hooks" },
   { id: "rest-api", label: "REST API" },
+  { id: "signals", label: "Signals" },
   { id: "tracking", label: "Event Tracking" },
   { id: "formats", label: "Ad Formats" },
   { id: "auth", label: "Authentication" },
@@ -259,6 +311,46 @@ const SdkDocsTab = () => (
             <ParamCard name="clickUrl" type="string" description="Destination URL on ad click." />
             <ParamCard name="tags" type="string[]" description="Topic tags from the campaign." />
           </div>
+        </div>
+      </section>
+
+      {/* ── Signals ────────────────────────────────────────────────── */}
+      <section id="signals">
+        <h3 className="text-lg font-bold">Signals (conversation scoring)</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Score each turn for intent, confidence, emotion, stage, topics, and safety. Get a recommended next action
+          (clarify, retrieve, escalate, tone shift, recommend, offer, or none). Niche-agnostic. Ads are optional when
+          action is <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono text-primary">offer</code>.
+        </p>
+
+        <div className="mt-4">
+          <CodeBlock title="scoreTurn.js">{signalsJsSnippet}</CodeBlock>
+        </div>
+
+        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-600">POST</span>
+              <p className="text-sm font-semibold text-foreground">/api/signals/score</p>
+            </div>
+            <CodeBlock title="signals.sh">{signalsCurlSnippet}</CodeBlock>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="rounded bg-blue-500/10 px-2 py-0.5 text-[10px] font-mono font-semibold text-blue-600">200</span>
+              <p className="text-sm font-semibold text-foreground">Response</p>
+            </div>
+            <CodeBlock title="signals-response.json">{signalsResponseSnippet}</CodeBlock>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ParamCard name="messages" type="array required" description="Last 1–12 turns as { role, content }. Scoring uses the latest user message plus context." />
+          <ParamCard name="includeOffer" type="boolean" description="If true and action is offer, may return a matched ad in data.offer." />
+          <ParamCard name="action" type="string" description="Recommended next step for your bot to take. Prism does not execute it for you." />
+          <ParamCard name="engine" type="string" description='"heuristic" by default. "hybrid" when LLM scoring is enabled on the bot.' />
+          <ParamCard name="safety.flags" type="string[]" description="Crisis, medical, self-harm, violence, illegal, and similar flags when detected." />
+          <ParamCard name="LLM toggle" type="portal" description="Enable Use LLM scoring per bot in the Publisher dashboard. Requires LOVABLE_API_KEY on the API." />
         </div>
       </section>
 
