@@ -14,7 +14,7 @@ const PreviewBanner = () => (
   <div className="sticky top-0 z-50 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-950">
     <strong className="font-semibold">Preview only.</strong>{" "}
     This page is not linked from the main site. Open it to review copy and layout before going live.{" "}
-    <span className="font-mono text-xs text-amber-800">/preview/signals</span>
+    <span className="font-mono text-sm text-amber-800">/preview/signals</span>
   </div>
 );
 
@@ -114,7 +114,7 @@ const SignalsPreview = () => {
                 Read the API shape
               </Link>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
+            <p className="mt-4 text-sm text-muted-foreground">
               Preview positioning. Ads are optional. Judgment is the product.
             </p>
           </div>
@@ -123,28 +123,28 @@ const SignalsPreview = () => {
           <div className="mx-auto mt-14 max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="rounded-2xl border border-border bg-card/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Turn score
                 </p>
-                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-mono text-primary">
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-mono text-primary">
                   engine: heuristic
                 </span>
               </div>
-              <p className="mt-3 rounded-lg bg-muted/60 px-3 py-2 text-sm text-foreground">
+              <p className="mt-3 rounded-lg bg-muted/60 px-3 py-2 text-base text-foreground">
                 <span className="font-medium text-muted-foreground">User: </span>
                 This still isn&apos;t fixed and I&apos;ve already waited two days. Can someone actually help?
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {signalRows.map((row) => (
                   <div key={row.label} className="rounded-lg border border-border/80 bg-background px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{row.label}</p>
-                    <p className={`mt-1 inline-block rounded-md px-1.5 py-0.5 text-xs font-mono ${row.tone}`}>
+                    <p className="text-sm uppercase tracking-wide text-muted-foreground">{row.label}</p>
+                    <p className={`mt-1 inline-block rounded-md px-1.5 py-0.5 text-sm font-mono ${row.tone}`}>
                       {row.value}
                     </p>
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 Reason: user emotion is frustrated. Soften tone before selling or advancing.
               </p>
             </div>
