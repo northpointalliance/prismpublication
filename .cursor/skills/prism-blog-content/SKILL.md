@@ -19,11 +19,98 @@ Articles live in Postgres `blog_posts` and are managed at **Admin portal → Blo
 | Category | `**Category:**` | `Publishers`, `Monetization`, `Industry`, or vertical (`Wellness`, `Travel`) |
 | Reading time | `**Reading time:**` | Estimate at 200 wpm |
 | Body | Markdown below `---` | Paste into "Article body (Markdown)" field |
-| Cover image | Upload in admin after save | JPEG/PNG/WebP, under 5 MB |
+| Cover image | `blog-drafts/assets/{slug}-cover.png` | JPEG/PNG/WebP, under 5 MB; upload to Storage and link `imageUrl` (see below) |
 
-**Publish steps:** New Post → fill fields → Save → upload cover → Publish toggle.
+**Publish steps (admin UI):** New Post → fill fields → Save → upload cover from `blog-drafts/assets/` → Publish toggle.
+
+**Publish steps (Supabase SQL, preferred for agents):** Draft → generate cover → save to `blog-drafts/assets/` → `INSERT` post via `execute_sql` → upload cover to Storage → `UPDATE imageUrl` → verify → mark calendar **published**.
 
 Public URL: `https://prismpublication.com/blog/{slug}`
+
+## Cover images (GenerateImage → assets → Storage → DB)
+
+Do not stop at generating the image. Finish the full cover pipeline so the live post has a hero image without a manual handoff.
+
+### Step 1: Generate and save locally
+
+1. Call **GenerateImage** (16:9) using the prompt pattern below.
+2. **Immediately copy** the output into the repo at:
+   ```
+   blog-drafts/assets/{slug}-cover.png
+   ```
+   GenerateImage may write to a Cursor temp path first. Always normalize to `{slug}-cover.png` under `blog-drafts/assets/` so admin upload and Storage upload use the same file.
+3. Confirm the file exists before publishing the article.
+
+### Step 2: Publish the article
+
+Either admin UI (see above) or Supabase `execute_sql` INSERT into `blog_posts` (save a matching `.sql` file under `blog-drafts/scheduled/`). Posts inserted via SQL **do not** get `imageUrl` automatically; complete steps 3–4.
+
+### Step 3: Upload cover to Supabase Storage
+
+Bucket: **`blog-images`** (public). Project ref: **`botnabfogcjrkpmdjgpr`**.
+
+**Option A — Supabase CLI (fastest for agents when CLI is linked):**
+```bash
+supabase storage cp "blog-drafts/assets/{slug}-cover.png" "ss:///blog-images/{slug}-cover.png" --project-ref botnabfogcjrkpmdjgpr --content-type image/png
+```
+
+**Option B — Admin portal:** Blog tab → edit post → drag `blog-drafts/assets/{slug}-cover.png` onto Cover image. Works when the post was created in admin (sets `imageUrl` on upload).
+
+**Option C — User upload:** If CLI is unavailable, tell the user to upload from `blog-drafts/assets/{slug}-cover.png` in admin, then run step 4 yourself to confirm `imageUrl` is set.
+
+Use a stable object name `{slug}-cover.png` when uploading via CLI so the public URL is predictable.
+
+### Step 4: Link `imageUrl` on the post (required after SQL publish)
+
+After the object is in Storage, set the column (admin upload does this automatically; SQL publish does not):
+
+```sql
+UPDATE blog_posts
+SET "imageUrl" = 'https://botnabfogcjrkpmdjgpr.supabase.co/storage/v1/object/public/blog-images/{slug}-cover.png',
+    "updatedAt" = now()
+WHERE slug = '{slug}';
+```
+
+Run via Supabase MCP `execute_sql`.
+
+### Step 5: Verify
+
+```sql
+SELECT slug, "imageUrl", published FROM blog_posts WHERE slug = '{slug}';
+```
+
+Confirm `imageUrl` is non-null and the image loads on:
+
+- `https://prismpublication.com/blog/{slug}`
+- `https://prismpublication.com/blog` (listing card)
+
+### Visual spec
+
+Match the **live site** at prismpublication.com, not legacy docs that mention purple.
+
+| Use | Colors |
+|---|---|
+| Background | White / off-white, subtle dot grid optional |
+| Primary accent | Sky blue `#38bdf8` (matches `--primary` / Tailwind `sky-400`) |
+| Secondary accents | Teal/cyan, soft orange/peach |
+| Text | Dark charcoal / near-black, medium grey body |
+| Gradient (optional) | Blue → teal → green → yellow → orange → red (like homepage "conversation") |
+| Logo accents | Yellow, teal, small magenta in the P mark only |
+
+**Use:** `#38bdf8` or Tailwind `sky-400` / `primary` for accents.
+
+**Avoid:** purple (`#6C47FF`) as a dominant cover color.
+
+**GenerateImage prompt pattern (16:9):**
+```
+16:9 blog cover, white background, subtle light dot grid,
+sky blue primary accent, teal and soft orange secondary accents,
+clean minimal B2B SaaS editorial style, dark charcoal text if any,
+[vertical theme: wellness/travel/lifestyle], abstract chat UI,
+no purple, no em dashes in any text
+```
+
+Filename convention: **`blog-drafts/assets/{slug}-cover.png`** (always).
 
 ## Content pillars (rotate 2x/week)
 
@@ -64,34 +151,6 @@ Alternate pillars week to week. Do not publish two generic "what is contextual a
 - wellness chatbot / travel chatbot / personal AI assistant
 - native conversational ads
 
-## Cover images (GenerateImage)
-
-Match the **live site** at prismpublication.com, not legacy docs that mention purple.
-
-| Use | Colors |
-|---|---|
-| Background | White / off-white, subtle dot grid optional |
-| Primary accent | Sky blue `#38bdf8` (matches `--primary` / Tailwind `sky-400`) |
-| Secondary accents | Teal/cyan, soft orange/peach |
-| Text | Dark charcoal / near-black, medium grey body |
-| Gradient (optional) | Blue → teal → green → yellow → orange → red (like homepage "conversation") |
-| Logo accents | Yellow, teal, small magenta in the P mark only |
-
-**Use:** `#38bdf8` or Tailwind `sky-400` / `primary` for accents.
-
-**Avoid:** purple (`#6C47FF`) as a dominant cover color.
-
-**GenerateImage prompt pattern (16:9):**
-```
-16:9 blog cover, white background, subtle light dot grid,
-sky blue primary accent, teal and soft orange secondary accents,
-clean minimal B2B SaaS editorial style, dark charcoal text if any,
-[vertical theme: wellness/travel/lifestyle], abstract chat UI,
-no purple, no em dashes in any text
-```
-
-Save to `blog-drafts/assets/{slug}-cover.png`. User uploads via admin Cover image field.
-
 ## Draft file format
 
 Save to `blog-drafts/scheduled/YYYY-MM-DD-slug.md`. Copy `_template.md` structure.
@@ -102,7 +161,7 @@ After drafting, run the checklist in `blog-drafts/README.md` before pasting into
 
 Follow `blog-drafts/content-calendar.md`. Mark status: `planned` → `draft` → `published`.
 
-When user says "write this week's posts", read the calendar, draft both slots, save files, and summarize admin paste instructions.
+When user says "write this week's posts", read the calendar, draft both slots, save files, generate covers to `blog-drafts/assets/`, publish via SQL, upload covers to Storage, link `imageUrl`, and summarize live URLs plus any LinkedIn repost blurbs.
 
 ## Reference examples
 

@@ -1,12 +1,12 @@
 import {
   BookOpen,
+  Brain,
   Building2,
   Eye,
   Globe,
   Heart,
   Lightbulb,
   MessageSquare,
-  Scale,
   Shield,
   ShieldCheck,
   Target,
@@ -18,22 +18,22 @@ import {
 
 export const pillars = [
   {
-    icon: MessageSquare,
-    title: "Conversations deserve better ads",
+    icon: Brain,
+    title: "Turn-level judgment comes first",
     description:
-      "When someone asks a chatbot for help, they are sharing real intent. The ads they see should respect that moment, not disrupt it. We build the infrastructure that makes that possible.",
+      "Reply quality is table stakes. Signals scores intent, emotion, stage, and safety on every turn, then recommends clarify, escalate, tone_shift, or more. Your bot decides how to execute.",
   },
   {
-    icon: Scale,
-    title: "Publishers and advertisers need balance",
+    icon: MessageSquare,
+    title: "Revenue should fit the conversation",
     description:
-      "Most ad networks optimize for one side. We design for both. Publisher UX and advertiser ROI are not competing goals. They are the same goal measured from different angles.",
+      "Contextual placement is a crowded category. Independent publishers still need a self-serve layer for partner integrations at the right moment, without banners or pop-ups breaking the thread.",
   },
   {
     icon: Eye,
     title: "Transparency is not optional",
     description:
-      "Published CPM rates. Open content policies. Full audit logging. The ad industry has an opacity problem. We think that is also a trust problem, and trust is the product we are actually building.",
+      "Published content policies. Open SDK docs. Usage metering you can see in the portal. The ad industry has an opacity problem. We think that is also a trust problem, and trust is the product we are actually building.",
   },
 ];
 

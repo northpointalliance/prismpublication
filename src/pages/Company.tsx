@@ -30,20 +30,26 @@ const Company = () => {
                 Company
               </div>
               <h1 className="mt-5 mx-auto lg:mx-0 max-w-xl text-4xl font-bold tracking-tight md:text-6xl">
-                Building the ad layer
+                Infrastructure for bots
                 <br />
-                <span className="text-gradient-primary">conversational AI deserves.</span>
+                <span className="text-gradient-primary">that already talk.</span>
               </h1>
               <p className="mt-6 mx-auto lg:mx-0 max-w-xl text-lg leading-relaxed text-muted-foreground">
-                Prism is an ad network built for AI chatbots. Publishers monetize conversations.
-                Advertisers reach users when they are actively expressing a need. The ads should not
-                compromise the experience.
+                Prism Signals scores every turn and recommends what to do next. When you opt in, the
+                marketplace surfaces partner integrations at the right moment. One SDK. Judgment first.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                 <Link
-                  to="/demo"
+                  to="/signals"
                   className="btn-sweep inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+                >
+                  Explore Signals
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/demo"
+                  className="btn-sweep inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold"
                 >
                   See the Product
                   <ArrowRight className="h-4 w-4" />
@@ -83,12 +89,39 @@ const Company = () => {
           <div className="text-center">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary">Why We Exist</p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
-              The problem we are solving
+              Beyond the reply
             </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              AI chatbots are becoming a primary interface for users to get things done. The ad
-              infrastructure built for those conversations does not exist yet. We are building it.
-            </p>
+            <div className="mx-auto mt-5 max-w-3xl space-y-4 text-left text-muted-foreground sm:text-center">
+              <p>
+                Teams everywhere are putting LLMs in front of customers: support bots, in-product
+                copilots, wellness and coaching apps. The model can answer. What most production
+                stacks still lack is turn-level judgment. When should the bot clarify? Escalate to a
+                human? Soften tone after frustration? Hold a commercial suggestion until safety and
+                intent say go?
+              </p>
+              <p>
+                That judgment problem shows up before monetization. It is also what makes revenue
+                trustworthy when you add it.
+              </p>
+              <p>
+                Conversational monetization is a real, crowded category now. Major platforms run
+                in-thread ads. Well-funded infrastructure companies sell contextual placement to
+                enterprise. Independent publishers building their own bots still need open tooling
+                they can integrate and control, without rebuilding ad ops or guessing on every turn.
+              </p>
+              <p>
+                Prism builds both layers on one SDK.{" "}
+                <Link to="/signals" className="font-medium text-primary hover:underline">
+                  Signals
+                </Link>{" "}
+                scores each turn and recommends a next action. The{" "}
+                <Link to="/publishers" className="font-medium text-primary hover:underline">
+                  marketplace
+                </Link>{" "}
+                surfaces partner integrations when the moment fits. Judgment comes first. Revenue is
+                optional.
+              </p>
+            </div>
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
