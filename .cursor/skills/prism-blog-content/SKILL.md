@@ -125,12 +125,13 @@ Alternate pillars week to week. Do not publish two generic "what is contextual a
 ### Structure (Gold Plan)
 - **2,000–2,900+ words** when possible (minimum 1,200 for a publishable draft)
 - **Question-based H2s** only (e.g. `## How much does a wellness chatbot cost per user?`)
-- Each section: **2–3 sentence direct answer** → supporting detail → **TL;DR** one-liner → internal link where relevant
+- Each section: **2–3 sentence direct answer** → supporting detail → optional one-line **In short:** summary (never use unexplained abbreviations like TL;DR) → internal link where relevant
 - End with **## Frequently Asked Questions** (4–6 Q&As, bold question lines)
 - Close with one-line Prism CTA linking to [prismpublication.com](https://prismpublication.com)
 
 ### Style (Prism voice)
 - **No em dashes.** Use commas, periods, or parentheses instead.
+- **No unexplained abbreviations.** Do not use TL;DR (too long; did not read) unless you spell it out. Prefer **In short:** or fold the summary into the paragraph.
 - No buzzwords: avoid "unlock", "synergy", "future-proof", "game-changer"
 - Prefer **"partner integrations surfaced at the right moment"** over "contextual ads" in B2B-facing copy
 - Light, direct, founder-to-founder tone. Concrete numbers and scenarios beat abstract claims.

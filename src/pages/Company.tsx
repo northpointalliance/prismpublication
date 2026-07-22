@@ -91,37 +91,35 @@ const Company = () => {
             <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
               Beyond the reply
             </h2>
-            <div className="mx-auto mt-5 max-w-3xl space-y-4 text-left text-muted-foreground sm:text-center">
-              <p>
-                Teams everywhere are putting LLMs in front of customers: support bots, in-product
-                copilots, wellness and coaching apps. The model can answer. What most production
-                stacks still lack is turn-level judgment. When should the bot clarify? Escalate to a
-                human? Soften tone after frustration? Hold a commercial suggestion until safety and
-                intent say go?
-              </p>
-              <p>
-                That judgment problem shows up before monetization. It is also what makes revenue
-                trustworthy when you add it.
-              </p>
-              <p>
-                Conversational monetization is a real, crowded category now. Major platforms run
-                in-thread ads. Well-funded infrastructure companies sell contextual placement to
-                enterprise. Independent publishers building their own bots still need open tooling
-                they can integrate and control, without rebuilding ad ops or guessing on every turn.
-              </p>
-              <p>
-                Prism builds both layers on one SDK.{" "}
-                <Link to="/signals" className="font-medium text-primary hover:underline">
-                  Signals
-                </Link>{" "}
-                scores each turn and recommends a next action. The{" "}
-                <Link to="/publishers" className="font-medium text-primary hover:underline">
-                  marketplace
-                </Link>{" "}
-                surfaces partner integrations when the moment fits. Judgment comes first. Revenue is
-                optional.
-              </p>
-            </div>
+          </div>
+          <div className="mx-auto mt-6 max-w-2xl space-y-5 text-base leading-[1.75] text-pretty text-muted-foreground">
+            <p>
+              Teams everywhere are putting LLMs in front of customers: support bots, in-product
+              copilots, wellness and coaching apps. The model can answer. What most production stacks
+              still lack is turn-level judgment. When should the bot clarify? Escalate to a human?
+              Soften tone after frustration? Hold a commercial suggestion until safety and intent say go?
+            </p>
+            <p>
+              That judgment problem shows up before monetization. It is also what makes revenue
+              trustworthy when you add it.
+            </p>
+            <p>
+              Conversational monetization is a real, crowded category now. Major platforms run
+              in-thread ads. Well-funded infrastructure companies sell contextual placement to
+              enterprise. Independent publishers building their own bots still need open tooling they
+              can integrate and control, without rebuilding ad ops or guessing on every turn.
+            </p>
+            <p>
+              Prism builds both layers on one SDK.{" "}
+              <Link to="/signals" className="font-medium text-primary hover:underline">
+                Signals
+              </Link>{" "}
+              scores each turn and recommends a next action. The{" "}
+              <Link to="/publishers" className="font-medium text-primary hover:underline">
+                marketplace
+              </Link>{" "}
+              surfaces partner integrations when the moment fits. Judgment comes first. Revenue is optional.
+            </p>
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
