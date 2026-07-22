@@ -33,7 +33,7 @@ export const pillars = [
     icon: Eye,
     title: "Transparency is not optional",
     description:
-      "Published content policies. Open SDK docs. Usage metering you can see in the portal. The ad industry has an opacity problem. We think that is also a trust problem, and trust is the product we are actually building.",
+      "That starts with naming who founded the company, publishing our content policies, and keeping SDK docs and usage metering visible in the portal. Opacity is a trust problem.",
   },
 ];
 
@@ -68,7 +68,7 @@ export const values = [
     icon: Lightbulb,
     title: "Small team, high leverage",
     description:
-      "We optimize for decisions per person, not headcount. A small team that ships fast with clear ownership beats a large team blocked by process.",
+      "Prism is founder-led. Contract help ships specific pieces; day-to-day product direction stays with Daniel Rosenthal. We optimize for decisions per person, not headcount.",
   },
   {
     icon: Globe,

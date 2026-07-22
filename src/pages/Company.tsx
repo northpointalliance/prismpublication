@@ -136,8 +136,51 @@ const Company = () => {
         </div>
       </section>
 
-      {/* ── What we believe ───────────────────────────────────────────────── */}
+      {/* ── Founder ───────────────────────────────────────────────────────── */}
       <section className="py-20 bg-muted/20">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary">Founder</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
+              Founded by Daniel Rosenthal
+            </h2>
+          </div>
+          <div className="mx-auto mt-6 max-w-2xl space-y-5 text-base leading-[1.75] text-pretty text-muted-foreground">
+            <p>
+              Prism Publication was founded by{" "}
+              <a
+                href="https://www.linkedin.com/in/dan73ros/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+              >
+                Daniel Rosenthal
+              </a>
+              . The name is
+              older than this product. Around 1999 and 2000, Daniel reserved it for a different idea:
+              email serial novels. That project was shelved. Time passed.
+            </p>
+            <p>
+              Daniel went on to sales and account management roles at companies in the United States
+              and Israel. Sales teams sit next to marketing teams. Marketing lives in long-tail search,
+              search-engine optimization (SEO), and now answer-engine optimization (AEO) and
+              generative-engine optimization (GEO).
+            </p>
+            <p>
+              With a BA in History and Education, the public launch of large language models did not
+              feel alien. It felt like a probability engine paired with a thesaurus. A year or more of
+              digging into the plumbing of LLMs and the research around them led to what you see today
+              at prismpublication.com.
+            </p>
+            <p>
+              The email serial novels idea might still launch. For now, Prism is what the name became.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── What we believe ───────────────────────────────────────────────── */}
+      <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.5fr]">
             <div className="lg:sticky lg:top-28">
