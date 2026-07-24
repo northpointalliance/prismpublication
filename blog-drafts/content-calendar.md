@@ -12,6 +12,7 @@ Mark **Status** as you go: `planned` → `draft` → `published`
 
 | Date | Status | Pillar | Vertical | Title (working) | Slug |
 |---|---|---|---|---|---|
+| 2026-07-24 | published | vertical-depth | personal-b2c | How can B2C chatbots score conversations for better customer experiences? | b2c-chatbot-conversation-scoring-customer-experience-2026 |
 | 2026-07-21 | published | vertical-depth | all | What is Prism Signals, and why does your chatbot need turn-level judgment? | prism-signals-conversation-scoring-2026 |
 | 2026-07-22 | published | api-costs | wellness | How much does it cost to run a wellness chatbot at scale? | wellness-chatbot-api-costs-2026 |
 | 2026-07-19 | published | contextual-monetization | wellness | How can wellness chatbots monetize without breaking user trust? | wellness-chatbot-monetization-contextual-2026 |
